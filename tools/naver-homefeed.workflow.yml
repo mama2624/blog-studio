@@ -1,0 +1,46 @@
+name: 네이버 홈판 인기글 수집
+
+# 작업실 오른쪽 패널의 '📊 홈판 관찰' 한 줄과, 제목 뽑기·2단계 검수 프롬프트가 읽는
+# data/naver-homefeed.json 을 매일 04:40 KST(= 19:40 UTC 전날)에 갱신한다.
+# 비로그인(로그아웃) 상태로 네이버 홈 PC 레이아웃만 읽는다 — 로그인·동의·개인화·유료 API 없음.
+# 지연님의 피클 스케줄·크레딧은 쓰지 않는다(GitHub Actions 무료 실행만).
+on:
+  schedule:
+    - cron: "40 19 * * *"      # 04:40 KST
+  workflow_dispatch:            # 필요할 때 손으로 한 번 돌리기
+
+permissions:
+  contents: write
+
+concurrency:
+  group: naver-homefeed
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 저장소 받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 홈판 인기글 수집 (12번 요청 · 판 4~6개)
+        run: python3 tools/fetch_naver_homefeed.py --pages 12 --gap 2.5
+
+      - name: 바뀐 게 있을 때만 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/naver-homefeed.json
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋하지 않습니다."
+            exit 0
+          fi
+          STAMP=$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')
+          git commit -m "chore: 홈판 인기글 관찰 갱신 ${STAMP} KST"
+          git push

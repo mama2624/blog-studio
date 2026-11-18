@@ -1,0 +1,1082 @@
+{
+ "version": "v1.9.7",
+ "observedAt": "2026-11-18 15:23",
+ "observedDate": "2026-11-18",
+ "source": "네이버 홈 PC 레이아웃 '추천 관심사' 판 · 비로그인",
+ "sourceUrl": "https://www.naver.com/?mobile",
+ "how": "비로그인 브라우저로 www.naver.com/?mobile 를 여러 번 받아, 서버가 실어 보내는 EAGER-DATA['PC-FEED-WRAPPER'] 카드에서 제목·주소·매체·판 이름만 뽑는다. 로그인·동의·개인화는 쓰지 않는다.",
+ "requests": {
+  "total": 12,
+  "ok": 12,
+  "log": [
+   {
+    "request": 1,
+    "ok": true,
+    "bytes": 216307,
+    "raw": 24,
+    "cards": 15,
+    "new": 15,
+    "panels": [
+     "건강"
+    ]
+   },
+   {
+    "request": 2,
+    "ok": true,
+    "bytes": 221131,
+    "raw": 24,
+    "cards": 13,
+    "new": 13,
+    "panels": [
+     "패션뷰티"
+    ]
+   },
+   {
+    "request": 3,
+    "ok": true,
+    "bytes": 216376,
+    "raw": 24,
+    "cards": 15,
+    "new": 0,
+    "panels": [
+     "건강"
+    ]
+   },
+   {
+    "request": 4,
+    "ok": true,
+    "bytes": 216339,
+    "raw": 24,
+    "cards": 15,
+    "new": 0,
+    "panels": [
+     "건강"
+    ]
+   },
+   {
+    "request": 5,
+    "ok": true,
+    "bytes": 222919,
+    "raw": 54,
+    "cards": 0,
+    "new": 0,
+    "panels": []
+   },
+   {
+    "request": 6,
+    "ok": true,
+    "bytes": 219328,
+    "raw": 28,
+    "cards": 14,
+    "new": 14,
+    "panels": [
+     "리빙"
+    ]
+   },
+   {
+    "request": 7,
+    "ok": true,
+    "bytes": 249726,
+    "raw": 104,
+    "cards": 0,
+    "new": 0,
+    "panels": []
+   },
+   {
+    "request": 8,
+    "ok": true,
+    "bytes": 249673,
+    "raw": 104,
+    "cards": 0,
+    "new": 0,
+    "panels": []
+   },
+   {
+    "request": 9,
+    "ok": true,
+    "bytes": 218154,
+    "raw": 54,
+    "cards": 0,
+    "new": 0,
+    "panels": []
+   },
+   {
+    "request": 10,
+    "ok": true,
+    "bytes": 238141,
+    "raw": 44,
+    "cards": 27,
+    "new": 24,
+    "panels": [
+     "지식+"
+    ]
+   },
+   {
+    "request": 11,
+    "ok": true,
+    "bytes": 254372,
+    "raw": 104,
+    "cards": 0,
+    "new": 0,
+    "panels": []
+   },
+   {
+    "request": 12,
+    "ok": true,
+    "bytes": 226560,
+    "raw": 44,
+    "cards": 20,
+    "new": 20,
+    "panels": [
+     "자동차"
+    ]
+   }
+  ]
+ },
+ "ok": true,
+ "stats": {
+  "total": 86,
+  "len": {
+   "min": 9,
+   "median": 36,
+   "mean": 36.3,
+   "max": 67,
+   "buckets": {
+    "~24자": 11,
+    "25~36자": 33,
+    "37~44자": 21,
+    "45~50자": 12,
+    "51자~": 9
+   }
+  },
+  "counts": {
+   "digit": 48,
+   "money": 21,
+   "quote": 33,
+   "question": 24,
+   "exclaim": 6,
+   "limit": 19,
+   "flip": 7,
+   "vague": 4,
+   "first": 2,
+   "brand": 24,
+   "badEnding": 1,
+   "questionOnly": 0
+  },
+  "rates": {
+   "digit": 55.8,
+   "money": 24.4,
+   "quote": 38.4,
+   "question": 27.9,
+   "exclaim": 7.0,
+   "limit": 22.1,
+   "flip": 8.1,
+   "vague": 4.7,
+   "first": 2.3,
+   "brand": 27.9,
+   "badEnding": 1.2,
+   "questionOnly": 0.0
+  },
+  "angles": [
+   {
+    "n": "①",
+    "k": "생활 속 실수·손해 회피",
+    "count": 1,
+    "pct": 1.2,
+    "examples": [
+     "\"이런 걸 그냥 준다고?\" 샤넬 성수 홀리데이 팝업 VIP 스페셜 기프트 내용물 전격 공개"
+    ]
+   },
+   {
+    "n": "②",
+    "k": "확인 1가지",
+    "count": 11,
+    "pct": 12.8,
+    "examples": [
+     "\"MRI는 정상인데 무릎은 왜 자꾸 아플까?\"...'움직이는 연골' 진단가능해졌다 [헬스체크]",
+     "지능이 높을수록 남들에게 절대 말하지 않는 것 5가지",
+     "진짜 머리 좋은데 보통 엄마들은 전혀 모르는 영재 아이 특징 3가지"
+    ]
+   },
+   {
+    "n": "③",
+    "k": "반전·상식 뒤집기",
+    "count": 9,
+    "pct": 10.5,
+    "examples": [
+     "나영석 PD가 말하는 “나이 들수록 멋진 사람의 ‘의외의 특징’”",
+     "청국장, 양파도 아니었다.. LDL콜레스테롤 낮춰주고 혈관 피를 깨끗하게 도와주는 음식",
+     "\"이런 걸 그냥 준다고?\" 샤넬 성수 홀리데이 팝업 VIP 스페셜 기프트 내용물 전격 공개"
+    ]
+   },
+   {
+    "n": "④",
+    "k": "공감·내 얘기",
+    "count": 5,
+    "pct": 5.8,
+    "examples": [
+     "진짜 머리 좋은데 보통 엄마들은 전혀 모르는 영재 아이 특징 3가지",
+     "코스트코 \"비싸다고 두 번 내려놓은 게 바보였어요\" 그새 다들 쓸어 가 바닥난 '이것' 3",
+     "이건 얼마나 좋길래..다들 코스트코에서 1개 아니고 '2개씩' 카트에 담아요?"
+    ]
+   },
+   {
+    "n": "⑤",
+    "k": "시즌·시의성",
+    "count": 11,
+    "pct": 12.8,
+    "examples": [
+     "\"1억이 웬 말..\" 요즘 20대가 돈 못 모으는 진짜 이유",
+     "올해 겨울 크리스마스 네일은 이걸로! 연말 네일 디자인 추천",
+     "2026년 11월 네일디자인 청주무제한네일아트 네일은행복"
+    ]
+   },
+   {
+    "n": "⑥",
+    "k": "따옴표 인용·말맛",
+    "count": 33,
+    "pct": 38.4,
+    "examples": [
+     "\"MRI는 정상인데 무릎은 왜 자꾸 아플까?\"...'움직이는 연골' 진단가능해졌다 [헬스체크]",
+     "나영석 PD가 말하는 “나이 들수록 멋진 사람의 ‘의외의 특징’”",
+     "“저녁밥 이렇게 바꾸면 허리 사이즈 확 줄어요!” 천만배우 김무열도 먹는 딱 3가지 재료, 5분 완성 다이어트 들깨버섯탕"
+    ]
+   },
+   {
+    "n": "⑦",
+    "k": "숫자 실험·기록",
+    "count": 4,
+    "pct": 4.7,
+    "examples": [
+     "\"딱 3가지만 따라해보세요\" 놀랄 정도로 허리가 가벼워집니다.",
+     "4인가족 한달식비 80만원 식비절약 저녁메뉴- 잡채볶음밥 김치볶음밥",
+     "맞벌이 3인 가족 한달식비 50만원으로 살아보기[26.11.14] 주말은 지출이 많지만 외식은 방어!!!!"
+    ]
+   }
+  ],
+  "panels": {
+   "건강": 15,
+   "패션뷰티": 13,
+   "리빙": 14,
+   "지식+": 24,
+   "자동차": 20
+  },
+  "media": {
+   "뉴스": 6,
+   "블로그": 26,
+   "인플루언서": 47,
+   "카페": 7
+  },
+  "matters": {
+   "건강·질병": 12,
+   "육아·교육": 3,
+   "먹거리·장보기": 13,
+   "연예·화제": 1,
+   "패션·뷰티": 11,
+   "자기계발·심리": 21,
+   "리빙·살림": 7,
+   "기타": 18
+  }
+ },
+ "items": [
+  {
+   "title": "\"MRI는 정상인데 무릎은 왜 자꾸 아플까?\"...'움직이는 연골' 진단가능해졌다 [헬스체크]",
+   "url": "https://n.news.naver.com/article/014/0005606176",
+   "source": "파이낸셜뉴스",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "뉴스",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "지능이 높을수록 남들에게 절대 말하지 않는 것 5가지",
+   "url": "https://blog.naver.com/1stpenguin1/224471750813",
+   "source": "퍼스트펭귄 콘텐츠",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "진짜 머리 좋은데 보통 엄마들은 전혀 모르는 영재 아이 특징 3가지",
+   "url": "https://blog.naver.com/fikabook/224471944060",
+   "source": "피카 출판사",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "나영석 PD가 말하는 “나이 들수록 멋진 사람의 ‘의외의 특징’”",
+   "url": "https://blog.naver.com/smallbigmedia/224479175158",
+   "source": "오분서가",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "청국장, 양파도 아니었다.. LDL콜레스테롤 낮춰주고 혈관 피를 깨끗하게 도와주는 음식",
+   "url": "https://in.naver.com/phia/contents/internal/1009352253444160",
+   "source": "봄봄피아",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "비슷하게 벌어도 30대 중반부터 격차가 커지는 이유",
+   "url": "https://blog.naver.com/oksuturtle/224479155589",
+   "source": "옥거북",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-1"
+  },
+  {
+   "title": "“저녁밥 이렇게 바꾸면 허리 사이즈 확 줄어요!” 천만배우 김무열도 먹는 딱 3가지 재료, 5분 완성 다이어트 들깨버섯탕",
+   "url": "https://in.naver.com/linsky7394/contents/internal/1011471219314912",
+   "source": "렛츠뀨희",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-2"
+  },
+  {
+   "title": "\"1억이 웬 말..\" 요즘 20대가 돈 못 모으는 진짜 이유",
+   "url": "https://in.naver.com/2engineer/contents/internal/1016197669013024",
+   "source": "이기사",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-2"
+  },
+  {
+   "title": "사과는 껍질째, 브로콜리는 줄기까지… 식이섬유 제대로 먹는 법",
+   "url": "https://n.news.naver.com/article/123/0002394303",
+   "source": "조세일보",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "뉴스",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-2"
+  },
+  {
+   "title": "오진일꺼라 믿었는데 결국 폐암...",
+   "url": "https://blog.naver.com/winelight02/224463015744",
+   "source": "영희씨",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-2"
+  },
+  {
+   "title": "\"고지혈증 눈꺼풀에서 시작합니다..\" 알기 어려운 고지혈증 증상 4가지",
+   "url": "https://in.naver.com/dpals19/contents/internal/1017137861801696",
+   "source": "건돌이",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-2"
+  },
+  {
+   "title": "\"딱 3가지만 따라해보세요\" 놀랄 정도로 허리가 가벼워집니다.",
+   "url": "https://blog.naver.com/pshhh9301/224462429608",
+   "source": "쇠버랜드",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "블로그",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-3"
+  },
+  {
+   "title": "“양배추와 두부를 이렇게 볶아 보세요! 뱃살 쏙 빠져요!” 저탄수 두부 양배추 볶음 다이어트식단",
+   "url": "https://in.naver.com/cookingsunny/contents/internal/1011077926780832",
+   "source": "쿠킹써니",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-3"
+  },
+  {
+   "title": "무조건 반반 결혼 해야 하는 이유라는데",
+   "url": "https://in.naver.com/muisto_o/contents/internal/1017106466711200",
+   "source": "무이스토",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-3"
+  },
+  {
+   "title": "천연 마운자로 양배추 샐러드 소스 만들기 7분 양배추 요리",
+   "url": "https://in.naver.com/baby0817/contents/internal/1014368606142624",
+   "source": "꼬마츄츄",
+   "panel": "건강",
+   "panelKey": "HEALTH",
+   "media": "인플루언서",
+   "block": "PC-FEED-HEALTH-AIRS-PAGE-3"
+  },
+  {
+   "title": "코트는 역시 비싼 게 최고? 부내 끝판왕 막스마라 코트",
+   "url": "https://in.naver.com/miming_z/contents/internal/1016559754302912",
+   "source": "밍밍",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "올해 겨울 크리스마스 네일은 이걸로! 연말 네일 디자인 추천",
+   "url": "https://in.naver.com/minbosori/contents/internal/1016978528925312",
+   "source": "민보소리",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "봉태규 유튜브 보다가 패딩 꽂혔는데 이 브랜드 유명한건가요?",
+   "url": "https://cafe.naver.com/casuallydressed/889068?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo4ODkwNjgsImNhZmVVcmwiOiJjYXN1YWxseWRyZXNzZWQiLCJpc3N1ZWRBdCI6MTc5NDk4MjgzNzM3MX0.3uYsDktsyHqXsn20rrNZcRUdkaHowXD2UOfAsIvAv7k",
+   "source": "GO OUT CASUALLY DRESSED 캐주얼 패션 커뮤니티 고아캐드",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "카페",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "슈프림 더 노스 페이스",
+   "url": "https://cafe.naver.com/sssw/17795507?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjoxNzc5NTUwNywiY2FmZVVybCI6InNzc3ciLCJpc3N1ZWRBdCI6MTc5NDk4MjgzNzM3MX0.a73lcRPiiUqC0U9h9raTBOroXanFC0mhazSyOrXv6Q0",
+   "source": "●나이키매니아●에어조던,아디다스,슈프림,중고장터,스트릿패션",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "카페",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "온야드 준엽/ 머리만 풀면 넙데데해 보이는 얼굴형 이라면? / #단발머리 #단발펌 #헤어컨설팅미용실",
+   "url": "https://in.naver.com/ch_yups/contents/internal/1017425086494272",
+   "source": "디자이너 김준엽",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "2026년 11월 네일디자인 청주무제한네일아트 네일은행복",
+   "url": "https://in.naver.com/greenrose_nail/contents/internal/1017271714571904",
+   "source": "그린로즈",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-1"
+  },
+  {
+   "title": "\"다음 주에 오면 진짜 없어요\" 코스트코 가자마자 눈앞에서 증발하는 겨울 유행템 2",
+   "url": "https://in.naver.com/ays3258/contents/internal/1017278637537024",
+   "source": "온별맘",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "\"이런 걸 그냥 준다고?\" 샤넬 성수 홀리데이 팝업 VIP 스페셜 기프트 내용물 전격 공개",
+   "url": "https://in.naver.com/gh676800/contents/internal/1018311593108832",
+   "source": "백화야",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "차정원이 들자 더 예뻐 보였던 7백만 원대 더로우 알제 토트백 가방",
+   "url": "https://in.naver.com/lily/contents/internal/1018494022366848",
+   "source": "러블리릴리",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "스탠다드에서 제일 유명한 그 보냉백이 품절이라면 (갠적으로 이번에 제일 마음에 드는)",
+   "url": "https://cafe.naver.com/jpnstory/4445839?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo0NDQ1ODM5LCJjYWZlVXJsIjoianBuc3RvcnkiLCJpc3N1ZWRBdCI6MTc5NDk4MjgzNzM3MX0.l5prYwV3DmlWuCnirvAd7WRVeFiQL72uPYIVOkSaI1Y",
+   "source": "네일동 : 일본여행카페",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "카페",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "“루이비통이 리부트를 시작했다” 시대에 맞춰 다시 디자인한 클래식 신상 가방 5가지",
+   "url": "https://in.naver.com/les-paul/contents/internal/1017616327243424",
+   "source": "이씨 클랩튼",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "이대로만 입으세요! 대신 짜주는 이번주 출근 코디, 지금 바로 따라 입는 요일별 11월 3째주 출근룩 스타일링",
+   "url": "https://blog.naver.com/fashion_choi/224478541220",
+   "source": "패션초이",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "블로그",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "패딩 입으면 부해 보인다고? 숏패딩 코디는 하의부터 바꿔봐요",
+   "url": "https://in.naver.com/nno1me2/contents/internal/1017266890413440",
+   "source": "힝냐옹",
+   "panel": "패션뷰티",
+   "panelKey": "BEAUTY",
+   "media": "인플루언서",
+   "block": "PC-FEED-BEAUTY-CARD-2"
+  },
+  {
+   "title": "4인가족 한달식비 80만원 식비절약 저녁메뉴- 잡채볶음밥 김치볶음밥",
+   "url": "https://blog.naver.com/rojeenne/224473829746",
+   "source": "잔느",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "블로그",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "“이 마당을 우리만 본다고요?” 집 한가운데 정원을 둔 4면 중정주택",
+   "url": "https://in.naver.com/sesame.home/contents/internal/1018203804436096",
+   "source": "참깨",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "풍수지리 믿는 사람들은 왜 지갑 색깔까지 따질까? 40대부터 관심 갖는 재물운 색상의 비밀",
+   "url": "https://in.naver.com/yellowin23/contents/internal/1018005487957536",
+   "source": "꼬꼬마",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "배부르게 먹어도 속이 편안한 양배추요리 | 양배추파스타 #양배추 #양배추파스타 #양배추요리 #수능도시락 #면대체양배추",
+   "url": "https://m.blog.naver.com/sabuzak_recipe/clip/16810561",
+   "source": "김주부의 사부작레시피",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "블로그",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "김밥스김밥 돌돌말은김밥",
+   "url": "https://cafe.naver.com/semogim/69232?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo2OTIzMiwiY2FmZVVybCI6InNlbW9naW0iLCJpc3N1ZWRBdCI6MTc5NDk4Mjg2ODM1NH0.2IiMma_Ll5HUP13mu032LNc_3m6KpVyx818snHl89Fo",
+   "source": "세상의 모든 김밥 - 김밥레시피/꿀팁/김밥맛집/김밥의 모든 것",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "카페",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "코스트코 \"비싸다고 두 번 내려놓은 게 바보였어요\" 그새 다들 쓸어 가 바닥난 '이것' 3",
+   "url": "https://in.naver.com/twinkle_star/contents/internal/1017298900756000",
+   "source": "반짝별",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-1"
+  },
+  {
+   "title": "다이소 \"이걸 몰랐다니..\" 그동안 헛돈 썼네요",
+   "url": "https://in.naver.com/heesue2240/contents/internal/1018495062636032",
+   "source": "해피말괄량이",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "이건 얼마나 좋길래..다들 코스트코에서 1개 아니고 '2개씩' 카트에 담아요?",
+   "url": "https://in.naver.com/maronhouse/contents/internal/1017112814823008",
+   "source": "마론인형",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "맞벌이 3인 가족 한달식비 50만원으로 살아보기[26.11.14] 주말은 지출이 많지만 외식은 방어!!!!",
+   "url": "https://blog.naver.com/orange7035/224477705385",
+   "source": "민뚱",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "블로그",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "“ 4인가족 한달식비 100만 원으로 버티는 현실 집밥 \" 체험단과 집밥으로 식비 방어!!",
+   "url": "https://in.naver.com/ddabongmom/contents/internal/1018329139234240",
+   "source": "따봉맘",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "코스트코 이건 진짜 좀 심했네요.. 매장 세 곳 돌아야 겨우 만난다는 이것",
+   "url": "https://in.naver.com/sulsoomom1618/contents/internal/1017245812586112",
+   "source": "설수맘",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "무지위크 전에 구매해 버린 무인양품 추천 템",
+   "url": "https://in.naver.com/daily/contents/internal/1016475270813184",
+   "source": "데일리",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "현관 타일.. 이게 맞나요?? 조언부탁드려요 ㅠㅠ",
+   "url": "https://cafe.naver.com/overseer/1808725?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjoxODA4NzI1LCJjYWZlVXJsIjoib3ZlcnNlZXIiLCJpc3N1ZWRBdCI6MTc5NDk4Mjg2ODM1NH0.AgK4QBAFLZLm6nrEubW4TvNONdZX-vX2VbPyKdnUn5c",
+   "source": "셀프 인테리어 My Home (혼자하는 집수리)",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "카페",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "코스트코 '진짜 해냈다' 온국민이 기다리던 이것 신제품 출시했다고?",
+   "url": "https://in.naver.com/rabbitmom_/contents/internal/1017731903071904",
+   "source": "토순맘",
+   "panel": "리빙",
+   "panelKey": "LIVINGHOME",
+   "media": "인플루언서",
+   "block": "PC-FEED-LIVINGHOME-CARD-2"
+  },
+  {
+   "title": "47만 구독자 보유한 일본 유튜버의 홋카이도 에세이 ‘북국의 생활’",
+   "url": "https://n.news.naver.com/article/018/0006411813",
+   "source": "이데일리",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "뉴스",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "\"무시당하기 싫으면 외우세요\" 만만해 보이지 않는 법 6",
+   "url": "https://blog.naver.com/smallbigmedia/224471680662",
+   "source": "오분서가",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "유독 인생 잘 풀리는 사람 99% '이 생각' 반복한다",
+   "url": "https://blog.naver.com/chungrimpub/224475896296",
+   "source": "청림출판",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "아들을 존스홉킨스에 보낸 이현이 카니발 뒷좌석에서 4학년까지 한 일",
+   "url": "https://blog.naver.com/fikabook/224472944084",
+   "source": "피카 출판사",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "항공우주추진시험센터 제2시험동 준공식",
+   "url": "https://n.news.naver.com/article/001/0016448826",
+   "source": "연합뉴스",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "뉴스",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "가난한 신혼부부의 전형적인 특징 5가지",
+   "url": "https://blog.naver.com/enjoy1677/224475439318",
+   "source": "윤또복",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "“부자들이 짝퉁 명품을 더 산다?” 정품을 사는 중산층은 희생양이라는 충격적인 연구결과",
+   "url": "https://in.naver.com/les-paul/contents/internal/1015127675101248",
+   "source": "이씨 클랩튼",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-0"
+  },
+  {
+   "title": "사람이 정신적으로 한계에 도달하면 나타나는 증상 4가지",
+   "url": "https://blog.naver.com/1stpenguin1/224471761289",
+   "source": "퍼스트펭귄 콘텐츠",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-1"
+  },
+  {
+   "title": "얘기해 보면 티가 나는, 언젠가 내가 필요할때 무시할 사람들의 말투들",
+   "url": "https://blog.naver.com/bloyam/224465420478",
+   "source": "밀미링",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-1"
+  },
+  {
+   "title": "\"청각, 김장에 꼭 넣어야 할까?\" 김치에 넣는 이유와 사용법",
+   "url": "https://blog.naver.com/mintapple22_/224456062811",
+   "source": "살림하는 동네언니",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-1"
+  },
+  {
+   "title": "예민한 사람(HSP)과 무던한 사람의 결정적 차이",
+   "url": "https://in.naver.com/ahsune/contents/internal/1015448685192704",
+   "source": "무명자",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "마음에 구김살 없는 사람들이 어릴 적 엄마에게 들었던 말",
+   "url": "https://blog.naver.com/bookiemb/224471796122",
+   "source": "부키",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "명상록으로 배우는 마음을 다스리는 삶의 지혜",
+   "url": "https://in.naver.com/wh1gus2tkd3/contents/internal/1011121420845568",
+   "source": "바쁜남자",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "4050 돈 걱정 없는 사람 특징",
+   "url": "https://in.naver.com/hermebook/contents/internal/1017219892413856",
+   "source": "에르메",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "\"다들 부자였다..\" 2006년 평균 순자산이 이 정도였을 줄이야",
+   "url": "https://in.naver.com/rmsgud2007/contents/internal/1017805004351072",
+   "source": "방구석 청년",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "부모가 자녀에게 물려줄 수 있는 가장 값비싼 유산",
+   "url": "https://blog.naver.com/jklovelike/224465100767",
+   "source": "데미안",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-2"
+  },
+  {
+   "title": "고대동물종류 악어종류 선사시대의 남아시아에 살았던 가비알악어의 패왕 람포수쿠스",
+   "url": "https://in.naver.com/bugman1303/contents/internal/1013774877798560",
+   "source": "viper",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-3"
+  },
+  {
+   "title": "나누고 싶은 것이 있다는 마음 <가을 엽서 / 안도현>",
+   "url": "https://blog.naver.com/bldal/224461802746",
+   "source": "달숲",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-3"
+  },
+  {
+   "title": "요즘 MZ들은 라면을 이렇게 먹는다는데요..?",
+   "url": "https://in.naver.com/bbaeyori/contents/internal/1018498922128672",
+   "source": "킴쿠키",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-3"
+  },
+  {
+   "title": "요즘 30대가 가장 많이 하는 착각, 집 없으면 실패한 인생? SNS가 만든 착각",
+   "url": "https://in.naver.com/healthandmoney/contents/internal/1016864753223392",
+   "source": "자꾸남",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-3"
+  },
+  {
+   "title": "“누가 장릉혁을 이렇게 입혔어?” 알고 보니 벌써 세 번째 (중국어단어)",
+   "url": "https://in.naver.com/kj_vb/contents/internal/1015842870085344",
+   "source": "그린밤",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-4"
+  },
+  {
+   "title": "\"수확이 코앞인데 약 쳐도 될까요?\" 김장무 진딧물 수확 전 방제",
+   "url": "https://blog.naver.com/rekkon/224449418161",
+   "source": "래콘",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-4"
+  },
+  {
+   "title": "약사의 혼잣말 3기 소설 5권 7, 8화 스포 - 진시 마오마오 리쿠손",
+   "url": "https://blog.naver.com/mongsill44/224459563179",
+   "source": "리미",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "블로그",
+   "block": "PC-FEED-LECTURE-AIRS-4"
+  },
+  {
+   "title": "우리나라 멸종위기 동물 5종, 야생에 남은 개체 수는 얼마나 될까?",
+   "url": "https://in.naver.com/srhlmw22/contents/internal/1016134631773504",
+   "source": "kong",
+   "panel": "지식+",
+   "panelKey": "LECTURE",
+   "media": "인플루언서",
+   "block": "PC-FEED-LECTURE-AIRS-4"
+  },
+  {
+   "title": "현대차·한국어촌어항공단, 지역 맞춤형 車 개발 맞손",
+   "url": "https://n.news.naver.com/article/629/0000553181",
+   "source": "더팩트",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "뉴스",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "2천만원에 650km \"현대차 맞아?\" 쏘나타급 세단",
+   "url": "https://in.naver.com/gomdora/contents/internal/1013182078603712",
+   "source": "곰도라",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "마침내 드러난 쌍용 미니밴 KGM ME10 실체",
+   "url": "https://in.naver.com/softengine/contents/internal/1009292697391584",
+   "source": "소프트엔진",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "제네시스 G80 하이브리드와 G90 페이스리프트의 올해 말 출시 시점이 연기될까?",
+   "url": "https://in.naver.com/wizard/contents/internal/1013012267524608",
+   "source": "마법사",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "기아·협력사 110곳, 중대재해 예방 ‘안전 공동선언’",
+   "url": "https://n.news.naver.com/article/031/0001076173",
+   "source": "아이뉴스24",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "뉴스",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "너무 싸게 나와 첫날에만 1.5만대 팔려버린 국민 SUV",
+   "url": "https://in.naver.com/ddihw/contents/internal/1009325720060128",
+   "source": "변검",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "7시리즈 보닛 원래 이런가요?",
+   "url": "https://cafe.naver.com/true8/4027662?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo0MDI3NjYyLCJjYWZlVXJsIjoidHJ1ZTgiLCJpc3N1ZWRBdCI6MTc5NDk4Mjk1MDM4M30.yZt4ySa87qODYGLzzv8pIas_A3p7yfvQuXC61lhMpec",
+   "source": "★BMW매니아-bmw520d,523d,520i,530i,x1,x3,x4,x5,x6,x7 5시리즈",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "카페",
+   "block": "PC-FEED-CARGAME-MANUAL-1"
+  },
+  {
+   "title": "\"아빠들 눈 돌아갈 가격이네\" 2,250만원에 등장한 독일 7인승 SUV",
+   "url": "https://in.naver.com/oksk2002kr/contents/internal/1016434040124672",
+   "source": "티보",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "\"사전계약만 2,500건 몰렸다는\" 벤츠가 새로 만든 전기 패밀리 SUV",
+   "url": "https://in.naver.com/mindev/contents/internal/1012470368076032",
+   "source": "차쟁이개발자",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "\"7인승에 e-4WD 조합까지 된다고?\" KGM 렉스턴, 6가지 사양으로 정리해 보는 트림 구성",
+   "url": "https://blog.naver.com/cardogirl/224471090106",
+   "source": "차도녀",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "블로그",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "실물 뜨자마자 전 세계 부자들 계약금 쏘고 난리 난 1036마력 슈퍼카",
+   "url": "https://blog.naver.com/zerobity/224466603325",
+   "source": "테크리",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "블로그",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "\"독보적인 상품성 갖춘 세단\", 2026 아우디 A6 40 TFSI S-라인 시승기 제원 포토 정보",
+   "url": "https://blog.naver.com/kdh5137000/224460109933",
+   "source": "rookie9420",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "블로그",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "벤틀리 플라잉 스퍼 플러그인 하이브리드 리뷰, 최후의 끝판왕",
+   "url": "https://in.naver.com/kksr4040/contents/internal/1015677444724160",
+   "source": "DJ",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-MANUAL-3"
+  },
+  {
+   "title": "\"뒷자리만 좋을 줄 알았죠\" 운전석까지 탐나는 신형 BMW 7 시리즈",
+   "url": "https://in.naver.com/techtino/contents/internal/1015196008050848",
+   "source": "테크티노",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "너무 화가 납니다",
+   "url": "https://cafe.naver.com/bimmerwerks/1145892?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjoxMTQ1ODkyLCJjYWZlVXJsIjoiYmltbWVyd2Vya3MiLCJpc3N1ZWRBdCI6MTc5NDk4Mjk1MDM4NH0.QjHplf4e18Wh4ZjHvqHD1L7EKY25AeVM5JdXp4cc7mw",
+   "source": "비머베르크 BMW 동호회",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "카페",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "\"수입차가 3천만원대? 미니쿠퍼 3도어 실물보니 생각보다 괜찮다\"",
+   "url": "https://blog.naver.com/autocarnic/224465841341",
+   "source": "오프라이더",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "블로그",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "신형 아반떼, 언덕길서 뒤로 밀리더니 시동까지 꺼졌다",
+   "url": "https://in.naver.com/hi_it/contents/internal/1012922568147008",
+   "source": "HIIT",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "BMW X6 계약 직전인데... 12월 출시 예정 신형 X5까지 기다려야 할까?",
+   "url": "https://in.naver.com/heading100/contents/internal/1015695936992704",
+   "source": "필이",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "\"차값은 9100만원인데 월 18만원 냅니다\" 포르쉐 타이칸 중고 실제 월 비용 총정리",
+   "url": "https://in.naver.com/flythfk2/contents/internal/1016429534340832",
+   "source": "새벽리더",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  },
+  {
+   "title": "쏘렌토 6인승·7인승 차이, 가격 15만원보다 중요한 2열과 트렁크",
+   "url": "https://in.naver.com/ggam/contents/internal/1018021417522976",
+   "source": "오토센틱",
+   "panel": "자동차",
+   "panelKey": "CARGAME",
+   "media": "인플루언서",
+   "block": "PC-FEED-CARGAME-BEST-CONTENTS"
+  }
+ ],
+ "promptBlock": "[📊 네이버 홈판 인기글 실측 — 2026-11-18 비로그인 수집 86건]\n· 판 분포: 지식+ 24 · 자동차 20 · 건강 15 · 리빙 14 · 패션뷰티 13\n· 매체: 인플루언서 54% · 블로그 30% · 카페 8% · 뉴스 7%\n· 제목 길이: 최소 9자 / 중앙 36자 / 최대 67자 — 가장 많은 구간 25~36자 33건(38.4%)\n· 제목 장치: 숫자 55.8% · 금액·수치 24.4% · 따옴표 38.4% · 조건 한정 22.1% · 반전 8.1% · 고유명사 27.9%\n· 7각도 실측: ①1% ②13% ③10% ④6% ⑤13% ⑥38% ⑦5%\n· 이번 실측에서 '후기'로 끝나는 제목은 1건 — 홈판에서 가장 약한 끝맺음이다\n· 실제 제목 예(그대로 베끼지 말고 각도·길이·숫자 감각만 참고):\n  ⑥ \"MRI는 정상인데 무릎은 왜 자꾸 아플까?\"...'움직이는 연골' 진단가능해졌다 [헬스체크]\n  ② 지능이 높을수록 남들에게 절대 말하지 않는 것 5가지\n  ⑤ \"1억이 웬 말..\" 요즘 20대가 돈 못 모으는 진짜 이유\n  ③ 나영석 PD가 말하는 “나이 들수록 멋진 사람의 ‘의외의 특징’”",
+ "history": [
+  {
+   "date": "2026-11-18",
+   "total": 86,
+   "angles": {
+    "①": 1.2,
+    "②": 12.8,
+    "③": 10.5,
+    "④": 5.8,
+    "⑤": 12.8,
+    "⑥": 38.4,
+    "⑦": 4.7
+   },
+   "digitRate": 55.8,
+   "medianLen": 36,
+   "panels": {
+    "건강": 15,
+    "패션뷰티": 13,
+    "리빙": 14,
+    "지식+": 24,
+    "자동차": 20
+   }
+  }
+ ]
+}
