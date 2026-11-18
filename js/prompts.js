@@ -383,14 +383,56 @@ BS.prompts = (function () {
   }
 
   function factRules() {
-    return [
+    var S = BS.SOURCE_CHECK || {};
+    var L = [
       "[사실 규칙]",
       "1. 확인되지 않은 수치·날짜·정책 조건을 만들어내지 마라. 확실하지 않으면 '기관에서 확인 필요'라고 쓰고 확인 경로를 적어라.",
       "2. 의료 내용은 진단·처방을 단정하지 말고, 증상 설명과 '이럴 때는 진료' 기준, 검사 종류로 정리하라.",
       "3. 출처는 실제 존재하는 공식 사이트만 쓴다. 확신이 없으면 기관 대표 주소(https://www.mohw.go.kr, https://www.kdca.go.kr, https://www.nhis.or.kr, https://www.nts.go.kr, https://www.bokjiro.go.kr, https://www.cancer.go.kr, https://www.foodsafetykorea.go.kr, https://www.korea.kr)만 쓴다.",
       "4. 없는 논문·기사·URL을 지어내지 마라. 링크는 실제 열리는 주소여야 한다.",
       "5. 지연님이 주지 않은 경험담·후기·상담 사례는 만들지 마라."
-    ].join("\n");
+    ];
+    /* 📅 기억 의존 금지 — 최신 출처·날짜 기준 (v2.2.2 · 2026-11-19)
+       모든 프롬프트가 같은 factRules()를 쓰므로 여기에 한 번만 붙이면
+       원고·카페·제품·검수·스레드·멀티유즈·영상대본에 같이 들어간다. */
+    (S.rules || []).forEach(function (r, i) { L.push((6 + i) + ". " + r); });
+    return L.join("\n");
+  }
+
+  /* ---------- 🎬 절차형 4단계 연출표 블록 (v2.2.2 · 2026-11-19) ----------
+     영상 대본 프롬프트가 쓴다. 숏폼은 30초 네 구간, 롱폼은 장면별 5항목.
+     규격 본체는 config.js 의 BS.SHORTS_DIRECT 하나다. */
+  function shortsDirectBlock(fmt) {
+    var D = BS.SHORTS_DIRECT || {};
+    var f = fmt || {};
+    var L = [];
+    if (f.id === "long") {
+      L.push("[🎬 연출표 — 장면마다 화면·카메라·자막·효과음·BGM (" + (D.version || "v2.2.2") + ")]");
+      L.push("1. 한 장면을 한 덩어리로 쓰지 않는다. 장면마다 화면·카메라·자막·효과음·BGM을 따로 적는다.");
+      L.push("2. 카메라는 장면마다 바꾼다 — " + (D.camera || []).join("·") + " 중 1개. 같은 카메라를 세 장면 연속 쓰지 않는다.");
+      L.push("3. 효과음은 장면마다 1개만, 그 동작에서 실제로 나는 소리로 적는다. BGM은 " + (D.bgm || []).join("·") + " 중 하나로 적는다.");
+      L.push("4. 0~5초 훅 / 마지막 30초 결론·CTA는 숏폼과 같은 원칙(질문·반전으로 열고, 요구는 하나만)으로 잡는다.");
+      return L.join("\n");
+    }
+    L.push("[" + (D.title || "🎬 절차형 4단계 연출표") + " (" + (D.version || "v2.2.2") + ")]");
+    L.push("장면을 한 덩어리로 쓰지 않는다. 아래 네 구간으로 쪼개고, 단계마다 " + (D.columns || []).join("·") + "을 따로 적는다.");
+    (D.blocks || []).forEach(function (b, i) {
+      L.push((i + 1) + ". " + b.time + " " + b.name + " — " + (b.what || ""));
+    });
+    L.push("");
+    L.push("항목 규격: 카메라 = " + (D.camera || []).join("·") + " 중 1개 / 자막 = " + (D.caption || "12자 내외") + " / 효과음 = 단계마다 1개 / BGM = " + (D.bgm || []).join("·") + " 중 1개");
+    (D.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    L.push("절차 4단계는 장면 2~4에 나눠 담는다(한 장면에 두 단계까지). 장면 프롬프트에는 그 장면에 실제로 보이는 동작만 적고, 카메라 움직임은 한 구절로 넣는다.");
+    return L.join("\n");
+  }
+
+  /* ---------- 🔊 TTS·BGM 라이선스 블록 (v2.2.2 · 2026-11-19) ---------- */
+  function licenseBlock() {
+    var M = BS.MEDIA_LICENSE || {};
+    var L = [];
+    L.push("[" + (M.title || "🔊 TTS·BGM·이미지 — 상업 무료 라이선스만") + " (" + (M.version || "v2.2.2") + " · " + (M.checkedOn || "") + " 확인 기준)]");
+    (M.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    return L.join("\n");
   }
 
   /* ---------- 🛡️ 건강 카테고리 금지어 필터 (v2.2.1 · 2026-11-19 크리 님 합의) ----------
@@ -1975,12 +2017,14 @@ BS.prompts = (function () {
       user.push("- 금지어(훅·첫 댓글·자막 공통): " + (o.persona6.banned || []).join(" / "));
     }
     user.push("");
-    user.push("## 클립 20초 자막");
+    user.push("## 클립 20초 연출표");
     if (o.docMode === "product") user.push("- 상품 선정: (① 반복 노출 ② 수수료·가격대 ③ 40~60대 수요 중 확인한 것 한 줄)");
-    user.push("1) 0~3초: (" + (C.hookMax || 12) + "자 이내 훅)");
-    user.push("2) 3~10초: (" + (C.captionMax || 16) + "자 이내)");
-    user.push("3) 10~16초: (전환 멘트 또는 핵심 한 가지)");
-    user.push("4) 16~20초: (오늘 바로 할 행동 하나 또는 저장·댓글 유도" + (o.persona6 ? " — 마무리는 이 페르소나 방식: " + (o.persona6.closing || "") : "") + ")");
+    user.push("1) 0~3초: 훅 — 화면 (…), 카메라 (줌인·컷 중 1개), 자막 \"(" + (C.hookMax || 12) + "자 이내)\", 효과음 (…), BGM (유지)");
+    user.push("2) 4~8초: 원리 — 화면 (…), 카메라 (…), 자막 \"(" + (C.captionMax || 16) + "자 이내)\", 효과음 (…), BGM (…)");
+    user.push("3) 9~17초: 절차 2~3단계 — 화면 (…), 카메라 (…), 자막 \"(12자 내외)\", 효과음 (…), BGM (…)");
+    user.push("4) 18~20초: 결론 + CTA — 화면 (…), 카메라 (…), 자막 \"(12자 내외)\", 효과음 (…), BGM (고조·정지 중 1)" + (o.persona6 ? " — 마무리는 이 페르소나 방식: " + (o.persona6.closing || "") : ""));
+    user.push("- 카메라·BGM은 앞 줄과 다르게 적는다(같은 카메라 세 줄 연속 금지 · BGM은 유지·고조·정지 중 1개). 효과음은 그 동작에서 실제로 나는 소리 1개.");
+    user.push("- 30초 쇼츠로 늘려 올릴 때는 0~3초 훅 / 4~8초 원리 / 9~24초 절차 4단계 / 25~30초 CTA 규격을 쓴다(🎬 영상 대본과 같은 규격). BGM·효과음은 상업 무료 라이선스만 — 비상업 음성 모델(XTTS-v2)로 만든 소리는 넣지 않는다.");
     user.push("");
     user.push("## 해시태그");
     user.push("(3~5개, 이 글 주제의 실제 검색어로만)");
@@ -2268,12 +2312,17 @@ BS.prompts = (function () {
     lines.push("1. " + ((V.retention || {}).transitionRule || ""));
     lines.push("2. " + ((V.retention || {}).hookRule || ""));
     lines.push("");
+    var sdVideo = shortsDirectBlock(f);
+    if (sdVideo) { lines.push(sdVideo); lines.push(""); }
+    var licVideo = licenseBlock();
+    if (licVideo) { lines.push(licVideo); lines.push(""); }
     lines.push("[장면 프롬프트 규칙]");
     lines.push("1. 장면 프롬프트는 구글 Flow·Google Vids에 그대로 붙여넣는 한국어 지시문이다. 한 장면에 피사체·행동·구도·조명만 담백하게 적는다.");
     lines.push("2. 비율·인물·배경·글자 규격(한국인 실사, 실제 한국 배경, 한글 8자 이내 등)은 앱이 뒤에 자동으로 붙인다. 그래서 프롬프트에 비율(9:16·16:9)을 또 쓰지 않는다.");
     lines.push("3. 장면마다 같은 인물이 이어지도록 나이·옷·머리를 한 번 정해 두고 모든 장면에서 같게 쓴다.");
     lines.push("4. 손 클로즈업·글자 클로즈업처럼 AI가 자주 망가뜨리는 구도는 피한다. 손이 꼭 필요하면 '손동작은 단순하게'라고 적는다.");
     lines.push("5. 장면은 나레이션 순서와 같게 1번부터 붙인다. 장면 수를 넘기거나 줄이지 않는다.");
+    lines.push("6. 장면 프롬프트 안에 카메라 움직임을 한 구절로 넣는다(예: '천천히 줌인', '옆으로 패닝'). 연출표의 카메라와 어긋나지 않게 한다.");
     lines.push("");
     lines.push("[AI티 금지 — 공통]");
     lines.push(BS.SLOP_RULES.map(function (r, i) { return (i + 1) + ". " + r; }).join("\n"));
@@ -2325,6 +2374,38 @@ BS.prompts = (function () {
     parts.push("1) (화면 중앙·하단용 짧은 자막)");
     parts.push("2) (…)");
     parts.push("");
+    /* 🎬 절차형 4단계 연출표 (v2.2.2 · 2026-11-19)
+       숏폼 = 30초 네 구간(9~24초는 절차 4단계로 넷줄), 롱폼 = 장면별 5항목. */
+    var SD = BS.SHORTS_DIRECT || {};
+    if (f.id === "long") {
+      parts.push("## 연출표 (장면별)");
+      parts.push("(장면마다 한 줄 — 화면 / 카메라 / 자막 / 효과음 / BGM. 화면·자막 내용은 아래 장면 블록과 같게)");
+      parts.push("- 1장면: 화면 (…) · 카메라 (" + (SD.camera || []).join("·") + " 중 1) · 자막 (…) · 효과음 (…) · BGM (" + (SD.bgm || []).join("·") + " 중 1)");
+      parts.push("- 2장면: (같은 형식 — 앞 장면과 다른 카메라)");
+      parts.push("");
+    } else {
+      parts.push("## 30초 절차형 연출표");
+      parts.push("(네 구간과 시간은 바꾸지 않는다. 구간마다 다섯 항목을 따로 적고, 자막은 12자 내외. 절차는 동사로 시작하는 4단계로 나누고, 순서를 바꾸면 결과가 달라지는 구조로 만든다)");
+      var sdBlocks = [
+        { time: "0~3초", name: "훅" },
+        { time: "4~8초", name: "원리" },
+        { time: "9~24초", name: "절차 1단계" },
+        { time: "9~24초", name: "절차 2단계" },
+        { time: "9~24초", name: "절차 3단계" },
+        { time: "9~24초", name: "절차 4단계" },
+        { time: "25~30초", name: "결론 + CTA" }
+      ];
+      sdBlocks.forEach(function (b) {
+        parts.push("[" + b.time + " · " + b.name + "]");
+        parts.push("- 화면: (이 구간에 보이는 것 하나 — 카드·손·제품·도구)");
+        parts.push("- 카메라: (" + (SD.camera || []).join("·") + " 중 1개 — 앞 구간과 다르게)");
+        parts.push("- 자막: \"(12자 내외)\"");
+        parts.push("- 효과음: (이 동작에서 실제로 나는 소리 1개, 없으면 '없음')");
+        parts.push("- BGM: (" + (SD.bgm || []).join("·") + " 중 1개)");
+        parts.push("- 나레이션: (이 구간에서 읽는 문장, 20자 안팎)");
+      });
+      parts.push("");
+    }
     parts.push("## 장면 1");
     parts.push("- 구간: 0~6초");
     parts.push("- 화면: (무엇이 보이는지 한 줄)");
@@ -2341,14 +2422,22 @@ BS.prompts = (function () {
     parts.push("- 나레이션 길이: (공백 포함 약 몇 자)");
     parts.push("- 확인 필요: (원고에 없어 비워 둔 숫자·기한, 없으면 '없음')");
     parts.push("");
+    parts.push("## 라이선스 확인");
+    parts.push("- TTS: (모델명 · 라이선스명 · 확인 날짜·출처 — 1순위 MeloTTS·GPT-SoVITS·CosyVoice)");
+    parts.push("- BGM·효과음: (출처 · 라이선스명 · 표기 의무)");
+    parts.push("- 이미지·폰트: (출처 · 라이선스명)");
+    parts.push("- 쓰지 않은 것: (비상업 모델 XTTS-v2 등 — 대본에 그 모델을 쓰지 않았다는 한 줄)");
+    parts.push("");
     parts.push("[출력 — 지금 바로]");
     if (BS.PICK_FIRST && BS.PICK_FIRST.memo) {
       parts.push("1. 맨 위 '" + BS.PICK_FIRST.memo.head + "' 칸을 먼저 쓴다 — 대본을 쓰기 전에 상품이 ①·②·③을 넘는지 적는다. 원고에 없는 값(수수료율·반복 노출)은 지어내지 말고 '확인 필요'로 적는다.");
       parts.push("2. 위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("3. 나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
+      parts.push("4. 연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
     } else {
       parts.push("위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
+      parts.push("연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
     }
     return { system: videoSystemPrompt(blog, f, o.persona6), user: parts.join("\n") };
   }
@@ -2375,6 +2464,9 @@ BS.prompts = (function () {
     personaBlock: personaBlock,
     healthFilterBlock: healthFilterBlock,
     productSafetyBlock: productSafetyBlock,
+    shortsDirectBlock: shortsDirectBlock,
+    licenseBlock: licenseBlock,
+    factRules: factRules,
     isHealthCtx: isHealthCtx,
     imagePromptRequest: imagePromptRequest,
     composeImageInstruction: composeImageInstruction,

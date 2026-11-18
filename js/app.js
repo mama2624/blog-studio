@@ -1599,7 +1599,7 @@
   }
 
   /* ============================================================
-     ⚡ 원소스 멀티유즈 (v2.0.0) — 원고 1편 → 스레드 훅·첫 댓글 + 클립 20초 자막
+     ⚡ 원소스 멀티유즈 (v2.0.0 → v2.2.2 연출표) — 원고 1편 → 스레드 훅·첫 댓글 + 클립 20초 연출표
      ============================================================ */
   function parseMultiUse(text) {
     var md = String(text || "").replace(/\r/g, "").trim();
@@ -1620,7 +1620,7 @@
         if (inComment && t && !/^[-*•]$/.test(t)) out.firstComment.push(t);
       });
     }
-    var s2 = pickSection(secs, ["클립", "클립20초자막", "클립 20초 자막"]);
+    var s2 = pickSection(secs, ["클립 20초 연출표", "클립", "클립20초자막", "클립 20초 자막"]);
     if (s2) {
       s2.body.forEach(function (l) {
         var t = String(l).replace(/\*\*/g, "").trim().replace(/^[-*•]\s+/, "");
@@ -1704,7 +1704,7 @@
       m.firstComment.forEach(function (c) { L.push(c); });
     }
     L.push("");
-    L.push("【클립 20초 자막】");
+    L.push("【클립 20초 연출표】");
     m.clip.forEach(function (c) { L.push((c.time ? c.time + " " : "") + c.text); });
     if (m.hashtags) { L.push(""); L.push(m.hashtags); }
     return L.join("\n");
@@ -1731,8 +1731,8 @@
     var clip = (m.clip || []).map(function (c) {
       return '<div class="mu-line"><b>' + esc(c.time || (c.no + ")")) + '</b><span>' + esc(c.text) + '</span></div>';
     }).join("");
-    html.push('<div class="mu-block"><h4>🎬 클립 20초 무음 자막</h4>' + (clip || "<p>(없음)</p>") +
-      '<div class="mu-copy"><button type="button" class="btn small ghost" data-mu="clip">자막 4줄 복사</button></div></div>');
+    html.push('<div class="mu-block"><h4>🎬 클립 20초 연출표</h4>' + (clip || "<p>(없음)</p>") +
+      '<div class="mu-copy"><button type="button" class="btn small ghost" data-mu="clip">연출표 4줄 복사</button></div></div>');
     if (m.hashtags) {
       html.push('<div class="mu-block"><h4>#️⃣ 해시태그</h4><p>' + esc(m.hashtags) + '</p>' +
         '<div class="mu-copy"><button type="button" class="btn small ghost" data-mu="tags">해시태그 복사</button></div></div>');
@@ -1767,7 +1767,7 @@
     });
     runScriptJob({
       req: req,
-      label: "⚡ 멀티유즈: 스레드 훅과 클립 자막을 같이 뽑는 중…",
+      label: "⚡ 멀티유즈: 스레드 훅과 클립 연출표를 같이 뽑는 중…",
       statusEl: $("#multiuseStatus"),
       buttons: [$("#btnMultiUse")],
       gen: { temperature: 0.85, topP: 0.95 },
@@ -1785,7 +1785,7 @@
         state.multiuse = m;
         renderMultiUse();
         var disc = articleDisclosure(r);
-        setStatus($("#multiuseStatus"), "✅ 스레드 훅·첫 댓글·클립 20초 자막 준비됨 — 각각 복사해 쓰세요" +
+        setStatus($("#multiuseStatus"), "✅ 스레드 훅·첫 댓글·클립 20초 연출표 준비됨 — 각각 복사해 쓰세요" +
           (disc.needed ? " (대가성 문구는 훅 첫 줄에 넣었습니다)" : ""), "ok");
         return true;
       },
@@ -5622,7 +5622,7 @@
     return '<div class="hc-acts">' +
       '<button type="button" class="btn small primary hc-go" data-act="write" data-id="' + id + '">✍️ 이걸로 글쓰기</button>' +
       '<div class="hc-alt">' +
-        '<button type="button" class="btn small ghost" data-act="multiuse" data-id="' + id + '" title="원고가 나오면 스레드 훅·첫 댓글 + 클립 20초 자막까지 이어서 돕니다">⚡ 원고+멀티유즈</button>' +
+        '<button type="button" class="btn small ghost" data-act="multiuse" data-id="' + id + '" title="원고가 나오면 스레드 훅·첫 댓글 + 클립 20초 연출표까지 이어서 돕니다">⚡ 원고+멀티유즈</button>' +
         '<button type="button" class="btn small ghost" data-act="video" data-id="' + id + '" title="원고가 나오면 클립·릴스 대본까지 이어서 만듭니다">🎬 원고+클립</button>' +
       "</div>" +
       "</div>";
@@ -6084,7 +6084,7 @@
     if (!box) return;
     if (!HOT.chain) { box.hidden = true; box.innerHTML = ""; return; }
     var label = HOT.chain === "multiuse"
-      ? "원고가 나오면 ⚡ 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 자막)가 이어서 돕니다"
+      ? "원고가 나오면 ⚡ 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 연출표)가 이어서 돕니다"
       : "원고가 나오면 🎬 클립·릴스 대본이 이어서 만들어집니다";
     var nm = HOT.chainItem ? (HOT.chainItem.topic || HOT.chainItem.title || "") : "";
     box.hidden = false;
