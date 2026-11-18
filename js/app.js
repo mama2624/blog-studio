@@ -3781,7 +3781,8 @@
   /* 영상 응답 → { thumbs, hook, narration, captions, scenes, memo } */
   function parseVideoScript(text) {
     var heads = splitHeads(text);
-    var out = { thumbs: [], hook: "", pick: "", narration: "", captions: [], scenes: [], memo: "", raw: String(text || "") };
+    var out = { thumbs: [], hook: "", pick: "", narration: "", captions: [], scenes: [], memo: "",
+      direct: "", license: "", raw: String(text || "") };
     var seq = 0;
     heads.forEach(function (h) {
       var name = h.head;
@@ -3805,6 +3806,10 @@
         out.scenes.push(sc);
       } else if (/^작업\s*메모/.test(name)) {
         out.memo = body;
+      } else if (/^\d*\s*초\s*절차형\s*연출표|^절차형\s*연출표|^연출표/.test(name)) {
+        out.direct = cleanBlock(body);            // 🎬 v2.2.2 — 시간축 연출표
+      } else if (/^라이선스/.test(name)) {
+        out.license = cleanBlock(body);           // 🔊 v2.2.2 — TTS·BGM 라이선스 확인
       }
     });
     out.scenes.sort(function (a, b) { return a.no - b.no; });
@@ -4024,14 +4029,18 @@
     L.push("[자막 핵심 줄]");
     v.captions.forEach(function (c, i) { L.push((i + 1) + ") " + c); });
     L.push("");
+    if (v.direct) { L.push(""); L.push("[연출표]"); L.push(v.direct); }
+    L.push("");
     L.push("[장면별 Flow 프롬프트]");
     v.scenes.forEach(function (s) {
       L.push("");
       L.push(s.final || videoScenePrompt(s, f));
     });
     L.push("");
+    if (v.license) { L.push(""); L.push("[라이선스 확인]"); L.push(v.license); }
+    L.push("");
     L.push("[요청]");
-    L.push("이걸로 영상 만들어줘. 비율 " + f.ratioShort + ", 인물은 한국인 실사, 화면 글자는 한글, 음성은 AI티 없는 구어체로.");
+    L.push("이걸로 영상 만들어줘. 비율 " + f.ratioShort + ", 인물은 한국인 실사, 화면 글자는 한글, 음성은 AI티 없는 구어체로. TTS·BGM은 상업 무료 라이선스만 쓰고, 비상업 모델(XTTS-v2)은 쓰지 마.");
     return L.join("\n");
   }
 
@@ -4228,6 +4237,11 @@
       v.captions = val.split("\n").map(function (x) { return x.trim(); }).filter(function (x) { return x; });
     });
 
+    if (v.direct) {
+      card("🎬 절차형 4단계 연출표", "화면·카메라·자막·효과음·BGM",
+        v.direct, "📋 연출표 복사", "copy-direct", 18, function (val) { v.direct = val; });
+    }
+
     v.scenes.forEach(function (s, i) {
       if (!s.final) s.final = videoScenePrompt(s, f);
       var c = document.createElement("div");
@@ -4252,6 +4266,10 @@
       box.appendChild(c);
       autoGrow(ta);
     });
+
+    if (v.license) {
+      card("🔊 라이선스 확인", "상업 무료만", v.license, "📋 라이선스 복사", "copy-license", 6, function (val) { v.license = val; });
+    }
   }
 
   function convertToThreads() {
@@ -6852,6 +6870,8 @@
   BS.bloggerDefect = bloggerDefect;
   BS.bloggerMetaText = bloggerMetaText;
   BS.parseMultiUse = parseMultiUse;
+  BS.parseVideoScript = parseVideoScript;   // v2.2.2 — 연출표·라이선스 칸까지 읽는지 검증용
+  BS.renderVideoScript = renderVideoScript; // v2.2.2 — 결과 화면 카드 렌더 검증용
   BS.multiAllText = multiAllText;
   BS.articleDisclosure = articleDisclosure;
   BS.ensureDisclosure = ensureDisclosure;
