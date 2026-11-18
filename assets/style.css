@@ -668,6 +668,12 @@ textarea{resize:vertical;line-height:1.6}
 .wsnw-head strong{font-weight:800}
 .wsnw-sub{margin-top:4px;font-size:11.5px;line-height:1.55;color:#8a6a2c;word-break:keep-all}
 
+/* 🛡️ 발행 전 확인 — 건강 금지어·허위 체험 검사 (v2.2.1) */
+.ws-safety{border-color:#e2a1a1;border-left-color:#b8423a;background:#fff3f2}
+.ws-safety .wsnw-head{color:#8a2a22}
+.ws-safety .wsnw-sub{color:#8a3b31}
+.wsnw-hint{margin-top:3px;font-size:11px;line-height:1.5;color:#8a6a6a}
+
 /* 🔍 실제 구글 검색 출처 — 결과 화면 맨 위 (v1.9.3) */
 .ws-sources{margin:12px 0 16px;border:1.5px solid #dfe9e4;border-radius:12px;background:#f8fcfa;padding:11px 13px}
 .wss-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13.5px;color:#1d4f3d}

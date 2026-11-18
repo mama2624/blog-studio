@@ -361,6 +361,8 @@ BS.prompts = (function () {
       lines.push("[🛒 제휴 리뷰 깊이 — 스펙 나열로 끝내지 않는다 (" + (dep.version || "v1.9.5") + ")]");
       dep.rules.forEach(function (r, i) { lines.push((i + 2) + ". " + r); });
     }
+    var safety = productSafetyBlock();
+    if (safety) { lines.push(""); lines.push(safety); }
     if (platform.id === "travel" && platform.focus) {
       lines.push("[✈️ 여행 제휴 특화 — 이 다섯 가지를 기준으로 본문을 쓴다]");
       platform.focus.forEach(function (f, i) { lines.push("   " + (i + 1) + ") " + f); });
@@ -389,6 +391,48 @@ BS.prompts = (function () {
       "4. 없는 논문·기사·URL을 지어내지 마라. 링크는 실제 열리는 주소여야 한다.",
       "5. 지연님이 주지 않은 경험담·후기·상담 사례는 만들지 마라."
     ].join("\n");
+  }
+
+  /* ---------- 🛡️ 건강 카테고리 금지어 필터 (v2.2.1 · 2026-11-19 크리 님 합의) ----------
+     건강·식단·질병 카테고리(긍정예찬·긍정사랑 + 식단건강·증상병원 페르소나)에서만
+     식품표시광고법 제8조 위반 소지 표현을 엄격 금지한다. 영문 카드는 한국어 표현
+     자체를 쓰지 않으므로 원본 지침 v3의 영어 기준을 그대로 둔다. */
+  function personaIdsOf(o) {
+    var ids = [];
+    if (o && o.persona && o.persona.id) ids.push(o.persona.id);
+    if (o && o.persona6 && o.persona6.id) ids.push(o.persona6.id);
+    return ids;
+  }
+  function isHealthCtx(o) {
+    var H = BS.HEALTH_CLAIMS || {};
+    var blog = (o && o.blog) || {};
+    if (blog.lang === "en") return false;
+    if (BS.healthContext(blog.id, "")) return true;
+    var ids = personaIdsOf(o);
+    for (var i = 0; i < ids.length; i++) {
+      if ((H.personas || []).indexOf(ids[i]) >= 0) return true;
+    }
+    return false;
+  }
+  function healthFilterBlock(o) {
+    if (!isHealthCtx(o)) return "";
+    var H = BS.HEALTH_CLAIMS || {};
+    var L = [];
+    L.push("[🛡️ 건강 금지어 — " + (H.law || "식품표시광고법 제8조") + " · " + (H.version || "v2.2.1") + "]");
+    (H.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    L.push("[바꿔 쓰는 법 — 뜻은 살리고 효능 단정만 빼다]");
+    (H.rewrite || []).forEach(function (r) { L.push("   · " + r); });
+    return L.join("\n");
+  }
+  /* 제품·제휴 리뷰·추천 안전장치 — 허위 체험·미확인 수치 금지 (v2.2.1) */
+  function productSafetyBlock() {
+    var S = (BS.PRODUCT && BS.PRODUCT.reviewSafety) || {};
+    if (!S.rules || !S.rules.length) return "";
+    var L = [];
+    L.push("[🛡️ 제품 리뷰·추천 안전장치 — " + (S.version || "v2.2.1") + "]");
+    (S.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    L.push("   · 확인되지 않은 값은 반드시 '" + (S.unknownMark || "확인 필요") + "'로 남긴다. 금지: " + (S.fakeExperience || []).slice(0, 6).join(" / "));
+    return L.join("\n");
   }
 
   function outputRules() {
@@ -963,6 +1007,8 @@ BS.prompts = (function () {
     parts.push("오늘 날짜: " + todayKR());
     var personaLineCafe = personaBlock(o.persona, "article");
     if (personaLineCafe) { parts.push(""); parts.push(personaLineCafe); }
+    var healthCafe = healthFilterBlock(o);
+    if (healthCafe) { parts.push(""); parts.push(healthCafe); }
     var refBlock = articleRefBlock(o);
     if (refBlock) { parts.push(""); parts.push(refBlock); }
     parts.push("");
@@ -1005,6 +1051,10 @@ BS.prompts = (function () {
     parts.push("오늘 날짜: " + todayKR());
     var personaLineProduct = personaBlock(o.persona, "article");
     if (personaLineProduct) { parts.push(""); parts.push(personaLineProduct); }
+    var healthProduct = healthFilterBlock(o);
+    if (healthProduct) { parts.push(""); parts.push(healthProduct); }
+    var safetyProduct = productSafetyBlock();
+    if (safetyProduct) { parts.push(""); parts.push(safetyProduct); }
     var pickBlock = pickFirstBlock(o, false, false);
     if (pickBlock) { parts.push(""); parts.push(pickBlock); }
     var refBlock = articleRefBlock(o);
@@ -1050,6 +1100,8 @@ BS.prompts = (function () {
     parts.push("오늘 날짜: " + todayKR() + " (작성일에 이 날짜를 그대로 써라)");
     var personaLineBlog = personaBlock(o.persona, "article", { english: blog && blog.lang === "en" });
     if (personaLineBlog) { parts.push(""); parts.push(personaLineBlog); }
+    var healthBlog = healthFilterBlock(o);
+    if (healthBlog) { parts.push(""); parts.push(healthBlog); }
     var refBlock = articleRefBlock(o);
     if (refBlock) { parts.push(""); parts.push(refBlock); }
     parts.push("");
@@ -1090,6 +1142,8 @@ BS.prompts = (function () {
       parts.push("[모듈 B 적용 — 리뷰·비교·전환 글]");
       parts.push("- 독자가 망설일 이유 8개(가격·번거로움·신뢰·적합성·효과·부작용·유지 부담·미룰 이유)를 먼저 정리하고, 상위 3개를 FAQ와 맺음말에서 정직하게 답하라.");
       parts.push("- 단점은 단점대로 쓰고 조건을 붙여라. 근거가 없으면 '확인 필요: (자료)'로 남겨라.");
+      var safetyReview = productSafetyBlock();
+      if (safetyReview) { parts.push(""); parts.push(safetyReview); }
       parts.push("");
     }
 
@@ -1118,8 +1172,16 @@ BS.prompts = (function () {
       parts.push("- 지원금·세무·제도·보험·정책 안내처럼 실물 상품과 무관한 글에는 억지로 상품을 붙이지 않는다. 그 경우 공정위 대가성 문구도 함께 넣지 않고, '## 작업 메모'의 제휴 줄에 '주제 무관으로 생략'이라고 적는다.");
       parts.push("- 글 맨 끝이나 출처 위에 따로 박스로 넣지 마라. 독자가 '그럼 뭘 사야 하지?' 하는 대목(해당 소제목 직후나 FAQ 직후) 본문 안에 아래 형식의 한 문단을 넣는다.");
       parts.push("> 💡 여기서 잠깐, (상황)할 땐 이런 게 꼭 필요해요");
-      parts.push("> (상품명) — (이 글에서 추천하는 이유 2문장). (쿠팡 검색어: (검색어) / 추천 코드: " + BS.COUPANG_CODE + " · " + BS.DISCLOSURE + ")");
-      parts.push("- 상품명·선정 이유·쿠팡 검색어·추천 코드 " + BS.COUPANG_CODE + "·공정위 문구를 빠짐없이 넣고, 가격·할인율은 쓰지 마라(실제 제휴 URL은 앱이 붙인다).");
+      var pfA = BS.platform(o.affiliatePlatform || "coupang");
+      if (pfA.id === "coupang") {
+        parts.push("> (상품명) — (이 글에서 추천하는 이유 2문장). (쿠팡 검색어: (검색어) / 추천 코드: " + BS.COUPANG_CODE + " · " + BS.DISCLOSURE + ")");
+        parts.push("- 상품명·선정 이유·쿠팡 검색어·추천 코드 " + BS.COUPANG_CODE + "·공정위 문구를 빠짐없이 넣고, 가격·할인율은 쓰지 마라(실제 제휴 URL은 앱이 붙인다).");
+      } else {
+        /* 🛍️ v2.2.1 — 네이버 쇼핑커넥트·크리에이터샵·브랜드커넥트 팁.
+           대가성 문구는 플랫폼 공식 문구 그대로, 확정 표현만 쓴다. */
+        parts.push("> (상품명) — (이 글에서 추천하는 이유 2문장). (" + (pfA.short || "네이버") + " 검색어: (검색어) · " + pfA.disclosure + ")");
+        parts.push("- 상품명·선정 이유·검색어·공정위 문구를 빠짐없이 넣고, 가격·할인율은 쓰지 마라(실제 제휴 URL은 앱이 붙인다). 문구는 확정 표현('" + pfA.disclosure + "')만 쓰고 '제공받을 수 있습니다' 같은 조건부 표현으로 바꾸지 않는다.");
+      }
       parts.push("");
     }
 
@@ -1875,6 +1937,8 @@ BS.prompts = (function () {
       (T.rules || []).map(function (r, i) { return (i + 1) + ". " + r; }).join("\n")
     ];
     if (pb) { sysLines.push(""); sysLines.push(pb); }
+    var healthMu = healthFilterBlock(o);
+    if (healthMu) { sysLines.push(""); sysLines.push(healthMu); }
     sysLines.push("");
     sysLines.push(disclosureBlock(o));
     sysLines.push("");
@@ -1963,6 +2027,12 @@ BS.prompts = (function () {
     user.push("- 오늘 날짜: " + todayKR() + " ([기준 시점]과 연도·요일이 맞는지 대조)");
     var personaLineAudit = personaBlock(o.persona, "review");
     if (personaLineAudit) { user.push(""); user.push(personaLineAudit); }
+    var healthAudit = healthFilterBlock(o);
+    if (healthAudit) { user.push(""); user.push(healthAudit); }
+    if (docMode === "product" || o.mode === "review") {
+      var safetyAudit = productSafetyBlock();
+      if (safetyAudit) { user.push(""); user.push(safetyAudit); }
+    }
     if (docMode === "blog" && BS.GEM_RAW) {
       user.push("- 검수 기준의 뿌리도 시스템 지침의 젬스 v3.3 원본(지침 + 지식 파일 통째)이다. 원본과 작업실 규칙이 어긋나면 시스템 지침의 [⚖️ 우선순위]를 따른다.");
     }
@@ -2106,6 +2176,8 @@ BS.prompts = (function () {
     parts.push("- 스레드 계정 페르소나: " + (p.emoji || "") + " " + (p.label || "") + " — " + (p.tone || ""));
     var pbThread = personaBlock(o.persona6, "thread");
     if (pbThread) { parts.push(""); parts.push(pbThread); }
+    var healthThread = healthFilterBlock(o);
+    if (healthThread) { parts.push(""); parts.push(healthThread); }
     if (o.extraKeywords) parts.push("- 함께 넣을 키워드: " + o.extraKeywords);
     if (o.notes) parts.push("- 지연님 요청사항: " + o.notes);
     parts.push("- 타래 수: 4개 또는 5개(내용이 짧으면 4개). 5개면 1 후킹 / 2·3·4 핵심 / 5 마무리, 4개면 1 후킹 / 2·3 핵심 / 4 마무리.");
@@ -2230,6 +2302,8 @@ BS.prompts = (function () {
     parts.push("- 장면 수: " + (f.sceneCount || "4~5") + "개");
     if (o.persona6) parts.push("- 화자: " + (o.persona6.emoji || "") + " " + (o.persona6.label || "") + " — 나레이션·자막·마무리 모두 이 사람 목소리로 (금지어: " + (o.persona6.banned || []).join(" / ") + ")");
     if (o.notes) parts.push("- 지연님 요청사항: " + o.notes);
+    var healthVideo = healthFilterBlock(o);
+    if (healthVideo) { parts.push(""); parts.push(healthVideo); }
     parts.push("");
     parts.push("[출력 형식 — 머리말 이름과 순서를 바꾸지 않는다]");
     if (BS.PICK_FIRST && BS.PICK_FIRST.memo) {
@@ -2299,6 +2373,9 @@ BS.prompts = (function () {
     actionGuideBlock: actionGuideBlock,
     pickFirstBlock: pickFirstBlock,
     personaBlock: personaBlock,
+    healthFilterBlock: healthFilterBlock,
+    productSafetyBlock: productSafetyBlock,
+    isHealthCtx: isHealthCtx,
     imagePromptRequest: imagePromptRequest,
     composeImageInstruction: composeImageInstruction,
     thumbnailInstructions: thumbnailInstructions,

@@ -18,12 +18,14 @@
   var K_WEBSEARCH = "bs.webSearch";  // '0'이면 구글 실시간 검색 끔 (기본은 켜짐 · v1.9.3)
   var K_GH = "bs.ghToken";           // GitHub 토큰 — 화제템 '지금 새로 수집'용 (v2.1.0 · 이 브라우저에만)
   var K_PERSONA = (BS.PERSONAS && BS.PERSONAS.storagePrefix) || "bs.persona.";  // 🎭 페르소나 — 블로그별 기억 (v2.2.0)
+  var K_AFF = "bs.affPlatform";   // 🛍️ 블로그 모드 제휴 플랫폼 선택 (v2.2.1 — 쿠팡·쇼핑커넥트·브랜드커넥트)
 
   var state = {
     blog: BS.BLOGS[0],
     docMode: "blog",            // 글 용도 (v1.8.0) — blog · cafe · product
     persona: "",               // 🎭 현재 페르소나 id (v2.2.0) — 블로근 고르면 추천·직접 고르면 그 선택
     productPlatform: "coupang", // 제휴 플랫폼 (product 모드)
+    affiliatePlatform: "", // 🛍️ 블로그 모드 제휴 팁 플랫폼 (v2.2.1) — 빈 값이면 저장된 선택·쿠팡
     chips: [],
     kwSel: null,       // 오늘자 목록에서 고른 번호
     autoTopic: "",    // 앱이 주제칸에 자동으로 넣은 값 (사용자가 고친 값과 구분)
@@ -167,6 +169,86 @@
     sel.innerHTML = (BS.PRODUCT.platforms || []).map(function (p) {
       return '<option value="' + p.id + '"' + (p.id === state.productPlatform ? " selected" : "") + ">" + esc(p.label) + "</option>";
     }).join("");
+    if (!BS.platform(state.productPlatform)) state.productPlatform = "coupang";
+  }
+
+  /* ---------- 🛍️ 블로그 모드 제휴 플랫폼 선택 (v2.2.1 · 2026-11-19 크리 님 합의) ----------
+     기존에는 쿠팡파트너스 하나뿐이었다. 네이버 쇼핑커넥트·크리에이터샵과 브랜드커넥트를
+     같은 자리에서 고를 수 있게 하고, 링크 주소를 붙여넣으면 BS.platformFromUrl 로 자동 인식한다.
+     대가성 문구는 고른 플랫폼의 확정 문구만 붙인다(조건부 표현 금지). */
+  function affiliateChoices() {
+    var ids = (BS.PRODUCT && BS.PRODUCT.affiliateChoices) || ["coupang"];
+    var out = [];
+    ids.forEach(function (id) {
+      var pf = BS.platform(id);
+      if (pf && pf.id && out.indexOf(pf) < 0) out.push(pf);
+    });
+    if (!out.length) out.push(BS.platform("coupang"));
+    return out;
+  }
+  function savedAffiliate() {
+    var list = affiliateChoices();
+    var v = "";
+    try { v = localStorage.getItem(K_AFF) || ""; } catch (e) {}
+    for (var i = 0; i < list.length; i++) if (list[i].id === v) return v;
+    return "coupang";
+  }
+  function affiliateInfo() { return BS.platform(state.affiliatePlatform || "coupang"); }
+  function renderAffiliatePlatforms() {
+    var sel = $("#affiliatePlatform");
+    var list = affiliateChoices();
+    var cur = state.affiliatePlatform || savedAffiliate();
+    var ok = false;
+    for (var i = 0; i < list.length; i++) if (list[i].id === cur) ok = true;
+    state.affiliatePlatform = ok ? cur : "coupang";
+    if (sel) {
+      sel.innerHTML = list.map(function (p) {
+        return '<option value="' + p.id + '"' + (p.id === state.affiliatePlatform ? " selected" : "") + ">" + esc(p.label) + "</option>";
+      }).join("");
+    }
+    paintAffiliateNote();
+  }
+  function paintAffiliateNote() {
+    var pf = affiliateInfo();
+    var link = $("#coupangLink");
+    if (link) { link.setAttribute("placeholder", pf.linkHint || ""); link.placeholder = pf.linkHint || ""; }
+    var label = $("#affLinkLabel");
+    if (label) label.textContent = (pf.id === "coupang" ? "쿠팡파트너스" : pf.label) + " 링크";
+    var hint = $("#affLinkHint");
+    if (hint) {
+      hint.textContent = pf.id === "coupang"
+        ? "(비우면 '링크 붙여넣기' 자리로 나갑니다 · 코드 " + (BS.COUPANG_CODE || "") + ")"
+        : "(비우면 " + (pf.short || "네이버") + " 검색 링크로 나갑니다 · " + pf.disclosure + ")";
+    }
+  }
+  function setAffiliatePlatform(id, opts) {
+    var pf = BS.platform(id);
+    if (!pf || !pf.id) return false;
+    var known = affiliateChoices().some(function (x) { return x.id === pf.id; });
+    if (!known) return false;
+    if (state.affiliatePlatform === pf.id) return false;
+    state.affiliatePlatform = pf.id;
+    try { localStorage.setItem(K_AFF, pf.id); } catch (e) {}
+    var sel = $("#affiliatePlatform");
+    if (sel) sel.value = pf.id;
+    paintAffiliateNote();
+    if (!(opts && opts.silent)) toast("제휴 플랫폼을 " + pf.label + "(으)로 바꿨습니다", 2600);
+    return true;
+  }
+  /* 링크 주소 → 플랫폼 자동 인식 (수동 선택이 더 강하다 — 주소를 새로 넣을 때만 맞춘다) */
+  function autoDetectAffiliate(url, mode) {
+    var pid = BS.platformFromUrl(url);
+    if (!pid) return false;
+    var pf = BS.platform(pid);
+    if (mode === "product") {
+      if (state.productPlatform === pid) return false;
+      state.productPlatform = pid;
+      if ($("#productPlatform")) $("#productPlatform").value = pid;
+      paintProductNote();
+      toast("링크 주소로 제휴 플랫폼을 " + pf.label + "(으)로 맞췄습니다", 3000);
+      return true;
+    }
+    return setAffiliatePlatform(pid, { silent: false });
   }
 
   /* ---------- 🗞 행동 가이드 안내 · 🛒 상품 역순 체크리스트 (v1.9.8 · 2026-11-18) ----------
@@ -242,6 +324,7 @@
     show($("#affiliateSwitchRow"), !isCafe && !isProduct);
     show($("#ctaReviewRow"), !isCafe && !isProduct);
     show($("#coupangField"), !isCafe && !isProduct);
+    show($("#affiliatePlatformRow"), !isCafe && !isProduct);   // 🛍️ v2.2.1
     show($("#internalBox"), !isCafe && !isProduct);
     show($("#thumbBlock"), !isCafe);
     paintModeNote();
@@ -1570,9 +1653,9 @@
     } else {
       var md = String(r.md || "");
       if (/쿠팡\s*파트너스\s*활동의\s*일환/.test(md)) pid = "coupang";
-      else if (/쇼핑\s*커넥트\s*활동의\s*일환/.test(md)) pid = "brandconnect";
+      else if (/쇼핑\s*커넥트\s*활동의\s*일환/.test(md)) pid = /이에\s*따른\s*일정액의\s*수수료/.test(md) ? "creatorshop" : "brandconnect";
       else if (/여행\s*커넥트\s*활동의\s*일환/.test(md)) pid = "travel";
-      else if (/여기서\s*잠깐/.test(md)) pid = "coupang";
+      else if (/여기서\s*잠깐/.test(md)) pid = r.affiliatePlatform || state.affiliatePlatform || "coupang";
     }
     if (!pid) return { needed: false, text: "", platform: "" };
     return {
@@ -2463,15 +2546,20 @@
     return (top ? '<div class="disc disc-top">' : '<div class="disc">') + esc(t) + "</div>";
   }
 
-  /* 본문의 '💡 여기서 잠깐' 제휴 팁에 실제 링크를 바로 붙인다 (확정 규칙: 링크는 팁 안에) */
+  /* 본문의 '💡 여기서 잠깐' 제휴 팁에 실제 링크를 바로 붙인다 (확정 규칙: 링크는 팁 안에)
+     v2.2.1 — 쿠팡 뿐 아니라 네이버 쇼핑커넥트·크리에이터샵 링크도 같은 자리에 붙인다. */
   function tipAnchorHtml() {
-    var link = ($("#coupangLink").value || "").trim();
+    var pf = affiliateInfo();
+    var link = ($("#coupangLink") && $("#coupangLink").value || "").trim();
     var kw = (state.result && (state.result.affiliateKeyword || state.result.topic)) || "";
-    var href = link || ("https://www.coupang.com/np/search?q=" + encodeURIComponent(kw));
+    var href = link || ((pf.searchUrl || "https://www.coupang.com/np/search?q=") + encodeURIComponent(kw));
     return '<a href="' + href + '" target="_blank" rel="noopener nofollow" style="color:#b8452a;text-decoration:none;font-weight:700">👉 추천 상품 링크</a>';
   }
   function hasTip(md) { return /여기서\s*잠깐/.test(String(md || "")); }
-  function bodyHasDisclosure(md) { return /쿠팡파트너스\s*활동의\s*일환/.test(String(md || "")); }
+  /* 원고 본문에 어느 플랫폼이든 공정위 문구가 이미 있는지 (v2.2.1 — 네이버 커넥트까지) */
+  function bodyHasDisclosure(md) {
+    return /쿠팡\s*파트너스\s*활동의\s*일환|쇼핑\s*커넥트\s*활동의\s*일환|여행\s*커넥트\s*활동의\s*일환/.test(String(md || ""));
+  }
   /* 원고가 '주제 무관으로 생략'했다고 밝혔는지 (2026-11-17 제휴 연관성 규칙)
      생략한 글에는 앱이 상품 박스도 공정위 문구도 다시 붙이지 않는다. */
   function affiliateSkipped(md) { return /제휴[^\n]{0,20}(생략|무관|없음)/.test(String(md || "")); }
@@ -2511,8 +2599,9 @@
       }
     }
     if (disc && !bodyHasDisclosure(r.md)) {
-      if (inline) out.push('<p style="margin:14px 0 0;padding-top:10px;border-top:1px dashed #e0d8cc;font-size:13px;color:#8d857c">' + esc(BS.DISCLOSURE) + "</p>");
-      else out.push('<div class="disc">' + esc(BS.DISCLOSURE) + "</div>");
+      var discTxt = affiliateInfo().disclosure || BS.DISCLOSURE;
+      if (inline) out.push('<p style="margin:14px 0 0;padding-top:10px;border-top:1px dashed #e0d8cc;font-size:13px;color:#8d857c">' + esc(discTxt) + "</p>");
+      else out.push('<div class="disc">' + esc(discTxt) + "</div>");
     }
     return out.join("\n");
   }
@@ -2830,6 +2919,59 @@
     }
   }
 
+  /* 🛡️ 결과물 검사기 (v2.2.1 · 2026-11-19 크리 님 합의)
+     ① 건강 카테고리(긍정예찬·긍정사랑·식단건강·증상병원) — 식품표시광고법 제8조 위반 소지 표현
+     ② 제품·리뷰 모드 — 직접 써보지 않은 제품의 1인칭 사용 후기
+     원고를 자동으로 고치지 않고, 걸린 표현만 결과 맨 위에 짚어 준다(발행 전 확인). */
+  function healthScopeFor(r) {
+    if (!r) return false;
+    var pid = (BS.personas && typeof BS.personas.id === "function") ? BS.personas.id() : "";
+    return BS.healthContext(r.blogId, pid);
+  }
+  function safetyIssues(r) {
+    var out = { health: [], fake: [] };
+    if (!r) return out;
+    var md = String(r.md || "");
+    if (healthScopeFor(r)) out.health = BS.healthHits(md);
+    var S = (BS.PRODUCT && BS.PRODUCT.reviewSafety) || {};
+    var mode = resultMode(r);
+    if (mode === "product" || r.reviewMode) {
+      var memo = String(r.productMemo || "");
+      /* 지연님이 직접 써 본 기록이 메모에 있으면 경고하지 않는다(진짜 후기) */
+      var used = /직접\s*(사용|써|먹어)|써\s*본|사용\s*중/.test(memo);
+      if (!used) {
+        var hit = [];
+        (S.fakeExperience || []).forEach(function (p) {
+          if (md.indexOf(p) >= 0 && hit.indexOf(p) < 0) hit.push(p);
+        });
+        /* '직접 써보니'가 걸렸으면 그 안에 든 '써보니'는 따로 보여 주지 않는다 */
+        out.fake = hit.filter(function (p) {
+          return !hit.some(function (q) { return q !== p && q.indexOf(p) >= 0; });
+        });
+      }
+    }
+    return out;
+  }
+  function paintSafetyWarn() {
+    var el = $("#safetyWarn");
+    if (!el) return;
+    var S = BS.SAFETY_CHECK || {};
+    var iss = safetyIssues(state.result);
+    var lines = [];
+    if (iss.health.length) {
+      lines.push("<b>" + esc(S.healthLabel || "건강 금지어") + "</b> — " + esc(iss.health.join(" · ")) +
+        (S.healthHint ? '<div class="wsnw-hint">' + esc(S.healthHint) + "</div>" : ""));
+    }
+    if (iss.fake.length) {
+      lines.push("<b>" + esc(S.fakeLabel || "허위 체험 의심") + "</b> — " + esc(iss.fake.join(" · ")) +
+        (S.fakeHint ? '<div class="wsnw-hint">' + esc(S.fakeHint) + "</div>" : ""));
+    }
+    if (!lines.length) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.innerHTML = '<div class="wsnw-head"><strong>' + esc(S.head || "🛡️ 발행 전 확인 — 고칠 표현이 남아 있습니다") +
+      '</strong></div><div class="wsnw-sub">' + lines.join("<br>") + "</div>";
+  }
+
   /* ♻️ 실시간 검색 없이 작성된 원고 — 결과 화면 맨 위 경고 (v1.9.4 · 2026-11-18)
      검색 미지원 모델·검색 실패·토글 끔·검색 결과 0건으로 날짜·금액을 확인하지 못한 채
      원고가 나온 경우, 발행 전에 한 번 더 보라고 결과 맨 위에 분명하게 붙인다. */
@@ -3049,6 +3191,8 @@
       productPlatform: state.productPlatform,
       productUrl: ($("#productUrl") ? String($("#productUrl").value || "").trim() : ""),
       productMemo: ($("#productMemo") ? String($("#productMemo").value || "").trim() : ""),
+      affiliatePlatform: state.affiliatePlatform || "coupang",   // 🛍️ v2.2.1 — 대가성 문구·링크 카드 플랫폼
+      reviewMode: !!(($("#optReview") && $("#optReview").checked) || (modeId || docMode()) === "product"),
       topic: topic,
       ts: state.genTs || Date.now(),
       affiliateKeyword: topic,
@@ -3076,6 +3220,8 @@
     paintWebSearch();
     // ♻️ 검색 없이 작성됐으면 그 위에 경고를 먼저 보여 준다 (v1.9.4)
     paintNoSearchWarn();
+    // 🛡️ 건강 금지어·허위 체험 검사 (v2.2.1) — 발행 전 확인
+    paintSafetyWarn();
 
 
     renderTitles();
@@ -3210,6 +3356,7 @@
       toneId: $("#toneSelect").value,
       lengthBody: lengthObj.body,
       affiliate: md === "blog" ? $("#optAffiliate").checked : false,
+      affiliatePlatform: state.affiliatePlatform || "coupang",   // 🛍️ v2.2.1 — 쿠팡·쇼핑커넥트·브커
       cta: (md === "blog" && $("#ctaSelect")) ? $("#ctaSelect").value : "none",
       mode: reviewOn ? "review" : "",
       productPlatform: state.productPlatform,
@@ -4615,6 +4762,7 @@
       blogId: r.blogId,
       docMode: resultMode(r),
       productPlatform: r.productPlatform || "",
+      affiliatePlatform: r.affiliatePlatform || state.affiliatePlatform || "coupang",
       productUrl: r.productUrl || "",
       productMemo: r.productMemo || "",
       md: r.md
@@ -4668,6 +4816,7 @@
     }
     state.docMode = d.docMode || "blog";
     if (d.productPlatform) state.productPlatform = d.productPlatform;
+    if (d.affiliatePlatform) setAffiliatePlatform(d.affiliatePlatform, { silent: true });
     renderModes();
     setDocMode(state.docMode);
     if ($("#productUrl")) $("#productUrl").value = d.productUrl || "";
@@ -4689,6 +4838,7 @@
     renderTitles();
     renderArticle();
     updateRawViews();
+    paintSafetyWarn();
     show($("#bloggerPanel"), !!state.result.blogger);
     show($("#resultTabs"), !state.result.blogger);
     show($("#copyBar"), !state.result.blogger);
@@ -6314,6 +6464,7 @@
     renderModes();
     renderProductPlatforms();
     paintProductNote();
+    renderAffiliatePlatforms();   // 🛍️ v2.2.1 — 블로그 모드 제휴 플랫폼(쿠팡·쇼핑커넥트·브커)
     paintGuideNotes();
     setDocMode("blog");
 
@@ -6507,8 +6658,22 @@
         paintProductNote();
       });
     }
+    if ($("#affiliatePlatform")) {
+      $("#affiliatePlatform").addEventListener("change", function (e) {
+        setAffiliatePlatform(e.target.value || "coupang", { silent: true });
+        if (state.result && !isProductResult(state.result)) { renderArticle(); updateRawViews(); }
+        toast("제휴 플랫폼: " + affiliateInfo().label + " — 대가성 문구도 이 플랫폼 것으로 바뀝니다", 3000);
+      });
+    }
+    if ($("#coupangLink")) {
+      $("#coupangLink").addEventListener("input", function (e) {
+        autoDetectAffiliate(e && e.target ? e.target.value : "", "blog");
+        if (state.result && !isProductResult(state.result)) { renderArticle(); updateRawViews(); }
+      });
+    }
     if ($("#productUrl")) {
-      $("#productUrl").addEventListener("input", function () {
+      $("#productUrl").addEventListener("input", function (e) {
+        autoDetectAffiliate(e && e.target ? e.target.value : "", "product");
         if (state.result && isProductResult(state.result)) { renderArticle(); updateRawViews(); }
       });
     }
@@ -6721,6 +6886,28 @@
     defaultFor: BS.personaDefault,
     forBlog: BS.personaForBlog,
     byId: BS.persona
+  };
+
+  /* v2.2.1 검증용 — 🛡️ 안전장치 3종을 콘솔에서 직접 확인
+     예: BS.safety.issues()  ·  BS.safety.healthHits('면역 특효')  ·  BS.affiliate.set('creatorshop') */
+  BS.safety = {
+    issues: function () { return safetyIssues(state.result); },
+    scan: safetyIssues,
+    paint: paintSafetyWarn,
+    healthHits: BS.healthHits,
+    healthContext: BS.healthContext,
+    healthScopeFor: healthScopeFor,
+    platformFromUrl: BS.platformFromUrl
+  };
+  BS.affiliate = {
+    info: affiliateInfo,
+    choices: affiliateChoices,
+    set: setAffiliatePlatform,
+    render: renderAffiliatePlatforms,
+    detect: autoDetectAffiliate,
+    link: tipAnchorHtml,
+    html: affiliateHtml,
+    disclosure: function () { return articleDisclosure(state.result); }
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
