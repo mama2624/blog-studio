@@ -2153,8 +2153,9 @@
     h = h.replace(blueRe(), function (m, inner) {
       return inner.trim() ? hlMarkup("blue", inner, inline) : m;
     });
-    h = h.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, t, u) {
-      if (!/^https?:\/\//.test(u)) return t;
+    /* v2.3.0 — 제목에 대괄호가 든 기존 글('[2026 김장 준비] …')도 링크로 살린다.
+       CommonMark는 링크 텍스트 안의 짝 맞는 대괄호를 허용하므로 한 겹까지 받는다. */
+    h = h.replace(/\[((?:[^\[\]]|\[[^\[\]]*\])+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) {
       return '<a href="' + u + '" target="_blank" rel="noopener nofollow">' + t + "</a>";
     });
     h = h.replace(/`([^`]+)`/g, inline ? '<code style="font-family:monospace;background:#f4f1ec">$1</code>' : "<code>$1</code>");
@@ -6011,22 +6012,36 @@
 
   /* ---------------- 화면 전환 ---------------- */
   function hotSwitchView(view, opts) {
-    var v = view === "hot" ? "hot" : "write";
+    var v = view === "hot" ? "hot" : (view === "finish" ? "finish" : "write");
     HOT.view = v;
     show($("#studioLayout"), v === "write");
     show($("#hotView"), v === "hot");
+    show($("#finishView"), v === "finish");
     $$("#viewTabs .view-tab").forEach(function (b) {
       var on = b.getAttribute("data-view") === v;
       if (on) b.classList.add("on"); else b.classList.remove("on");
       b.setAttribute("aria-selected", on ? "true" : "false");
     });
+    var vtHint = $("#vtHint");
+    if (vtHint) vtHint.hidden = v !== "hot";   // 화제템 설명은 화제템 탭에서만
     if (v === "hot") {
       if (!HOT.loaded && !HOT.loading) hotLoad(false);
       else hotRender();
     }
+    /* 📎 v2.3.0 — 내 글 탭에 처음 들어올 때 그리고, 기존 글 목록이 늦게 도착했으면 다시 그린다 */
+    if (v === "finish") {
+      if (!FIN.booted) initFinish();
+      else {
+        finPaintBlogs();
+        finPaintCounts();
+        finRenderLinks();
+        finPaintPicked();
+        finPaintUpload();
+      }
+    }
     try {
       if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, "", v === "hot" ? "#hot" : (window.location.pathname + window.location.search));
+        window.history.replaceState(null, "", v === "hot" ? "#hot" : (v === "finish" ? "#finish" : (window.location.pathname + window.location.search)));
       }
     } catch (e) { /* file:// 등에서는 주소를 못 바꾼다 — 화면은 그대로 */ }
     if (!opts || !opts.silent) { try { window.scrollTo(0, 0); } catch (e2) {} }
@@ -6292,6 +6307,1449 @@
       (isProduct ? " · 제품 리뷰 모드" : "") + (HOT.chain ? " · 원고 뒤 " + (HOT.chain === "multiuse" ? "멀티유즈" : "클립 대본") + "까지" : ""), 3600);
     return true;
   }
+
+
+  /* ============================================================
+     📎 내 글 내부링크·후작업 (v2.3.0 · 2026-11-19 지연님 지시)
+
+     지연님 —
+       "[#30000] 내가 작성한 글 넣고 내부링크 걸어즐 탭이 없네?"
+       "[#30026] 스레드 릴스 클립 재성해 달라고 체크하는 칸도 없도"
+       "[#30039] 또 스레드나 릴스에 올리기 칸도 같이 만들어 줘야지"
+
+     ● 흐름: 내 글 붙여넣기 → 내부링크 추천·삽입(키 없이) → 체크한 작업만
+       차례로(스레드·릴스/클립·이미지 프롬프트·멀티유즈) → 올리기 요청 복사.
+     ● 원문은 고치지 않는다 — 연결 문장 한 줄만 문단 끝에 덧붙인다.
+     ● 이 화면은 글쓰기 탭의 state.result/state.blog 를 건드리지 않는다
+       (글쓰다 만 원고가 있는데 붙여넣은 글로 덮어쓰지 않게).
+     ============================================================ */
+  var FINCFG = BS.FINISH || {};
+  var FIN = {
+    blogId: "",
+    recos: [],          // 지금 보여 주는 후보 (추천 또는 검색 결과)
+    picked: {},         // url → {title,url,date,blog,score}
+    added: [],          // 직접 추가한 글
+    q: "",              // 기존 글 검색어
+    last: null,         // 내부링크 삽입 결과 {md, title, links, mode, placed}
+    threads: null,
+    video: null,
+    multi: null,
+    images: null,
+    run: false,
+    uploadAccounts: [],
+    uploadWhen: "",
+    uploadWhenCustom: "",
+    draftTimer: null,
+    matchTimer: null,
+    booted: false
+  };
+
+  function finNote(key) { return (FINCFG.notes || {})[key] || ""; }
+  function finBlogList() { return (BS.BLOGS || []).filter(function (b) { return b && b.id; }); }
+  function finBlog() { return BS.blogById(FIN.blogId) || finBlogList()[0] || { id: "mama2624", name: "생활픽스" }; }
+  function finHomeBlog(blog) {
+    /* 블로그 홈에서 원 글 제목·링크를 만들 때 쓰는 기본 주소 */
+    return (blog && blog.url) || "https://blog.naver.com/mama2624";
+  }
+  function finTitleValue() { return $("#finishTitle") ? String($("#finishTitle").value || "").trim() : ""; }
+  function finBodyValue() { return $("#finishBody") ? String($("#finishBody").value || "") : ""; }
+  function finTopicFrom(title, md) {
+    var t = String(title || "").trim();
+    if (t) return t;
+    var first = String(md || "").split(/\r?\n/).filter(function (l) { return l.trim() && !/^#/.test(l.trim()); })[0] || "";
+    return first.trim().slice(0, 60);
+  }
+
+  /* ---------------- 내부링크 후보 목록 ---------------- */
+  function finLoadAdded() {
+    try {
+      var j = JSON.parse(localStorage.getItem(FINCFG.storageAdded || "bs.finish.added") || "[]");
+      FIN.added = Array.isArray(j) ? j.filter(function (x) { return x && x.url; }) : [];
+    } catch (e) { FIN.added = []; }
+  }
+  function finSaveAdded() {
+    try { localStorage.setItem(FINCFG.storageAdded || "bs.finish.added", JSON.stringify(FIN.added)); } catch (e) {}
+  }
+
+  function finItems(blogId) {
+    var out = [];
+    if (blogId === "jinjin2624") {
+      (BS.INTERNAL_POSTS || []).forEach(function (p) {
+        if (p && p[0] && p[1]) out.push({ blog: "jinjin2624", title: p[0], url: p[1], date: "", tags: [], keywords: [], summary: "" });
+      });
+    } else {
+      var D = BS.INTERNAL_DATA || null;
+      ((D && D.items) || []).forEach(function (it) {
+        if (it && it.blog === blogId && it.url && it.title) out.push(it);
+      });
+    }
+    (FIN.added || []).forEach(function (a) {
+      if (!blogId || a.blog === blogId) out.push(a);
+    });
+    return out;
+  }
+  function finHasList(blogId) {
+    return finItems(blogId).length > 0;
+  }
+
+  /* ---------------- 관련도 계산 (순수 함수 — 단위 테스트용) ----------------
+     방향을 뒤집었다 — 내 글 낱말로 기존 글을 훑는 대신, 기존 글의 제목·태그·키워드가
+     내 제목/본문에 실제로 들어 있는지 본다. 조사가 붙어도('단열이') 부분 문자열로 걸린다. */
+  /* 조사·어미를 떼어 낱말 단위로 맞춘다.
+     부분 문자열(indexOf)로 맞추면 '절반입니다' 안의 '반입' 같은 것이 걸려 엉뚱한 글이 올라온다. */
+  var FIN_PARTICLES = ["입니다", "합니다", "했습니다", "했다", "한다", "하는", "되는", "되어", "에서", "에게",
+    "으로는", "으로", "부터", "까지", "보다", "처럼", "마다", "라고", "이라", "이고", "이면", "이다", "인데",
+    "지만", "는데", "면서", "한테", "에는", "에도", "에만", "에서는", "들이", "들을", "은", "는", "이", "가",
+    "을", "를", "의", "에", "도", "만", "과", "와", "로", "랑", "나", "께"];
+
+  function finNormWord(w) {
+    var t = String(w || "");
+    for (var i = 0; i < FIN_PARTICLES.length; i++) {
+      var p = FIN_PARTICLES[i];
+      if (t.length > p.length + 1 && t.slice(-p.length) === p) return t.slice(0, -p.length);
+    }
+    return t;
+  }
+
+  function finWordSet(text) {
+    var set = {};
+    String(text || "").toLowerCase().split(/[^0-9a-z가-힣]+/).forEach(function (w) {
+      if (w.length < 2) return;
+      set[w] = 1;
+      var n = finNormWord(w);
+      if (n.length >= 2) set[n] = 1;
+    });
+    return set;
+  }
+
+  function finScoreItem(item, titleSet, bodySet, df, N) {
+    var keys = ilTokens([item.title || "", (item.tags || []).join(" "), (item.keywords || []).join(" ")].join(" "));
+    var titleToks = finWordSet(item.title || "");
+    var raw = 0, hits = 0, spec = 0, titleStrong = 0, matched = [];
+    keys.forEach(function (t) {
+      var inTitle = !!titleSet[t];
+      var inBody = !inTitle && !!bodySet[t];
+      if (!inTitle && !inBody) return;
+      var d = (df && df[t]) || 1;
+      var idf = Math.log(((N || 1) + 1) / (d + 0.5)) + 0.15;   // 어디에나 나오는 낱말(겨울·비교)은 낮게
+      var w = Math.min(t.length, 6) * Math.max(0.25, idf);
+      raw += w * (inTitle ? 2.6 : 1);
+      hits += 1;
+      matched.push(t);
+      var strong = (t.length >= 3 && d <= Math.max(2, (N || 1) * 0.25)) || (t.length >= 2 && d <= 2);
+      if (strong) spec += 1;
+      if (strong && titleToks[t]) titleStrong += 1;
+    });
+    var norm = Math.sqrt(Math.max(4, Math.min(keys.length, 14)));
+    return { score: Math.round((raw / norm) * 10) / 10, hits: hits, spec: spec, titleStrong: titleStrong, matched: matched };
+  }
+
+  function finMatchList(title, body, blogId, items) {
+    var titleSet = finWordSet(title);
+    var bodySet = finWordSet(body);
+    var bodyLower = String(body || "").toLowerCase();
+    var list = items || finItems(blogId);
+    if (!list.length || String(body || "").trim().length < (FINCFG.minBody || 40)) return [];
+    var df = {}, N = list.length, seen = null;
+    list.forEach(function (it) {
+      if (!it || !it.url || !it.title) return;
+      seen = {};
+      ilTokens([it.title, (it.tags || []).join(" "), (it.keywords || []).join(" ")].join(" ")).forEach(function (t) {
+        if (seen[t]) return;
+        seen[t] = 1;
+        df[t] = (df[t] || 0) + 1;
+      });
+    });
+    var scored = [];
+    list.forEach(function (item) {
+      if (!item || !item.url || !item.title) return;
+      if (bodyLower.indexOf(String(item.url).toLowerCase()) >= 0) return;   // 이미 본문에 있는 링크
+      var m = finScoreItem(item, titleSet, bodySet, df, N);
+      if (m.hits < 2 || m.spec < 1) return;
+      if (!(m.titleStrong >= 1 || m.spec >= 2)) return;
+      if (m.score < 8) return;
+      scored.push({ title: item.title, url: item.url, date: item.date || "", blog: item.blog || blogId,
+        score: m.score, hits: m.hits, spec: m.spec, matched: m.matched });
+    });
+    if (!scored.length) return [];
+    scored.sort(function (a, b) { return b.score - a.score || (b.date > a.date ? 1 : -1); });
+    var best = scored[0].score;
+    return scored.filter(function (x) { return x.score >= Math.max(8, best * 0.45); }).slice(0, FINCFG.maxRecos || 8);
+  }
+
+  /* ---------------- 내부링크 삽입 (순수 함수) ---------------- */
+  function finBlockKind(first) {
+    var t = String(first || "").trim();
+    if (/^#{1,6}\s/.test(t)) return "h";
+    if (/^[-*•]\s/.test(t) || /^\d+[).]\s/.test(t)) return "li";
+    if (/^>/.test(t)) return "quote";
+    if (/^\|/.test(t)) return "table";
+    if (/^(```|\*\*\*|---|!\[)/.test(t)) return "skip";
+    return "p";
+  }
+
+  function finBlockScore(text, link) {
+    var set = finWordSet(text);
+    var keys = ilTokens([link.title || "", (link.tags || []).join(" "), (link.keywords || []).join(" ")].join(" "));
+    var s = 0, kw = "", kwLen = 0;
+    keys.forEach(function (k) {
+      if (!set[k]) return;
+      s += Math.min(k.length, 6);
+      if (k.length > kwLen) { kwLen = k.length; kw = k; }
+    });
+    return { score: s, kw: kw };
+  }
+
+  /* 붙여넣은 글에 이미 '함께 보면 좋은 글' 칸이 있으면(젬이 넣어 둔 경우)
+     지우지 않고 링크를 걷어 와서 아래 목록에 합친다 — 지연님이 이미 고른 링크를 잃지 않게. */
+  function finTakeGoodSection(md) {
+    var lines = String(md || "").replace(/\r/g, "").split("\n");
+    var out = [], skipped = [], skipping = false;
+    lines.forEach(function (l) {
+      var t = l.trim();
+      if (!skipping && /^#{1,3}\s*함께\s*보면\s*좋은\s*글\s*$/.test(t)) { skipping = true; return; }
+      if (skipping) {
+        if (/^#{1,2}\s+/.test(t)) { skipping = false; out.push(l); }
+        else skipped.push(l);
+        return;
+      }
+      out.push(l);
+    });
+    var existing = [];
+    skipped.forEach(function (l) {
+      var m = String(l).trim().match(/^[-*•]\s*\[(.+)\]\((https?:\/\/[^)\s]+)\)/);
+      if (m) existing.push({ title: m[1].trim(), url: m[2].trim() });
+    });
+    var text = out.join("\n").replace(/\s+$/, "");
+    return { md: text, existing: existing };
+  }
+
+  function finInsertMd(md, links, mode) {
+    var taken = finTakeGoodSection(md);
+    var src = taken.md;
+    var lines = src.split("\n");
+    var blocks = [], cur = null, curHead = "";
+    function closeBlock(endIdx) {
+      if (!cur) return;
+      cur.end = endIdx;
+      blocks.push(cur);
+      cur = null;
+    }
+    lines.forEach(function (l, i) {
+      if (!l.trim()) { closeBlock(i - 1); return; }
+      /* 소제목 줄은 따로 떼어 둔다 — '## 소제목' 바로 다음 줄에 본문이 붙어 있어도
+         그 본문 문단에 연결 문장을 넣을 수 있게 (마크다운은 빈 줄 없이도 이어진다) */
+      if (/^\s{0,3}#{1,6}\s+/.test(l)) {
+        closeBlock(i - 1);
+        curHead = l.replace(/^\s{0,3}#{1,6}\s+/, "").replace(/\*\*/g, "").trim();
+        blocks.push({ start: i, end: i, lines: [l], head: curHead });
+        return;
+      }
+      if (!cur) cur = { start: i, end: i, lines: [], head: curHead };
+      cur.lines.push(l);
+      cur.end = i;
+    });
+    closeBlock(lines.length - 1);
+    blocks.forEach(function (b) { b.text = b.lines.join(" ").trim(); b.kind = finBlockKind(b.lines[0]); });
+
+    var used = {}, inserts = {}, placed = [], inlineUsed = {};
+    var cap = mode === "bottom" ? 0 : (FINCFG.maxInsertInline || 3);
+    (links || []).forEach(function (link, li) {
+      if (!link || !link.url) return;
+      if (placed.length >= cap) return;
+      var best = -1, bestScore = 0, bestKw = "";
+      blocks.forEach(function (b, bi) {
+        if (b.kind !== "p" || used[bi] || b.text.length < 40) return;
+        var m = finBlockScore(b.text, link);
+        /* 그 문단이 속한 소제목이 링크와 맞으면 그 문단을 우선한다
+           ('## 절임배추 보관' 아래 문단 > 서두에서 스친 문단) */
+        if (b.head) {
+          var hm = finBlockScore(b.head, link);
+          if (hm.score) m = { score: m.score + hm.score * 0.8, kw: m.kw || hm.kw };
+        }
+        if (m.score > bestScore) { bestScore = m.score; best = bi; bestKw = m.kw; }
+      });
+      if (best < 0 || bestScore < 6) return;
+      used[best] = 1;
+      var tpl = bestKw
+        ? (FINCFG.sentences || [])[li % Math.max(1, (FINCFG.sentences || []).length)]
+        : (FINCFG.sentenceNoKw || [])[li % Math.max(1, (FINCFG.sentenceNoKw || []).length)];
+      if (!tpl) return;
+      var line = tpl.replace("{kw}", bestKw).replace("{title}", link.title || "").replace("{url}", link.url);
+      inserts[blocks[best].end] = (inserts[blocks[best].end] ? inserts[blocks[best].end] + "\n\n" : "") + line;
+      inlineUsed[link.url] = 1;
+      placed.push({ title: link.title || "", url: link.url, kw: bestKw,
+        where: "본문 " + (best + 1) + "번째 덩어리 뒤" + (bestKw ? " (" + bestKw + ")" : "") });
+    });
+
+    var out = [];
+    lines.forEach(function (l, i) {
+      out.push(l);
+      if (inserts[i]) { out.push(""); out.push(inserts[i]); }
+    });
+    var text = out.join("\n").replace(/[ \t]+$/gm, "").replace(/\s+$/, "");
+
+    var newBottom = (links || []).filter(function (l) {
+      if (!l || !l.url) return false;
+      if (mode === "both" || mode === "bottom") return true;
+      return !inlineUsed[l.url];
+    });
+    /* 젬이 넣어 둔 기존 링크는 앞에 그대로 두고, 새로 고른 링크만 뒤에 붙인다(주소 중복 제거) */
+    var merged = [], seenUrl = {};
+    taken.existing.forEach(function (l) {
+      if (seenUrl[l.url]) return;
+      seenUrl[l.url] = 1;
+      merged.push(l);
+    });
+    newBottom.forEach(function (l) {
+      if (seenUrl[l.url]) return;
+      seenUrl[l.url] = 1;
+      merged.push(l);
+      if (!inlineUsed[l.url]) placed.push({ title: l.title || "", url: l.url, kw: "", where: "글 맨 아래 '함께 보면 좋은 글'" });
+    });
+    if (merged.length) {
+      text += "\n\n## " + (FINCFG.bottomHeading || "함께 보면 좋은 글") + "\n" +
+        merged.map(function (l) { return "- [" + (l.title || "") + "](" + l.url + ")"; }).join("\n");
+    }
+    return { md: text, placed: placed, links: (links || []).slice(), kept: taken.existing.length };
+  }
+
+  /* ---------------- 마크다운 → 화면/스마트에디터 HTML ---------------- */
+  function finSections(md) {
+    var lines = String(md || "").replace(/\r/g, "").split("\n");
+    var secs = [{ h: "", body: [] }];
+    lines.forEach(function (raw) {
+      var m = raw.match(/^\s{0,3}##(?!#)\s*(.+?)\s*$/);
+      if (m) { secs.push({ h: m[1].replace(/\*\*/g, "").trim(), body: [] }); return; }
+      secs[secs.length - 1].body.push(raw);
+    });
+    return secs.filter(function (s) { return s.h || s.body.join("").trim(); });
+  }
+
+  function finHtml(md, rich) {
+    var H2 = rich ? ' style="font-size:1.25em;font-weight:700;line-height:1.4;margin:0;color:#222"' : "";
+    var parts = [];
+    finSections(md).forEach(function (sec) {
+      if (sec.h) parts.push("<h2" + H2 + ">" + esc(sec.h) + "</h2>");
+      /* 지연님이 쓴 문단은 그대로 둔다 — 문단을 쪼개면 연결 문장 안의 링크가 끊긴다 */
+      bodyToHtml(sec.body, { inline: !!rich, blocks: true, paraMax: 100000 }).forEach(function (b) { parts.push(b); });
+    });
+    return parts.join(rich ? "\n" + RICH_GAP + "\n" : "\n");
+  }
+
+  /* 이미지 프롬프트에 넣을 '글 요지' — 화면 기호·링크 주소를 걷어낸 평문 */
+  function finPlainText(md) {
+    return String(md || "")
+      .replace(/!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\([^)]*\)/g, " ")
+      .replace(/\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\((?:https?:)?\/\/[^)]*\)/g, "$1")
+      .replace(/\]\([^)]*\)/g, " ")
+      .replace(/https?:\/\/\S+/g, " ")
+      .replace(/^\s*#{1,6}\s*/gm, "")
+      .replace(/[*_`>|~]/g, " ")
+      .replace(/^\s*[-•]\s+/gm, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  /* ---------------- 화면 그리기 ---------------- */
+  function finPaintBlogs() {
+    var box = $("#finishBlogChips");
+    if (!box) return;
+    box.innerHTML = finBlogList().map(function (b) {
+      var on = b.id === FIN.blogId;
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-fin-blog="' + esc(b.id) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+        esc((b.emoji ? b.emoji + " " : "") + b.name) + "</button>";
+    }).join("");
+    var cnt = $("#finishBlogCount");
+    if (cnt) {
+      var n = finItems(FIN.blogId).length;
+      cnt.textContent = n ? n + "편에서 찾기" : "자동 목록 없음";
+    }
+    var note = $("#finishBlogNote");
+    if (note) {
+      var b = finBlog();
+      var msg = "";
+      if (FIN.blogId === "jinjin2624") msg = finNote("jinjin");
+      else if (!finHasList(FIN.blogId)) msg = finNote("noList");
+      else msg = (b.name || "") + " 기존 글 " + finItems(FIN.blogId).length + "편에서 제목·태그·요약을 대조해 찾습니다 (긍정사랑은 201편 관리대장에서 직접 고르기).";
+      note.textContent = msg;
+    }
+  }
+
+  function finIsPicked(url) { return !!(url && FIN.picked[url]); }
+  function finPickedList() {
+    var keys = Object.keys(FIN.picked);
+    return keys.map(function (k) { return FIN.picked[k]; });
+  }
+
+  function finPaintPicked() {
+    var box = $("#finishPicked");
+    if (!box) return;
+    var list = finPickedList();
+    if (!list.length) { box.hidden = true; box.innerHTML = ""; return; }
+    box.hidden = false;
+    box.innerHTML = '<div class="fin-picked-head">고른 내부링크 <span class="fp-n">' + list.length + "편 · 최대 " + (FINCFG.maxPick || 5) + '편</span></div>' +
+      '<div class="fin-chips">' + list.map(function (l) {
+        return '<span class="fin-chip"><span>' + esc(l.title) + "</span>" +
+          '<button type="button" data-fin-unpick="' + esc(l.url) + '" aria-label="빼기">✕</button></span>';
+      }).join("") + "</div>";
+    var cnt = $("#finishLinkCount");
+    if (cnt) cnt.textContent = list.length ? list.length + "편 선택" : "";
+  }
+
+  function finRenderLinks() {
+    var box = $("#finishLinkList");
+    if (!box) return;
+    var q = String($("#finishLinkSearch") ? $("#finishLinkSearch").value : "").trim().toLowerCase();
+    var list;
+    if (q) {
+      list = finItems(FIN.blogId).filter(function (it) {
+        return String(it.title || "").toLowerCase().indexOf(q) >= 0;
+      }).slice(0, 30);
+      var cnt0 = $("#finishLinkCount");
+      if (cnt0) cnt0.textContent = list.length + "편 검색됨";
+    } else {
+      list = FIN.recos;
+      var cnt1 = $("#finishLinkCount");
+      if (cnt1) cnt1.textContent = list.length ? list.length + "편 추천" : "";
+    }
+
+    if (!list.length) {
+      var note = q ? finNote("noMatch") : (finBodyValue().trim().length < (FINCFG.minBody || 40) ? finNote("noBody") : finNote("noMatch"));
+      box.innerHTML = '<div class="fin-links-empty">' + esc(note) + "</div>";
+      return;
+    }
+    box.innerHTML = list.map(function (it, i) {
+      var on = finIsPicked(it.url);
+      var date = it.date ? String(it.date).slice(2).replace(/-/g, ".") : "";
+      var score = it.score ? '<span class="fl-score">관련 ' + it.score + "</span>" : "";
+      return '<div class="fin-link' + (on ? " on" : "") + '" data-fin-url="' + esc(it.url) + '">' +
+        '<input type="checkbox" id="finPick' + i + '" data-fin-pick="' + esc(it.url) + '"' + (on ? " checked" : "") + ' aria-label="' + esc(it.title) + '">' +
+        '<label class="fl-main" for="finPick' + i + '">' +
+          '<span class="fl-title">' + esc(it.title) + "</span>" +
+          '<span class="fl-meta">' + (date ? "<span>" + esc(date) + "</span>" : "") +
+            "<span>" + esc(it.blog || FIN.blogId) + "</span></span>" +
+        "</label>" + score +
+        '<a class="fl-open" href="' + esc(it.url) + '" target="_blank" rel="noopener" aria-label="새 창에서 열기">↗</a>' +
+        "</div>";
+    }).join("");
+  }
+
+  function finPaintCounts() {
+    var el = $("#finishBodyCount");
+    if (el) {
+      var n = finBodyValue().length;
+      el.textContent = n ? n.toLocaleString() + "자" : "0자";
+    }
+    var meta = $("#finishMeta");
+    if (meta) {
+      var b = finBlog();
+      var t = finTitleValue();
+      meta.textContent = b.name + (t ? " · " + (t.length > 22 ? t.slice(0, 22) + "…" : t) : "");
+    }
+  }
+
+  /* ---------------- 붙여넣은 글 임시 기억 ---------------- */
+  function finSaveDraft() {
+    try {
+      localStorage.setItem(FINCFG.storageDraft || "bs.finish.draft", JSON.stringify({
+        blogId: FIN.blogId,
+        title: finTitleValue(),
+        body: finBodyValue(),
+        mode: $("#finishInsertMode") ? $("#finishInsertMode").value : "inline",
+        ai: !!($("#finishAiLink") && $("#finishAiLink").checked),
+        at: Date.now()
+      }));
+    } catch (e) { /* 저장 공간이 꽉 차면 붙여넣은 글은 화면에만 남는다 */ }
+  }
+  function finQueueSave() {
+    clearTimeout(FIN.draftTimer);
+    FIN.draftTimer = setTimeout(finSaveDraft, 420);
+  }
+  function finRestoreDraft() {
+    var j = null;
+    try { j = JSON.parse(localStorage.getItem(FINCFG.storageDraft || "bs.finish.draft") || "null"); } catch (e) { j = null; }
+    if (!j) return;
+    if (j.blogId && BS.blogById(j.blogId)) FIN.blogId = j.blogId;
+    if ($("#finishTitle") && j.title) $("#finishTitle").value = j.title;
+    if ($("#finishBody") && j.body) $("#finishBody").value = j.body;
+    if ($("#finishInsertMode") && j.mode) $("#finishInsertMode").value = j.mode;
+    if ($("#finishAiLink")) $("#finishAiLink").checked = !!j.ai;
+  }
+
+  function finRecalc(silent) {
+    var title = finTitleValue(), body = finBodyValue();
+    FIN.recos = finMatchList(title, body, FIN.blogId);
+    /* 이미 본문에 들어간 내부링크는 후보에서도 뺀다 */
+    finRenderLinks();
+    finPaintPicked();
+    finPaintCounts();
+    if (!silent) {
+      var note = $("#finishLinkNote");
+      if (note) {
+        note.textContent = FIN.recos.length
+          ? "관련도 순 " + FIN.recos.length + "편 — 체크해서 고르세요 (최대 " + (FINCFG.maxPick || 5) + "편). 본문 속 문단 끝에 자연스럽게 꽂거나, 글 맨 아래에 모을 수 있습니다."
+          : finNote("noMatch") === "" ? "" : (body.trim().length < (FINCFG.minBody || 40) ? finNote("noBody") : finNote("noMatch"));
+      }
+    }
+  }
+
+  /* ---------------- 선택 ---------------- */
+  function finPick(url, on) {
+    if (!url) return;
+    if (on) {
+      var item = null;
+      FIN.recos.concat(finItems(FIN.blogId)).some(function (it) { if (it.url === url) { item = it; return true; } return false; });
+      if (!item) return;
+      var max = FINCFG.maxPick || 5;
+      if (Object.keys(FIN.picked).length >= max) {
+        toast("내부링크는 한 글에 " + max + "편까지 고를 수 있습니다 — 하나를 빼고 다시 골라 주세요");
+        return;
+      }
+      FIN.picked[url] = { title: item.title, url: url, date: item.date || "", blog: item.blog || FIN.blogId, score: item.score || 0 };
+    } else {
+      delete FIN.picked[url];
+    }
+    finRenderLinks();
+    finPaintPicked();
+  }
+
+  /* ---------------- 생성 공통 (Gemini) ---------------- */
+  function finModel() { return localStorage.getItem(K_TEXT) || BS.DEFAULT_TEXT_MODEL; }
+  function finCall(system, user, gen) {
+    return new Promise(function (resolve, reject) {
+      var box = { arm: function () {}, disarm: function () {} };
+      geminiTextAuto(finModel(), system, user, box, gen || { temperature: 0.85, topP: 0.95 }).then(resolve, reject);
+    });
+  }
+  function finKeyOrExplain() {
+    if (getKey()) return true;
+    toast((FINCFG.notes || {}).needKey || "Gemini API 키가 필요합니다 — ⚙️ 설정에서 넣어 주세요", 4600);
+    return false;
+  }
+  function finDisclosure(md) {
+    var r = {
+      md: String(md || ""), docMode: "blog", blogId: FIN.blogId,
+      affiliatePlatform: state.affiliatePlatform || "coupang", topic: finTitleValue()
+    };
+    return articleDisclosure(r);
+  }
+
+  /* ---------------- 기능 A/B: 내부링크 삽입 ---------------- */
+  function finDoLink() {
+    var title = finTitleValue();
+    var body = finBodyValue().trim();
+    if (!body) return Promise.reject(new Error(finNote("emptyLink")));
+    var links = finPickedList();
+    if (!links.length) {
+      /* 체크한 것이 없으면 자동 매칭 상위 3편으로 진행 — '자동 매칭 & 글에 꽂기'의 뜻 */
+      finRecalc(true);
+      links = FIN.recos.slice(0, Math.min(3, FINCFG.maxInsertInline || 3)).map(function (it) {
+        return { title: it.title, url: it.url, date: it.date, blog: it.blog, score: it.score };
+      });
+      if (!links.length) return Promise.reject(new Error(finNote("noMatch")));
+      links.forEach(function (l) { FIN.picked[l.url] = l; });
+      finPaintPicked();
+    }
+    var mode = $("#finishInsertMode") ? $("#finishInsertMode").value : "inline";
+    var useAi = !!($("#finishAiLink") && $("#finishAiLink").checked) && !!getKey();
+
+    function finish(ins, via) {
+      FIN.last = { md: ins.md, title: title, links: ins.links, placed: ins.placed, mode: mode, via: via, at: Date.now() };
+      finRenderLinkResult();
+      var card = $("#finishResultCard");
+      if (card) card.hidden = false;
+      var empty = $("#finishResultEmpty");
+      if (empty) empty.hidden = true;
+      return FIN.last;
+    }
+
+    var offline = finInsertMd(body, links, mode);
+    if (!useAi) return Promise.resolve(finish(offline, "rule"));
+    return finCall(
+      "너는 한국 블로그 편집자다. 이미 완성된 글의 문장·수치·팩트는 한 글자도 바꾸지 않고, 지정한 기존 글 링크를 본문 흐름에 자연스럽게 잇는 문장 한 줄만 덧붙인다.",
+      ["아래 [내 글]을 그대로 살린다. 문장·순서·수치·강조는 고치지 않는다. 새로운 사실이나 추정을 더하지 않는다.",
+        "아래 [내부링크]의 제목과 주소를 글자 하나 바꾸지 않고 마크다운 링크 [제목](주소)로 쓴다.",
+        "각 링크는 내 글에서 그 주제를 다루는 문단의 끝에 연결 문장 한 줄로 넣는다. 붙일 곳이 없으면 글 맨 아래 '## " + (FINCFG.bottomHeading || "함께 보면 좋은 글") + "' 아래 목록으로 둔다.",
+        "본문 전체를 마크다운으로 그대로 돌려준다. 머리말·설명·코드블록은 쓰지 않는다.",
+        "",
+        "[내부링크]",
+        links.map(function (l) { return "- " + l.title + " | " + l.url; }).join("\n"),
+        "",
+        "[내 글]",
+        body].join("\n"),
+      { temperature: 0.35, topP: 0.9 }
+    ).then(function (text) {
+      var clean = String(text || "").replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "").trim();
+      var okLen = clean.length >= offline.md.length * 0.72;
+      var hasAll = links.every(function (l) { return clean.indexOf(l.url) >= 0; });
+      if (!okLen || !hasAll) {
+        toast("AI 다듬기 응답이 원문을 줄였거나 링크가 빠져 규칙 기반 결과로 보여 드립니다", 4200);
+        return finish(offline, "rule");
+      }
+      return finish({ md: clean, placed: offline.placed, links: links }, "ai");
+    }, function (err) {
+      toast("AI 다듬기에 실패해 규칙 기반으로 꽂았습니다 — " + (err && err.message ? err.message : err), 4200);
+      return finish(offline, "rule");
+    });
+  }
+
+  function finRenderLinkResult() {
+    var r = FIN.last;
+    var block = $("#finishLinkResult");
+    if (!r || !block) return;
+    block.hidden = false;
+    var tag = $("#finishLinkResultTag");
+    if (tag) tag.textContent = r.links.length + "편 · " + (r.via === "ai" ? "AI 다듬기" : "규칙 기반") + " · " + (r.mode === "bottom" ? "글 맨 아래" : r.mode === "both" ? "본문+글 아래" : "본문 속");
+    var note = $("#finishPlacedNote");
+    if (note) {
+      note.textContent = (FINCFG.notes || {}).inserted + " " +
+        r.placed.map(function (p) { return "· 「" + (p.title.length > 24 ? p.title.slice(0, 24) + "…" : p.title) + "」 → " + p.where; }).join("  ") +
+        (r.kept ? "  · 붙여넣은 글의 '함께 보면 좋은 글' 링크 " + r.kept + "편은 그대로 두었습니다" : "");
+    }
+    var prev = $("#finishPreview");
+    if (prev) prev.innerHTML = finHtml(r.md, false);
+    var raw = $("#finishRawMd");
+    if (raw) raw.value = r.md;
+    var meta = $("#finishResultMeta");
+    if (meta) meta.textContent = "원고 " + finBodyValue().length.toLocaleString() + "자 → " + r.md.length.toLocaleString() + "자";
+  }
+
+  /* ---------------- 기능 C: 스레드 ---------------- */
+  function finSourceMd() {
+    return FIN.last ? FIN.last.md : finBodyValue();
+  }
+  function finDoThread(source) {
+    if (!finKeyOrExplain()) return Promise.reject(new Error("Gemini API 키 없음"));
+    var md = String(source || "").trim();
+    if (!md) return Promise.reject(new Error(finNote("emptyLink")));
+    var blog = finBlog();
+    var title = finTitleValue();
+    var topic = finTopicFrom(title, md);
+    var persona = BS.threadPersona(blog.id, topic);
+    var persona6 = BS.persona(BS.personaForBlog(blog.id, personaPref(blog.id)));
+    var req;
+    try {
+      req = BS.prompts.threadsPrompt({
+        blog: blog, persona: persona, persona6: persona6,
+        source: md, topic: topic, title: title,
+        extraKeywords: "", notes: "지연님이 이미 쓴 글을 붙여넣은 후작업입니다. 원문 팩트를 그대로 쓰세요.",
+        disclosure: finDisclosure(md)
+      });
+    } catch (e) { return Promise.reject(e); }
+    setStatus($("#finishRunState"), '<span class="spin"></span>🧵 스레드 타래를 쓰는 중입니다…');
+    return finCall(req.system, req.user, { temperature: 0.85 }).then(function (text) {
+      var parsed = parseThreads(text);
+      if (!parsed) throw new Error("스레드 타래를 읽지 못했습니다 — 다시 한 번 실행해 주세요");
+      var disc = finDisclosure(md);
+      if (disc.needed) {
+        parsed.disclosure = disc.text;
+        if (parsed.threads.length) parsed.threads[0].text = ensureDisclosure(parsed.threads[0].text, disc.text);
+        parsed.comment = ensureNoDisclosure(parsed.comment, disc.text);
+      }
+      FIN.threads = parsed;
+      finRenderThreads();
+      var card = $("#finishResultCard");
+      if (card) card.hidden = false;
+      var empty = $("#finishResultEmpty");
+      if (empty) empty.hidden = true;
+      return parsed;
+    });
+  }
+
+  function finThreadsText(t) {
+    if (!t) return "";
+    var L = [];
+    (t.threads || []).forEach(function (it, i) {
+      L.push("[타래 " + (it.no || i + 1) + " · " + (it.role || "") + "]");
+      L.push(it.text);
+      L.push("");
+    });
+    if (t.comment) { L.push("[첫 댓글]"); L.push(t.comment); L.push(""); }
+    if (t.hashtags) { L.push("[해시태그]"); L.push(t.hashtags); }
+    return L.join("\n").trim();
+  }
+
+  function finRenderThreads() {
+    var t = FIN.threads;
+    var block = $("#finishThreadResult");
+    var box = $("#finishThreadList");
+    if (!t || !block || !box) return;
+    block.hidden = false;
+    var tag = $("#finishThreadTag");
+    if (tag) tag.textContent = "타래 " + t.threads.length + "개 · " + ((BS.threadAccountFor(FIN.blogId) || {}).handle || "업로드 계정은 아래에서");
+    box.innerHTML = "";
+    t.threads.forEach(function (it, i) {
+      var card = document.createElement("div");
+      card.className = "thread-card";
+      card.innerHTML =
+        '<div class="ipc-head"><strong>타래 ' + (it.no || i + 1) + '</strong>' +
+        '<span class="ipc-badge">' + esc(it.role || "") + '</span><span class="tc-len"></span></div>' +
+        '<textarea rows="2" spellcheck="false"></textarea>' +
+        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy">📋 이 타래 복사</button>' +
+        '<span class="ipc-tip">복사 → 스레드에 차례로 붙여넣기</span></div>';
+      var ta = card.querySelector("textarea");
+      var len = card.querySelector(".tc-len");
+      ta.value = it.text;
+      function paint() { if (len) len.textContent = ta.value.length + "자"; }
+      paint();
+      ta.addEventListener("input", function (e) { FIN.threads.threads[i].text = e.target.value; paint(); autoGrow(e.target); });
+      card.querySelector('[data-act="copy"]').addEventListener("click", function () {
+        copyPlain(FIN.threads.threads[i].text).then(function (ok) { toast(ok ? "타래 " + (i + 1) + "을 복사했습니다" : "복사 실패"); });
+      });
+      box.appendChild(card);
+      autoGrow(ta);
+    });
+    if (t.comment) {
+      var c = document.createElement("div");
+      c.className = "thread-card extra";
+      c.innerHTML = '<div class="ipc-head"><strong>첫 댓글</strong><span class="ipc-badge">링크는 여기에만</span></div>' +
+        '<textarea rows="2" spellcheck="false"></textarea>' +
+        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy">📋 첫 댓글 복사</button></div>';
+      var cta = c.querySelector("textarea");
+      cta.value = t.comment;
+      cta.addEventListener("input", function (e) { FIN.threads.comment = e.target.value; autoGrow(e.target); });
+      c.querySelector('[data-act="copy"]').addEventListener("click", function () {
+        copyPlain(FIN.threads.comment).then(function (ok) { toast(ok ? "첫 댓글을 복사했습니다" : "복사 실패"); });
+      });
+      box.appendChild(c);
+      autoGrow(cta);
+    }
+    if (t.hashtags) {
+      var h = document.createElement("div");
+      h.className = "thread-card extra";
+      h.innerHTML = '<div class="ipc-head"><strong>해시태그</strong></div><textarea rows="2" spellcheck="false" readonly></textarea>' +
+        '<div class="ipc-foot"><button type="button" class="btn small ghost" data-act="copy"># 해시태그 복사</button></div>';
+      h.querySelector("textarea").value = t.hashtags;
+      h.querySelector('[data-act="copy"]').addEventListener("click", function () {
+        copyPlain(t.hashtags).then(function (ok) { toast(ok ? "해시태그를 복사했습니다" : "복사 실패"); });
+      });
+      box.appendChild(h);
+    }
+    finPaintUpload();
+  }
+
+  /* ---------------- 기능 C: 릴스·클립 대본 ---------------- */
+  function finDoVideo(source) {
+    if (!finKeyOrExplain()) return Promise.reject(new Error("Gemini API 키 없음"));
+    var md = String(source || "").trim();
+    if (!md) return Promise.reject(new Error(finNote("emptyLink")));
+    var blog = finBlog();
+    var title = finTitleValue();
+    var f = BS.videoFormat("short");
+    var persona6 = BS.persona(BS.personaForBlog(blog.id, personaPref(blog.id)));
+    var req;
+    try {
+      req = BS.prompts.videoScriptPrompt({
+        blog: blog, fmt: f, formatId: f.id, persona6: persona6,
+        source: md, topic: finTopicFrom(title, md), title: title,
+        notes: "지연님이 이미 쓴 글을 붙여넣은 후작업입니다. 원문 팩트를 그대로 쓰세요."
+      });
+    } catch (e) { return Promise.reject(e); }
+    setStatus($("#finishRunState"), '<span class="spin"></span>🎬 릴스·클립 대본을 쓰는 중입니다…');
+    return finCall(req.system, req.user, { temperature: 0.8 }).then(function (text) {
+      var parsed = parseVideoScript(text);
+      if (!parsed) throw new Error("영상 대본을 읽지 못했습니다 — 다시 한 번 실행해 주세요");
+      parsed.format = f;
+      FIN.video = parsed;
+      finRenderVideo();
+      var card = $("#finishResultCard");
+      if (card) card.hidden = false;
+      var empty = $("#finishResultEmpty");
+      if (empty) empty.hidden = true;
+      return parsed;
+    });
+  }
+
+  function finVideoText(v) {
+    if (!v) return "";
+    var f = v.format || BS.videoFormat("short");
+    var L = ["[릴스·클립 숏폼 대본]"];
+    L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
+    if (v.pick) { L.push(""); L.push("[상품 선정]"); L.push(v.pick); }
+    if (v.thumbs.length) { L.push(""); L.push("[추천 썸네일 문구]"); v.thumbs.forEach(function (t, i) { L.push((i + 1) + ") " + t); }); }
+    L.push(""); L.push("[3초 후크]"); L.push(v.hook || "");
+    L.push(""); L.push("[나레이션]"); L.push(v.narration || "");
+    if (v.captions.length) { L.push(""); L.push("[자막]"); v.captions.forEach(function (c, i) { L.push((i + 1) + ") " + c); }); }
+    if (v.direct) { L.push(""); L.push("[연출표]"); L.push(v.direct); }
+    if (v.scenes.length) {
+      L.push(""); L.push("[장면별 Flow 프롬프트]");
+      v.scenes.forEach(function (s) { L.push(""); L.push(videoScenePrompt(s, f)); });
+    }
+    if (v.license) { L.push(""); L.push("[라이선스 확인]"); L.push(v.license); }
+    return L.join("\n");
+  }
+
+  function finRenderVideo() {
+    var v = FIN.video;
+    var block = $("#finishVideoResult");
+    var box = $("#finishVideoBody");
+    if (!v || !block || !box) return;
+    block.hidden = false;
+    var f = v.format || BS.videoFormat("short");
+    var tag = $("#finishVideoTag");
+    if (tag) tag.textContent = f.emoji + " " + f.label + " · " + f.seconds + " · " + f.ratio;
+    var html = [];
+    function vbox(title, body, copyLabel, copyText) {
+      return '<div class="fin-vbox"><h4>' + esc(title) + "</h4><p>" + esc(body || "") + "</p>" +
+        (copyText ? '<div class="fvb-foot"><button type="button" class="btn small ghost" data-fin-copy="' + esc(copyText) + '">' + esc(copyLabel) + "</button></div>" : "") +
+        "</div>";
+    }
+    if (v.pick) html.push(vbox("🛒 상품 선정 (대본보다 먼저)", v.pick));
+    if (v.thumbs && v.thumbs.length) html.push(vbox("🖼️ 추천 썸네일 문구", v.thumbs.map(function (t, i) { return (i + 1) + ") " + t; }).join("\n"), "문구 복사", v.thumbs.join("\n")));
+    html.push(vbox("⚡ 3초 후크", v.hook, "후크 복사", v.hook));
+    html.push(vbox("🎙️ 나레이션", v.narration, "나레이션 복사", v.narration));
+    if (v.captions && v.captions.length) html.push(vbox("💬 자막", v.captions.map(function (c, i) { return (i + 1) + ") " + c; }).join("\n"), "자막 복사", v.captions.join("\n")));
+    if (v.direct) html.push(vbox("🎬 연출표", v.direct, "연출표 복사", v.direct));
+    (v.scenes || []).forEach(function (s) {
+      var pr = videoScenePrompt(s, f);
+      html.push('<div class="fin-vbox"><div class="fvb-line"><span class="fvb-n">장면 ' + s.no + "</span> " + esc(s.view || "") + "</div>" +
+        (s.caption ? '<div class="fvb-line">자막: ' + esc(s.caption) + "</div>" : "") +
+        (s.narration ? '<div class="fvb-line">나레이션: ' + esc(s.narration) + "</div>" : "") +
+        '<div class="fvb-prompt">' + esc(pr) + "</div>" +
+        '<div class="fvb-foot"><button type="button" class="btn small ghost" data-fin-copy="' + esc(pr) + '">📋 장면 프롬프트 복사</button></div></div>');
+    });
+    if (v.license) html.push(vbox("🔊 라이선스 확인", v.license));
+    box.innerHTML = html.join("");
+    bindFinCopyButtons(box);
+    finPaintUpload();
+  }
+
+  /* ---------------- 기능 C: 이미지 프롬프트 세트 ---------------- */
+  function finDoImage(source) {
+    var md = String(source || "").trim();
+    if (!md) return Promise.reject(new Error(finNote("emptyLink")));
+    var blog = finBlog();
+    var title = finTitleValue();
+    var topic = finTopicFrom(title, md);
+    var cards = [];
+    /* 썸네일 2종 + 3:1 배너는 키 없이 바로 만들어진다 */
+    var gist = finPlainText(md).slice(0, 700);
+    (BS.prompts.thumbnailInstructions({ blog: blog, title: title || topic, topic: topic, summary: gist }) || []).forEach(function (t) {
+      cards.push({ role: t.role || "썸네일", prompt: t.prompt || "", kind: "thumb" });
+    });
+    cards.push({ role: "글 하단 3:1 허브 배너", prompt: BS.prompts.bannerInstruction(), kind: "banner" });
+    FIN.images = { cards: cards, body: false, at: Date.now() };
+    finRenderImages();
+    if (!getKey()) {
+      setStatus($("#finishRunState"), "🖼️ 썸네일 2종·배너 프롬프트는 준비됐습니다 — 본문 장면 이미지는 Gemini 키가 있어야 만듭니다", "");
+      return Promise.resolve(FIN.images);
+    }
+    var count = Math.min(9, Math.max(1, finSections(md).length - 1)) || 3;
+    var req;
+    try {
+      req = BS.prompts.imagePromptRequest({ blog: blog, topic: topic, summary: gist, count: count, withText: false, bySection: false });
+    } catch (e) { return Promise.resolve(FIN.images); }
+    setStatus($("#finishRunState"), '<span class="spin"></span>🖼️ 본문 장면 이미지 프롬프트를 고르는 중입니다…');
+    return finCall(req.system, req.user, null).then(function (text) {
+      var scenes = parseImageScenes(text, false);
+      if (scenes.length) {
+        scenes.slice(0, 9).forEach(function (p, i) {
+          cards.push({ role: "본문 장면 " + (i + 1) + (p.role ? " · " + p.role : ""), prompt: p.prompt, kind: "body" });
+        });
+        FIN.images = { cards: cards, body: true, at: Date.now() };
+        finRenderImages();
+      }
+      return FIN.images;
+    }, function (err) {
+      setStatus($("#finishRunState"), "⚠️ 본문 장면 프롬프트는 실패했습니다 — 썸네일·배너는 위에 준비됐습니다 (" + esc(err && err.message ? err.message : err) + ")", "warn");
+      return FIN.images;
+    });
+  }
+
+  function finRenderImages() {
+    var im = FIN.images;
+    var block = $("#finishImageResult");
+    var box = $("#finishImageBody");
+    if (!im || !block || !box) return;
+    block.hidden = false;
+    var tag = $("#finishImageTag");
+    var thumbs = im.cards.filter(function (c) { return c.kind === "thumb"; }).length;
+    if (tag) tag.textContent = "프롬프트 " + im.cards.length + "개 · 썸네일 " + thumbs + (im.body ? " · 본문 장면 포함" : " · 본문 장면은 키 필요");
+    box.innerHTML = im.cards.map(function (c, i) {
+      return '<div class="img-prompt-card"><div class="ipc-head"><strong>' + esc(c.role) + '</strong><span class="ipc-badge">' +
+        (c.kind === "body" ? "본문 1:1" : c.kind === "banner" ? "3:1 배너" : "대표 썸네일") + "</span></div>" +
+        '<textarea rows="5" spellcheck="false" data-fin-img="' + i + '">' + esc(c.prompt) + "</textarea>" +
+        '<div class="ipc-foot"><button type="button" class="btn small primary" data-fin-imgcopy="' + i + '">📋 프롬프트 복사</button>' +
+        '<a class="btn small ghost" href="https://gemini.google.com/" target="_blank" rel="noopener">제미나이 열기 ↗</a>' +
+        '<span class="ipc-tip">따옴표 안 영문만 복사됩니다</span></div></div>';
+    }).join("");
+    Array.prototype.slice.call(box.querySelectorAll("textarea[data-fin-img]")).forEach(function (ta) {
+      var i = parseInt(ta.getAttribute("data-fin-img"), 10);
+      ta.addEventListener("input", function (e) { FIN.images.cards[i].prompt = e.target.value; autoGrow(e.target); });
+      autoGrow(ta);
+    });
+    Array.prototype.slice.call(box.querySelectorAll("[data-fin-imgcopy]")).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var i = parseInt(b.getAttribute("data-fin-imgcopy"), 10);
+        var p = FIN.images.cards[i];
+        copyPlain(p.prompt).then(function (ok) { toast(ok ? "프롬프트를 복사했습니다 — 제미나이에 붙여넣으세요" : "복사 실패 — 지시문을 직접 선택해 주세요"); });
+      });
+    });
+    finPaintUpload();
+  }
+
+  /* ---------------- 기능 C: 멀티유즈 ---------------- */
+  function finDoMulti(source) {
+    if (!finKeyOrExplain()) return Promise.reject(new Error("Gemini API 키 없음"));
+    var md = String(source || "").trim();
+    if (!md) return Promise.reject(new Error(finNote("emptyLink")));
+    var blog = finBlog();
+    var title = finTitleValue();
+    var persona6 = BS.persona(BS.personaForBlog(blog.id, personaPref(blog.id)));
+    var req = BS.prompts.multiUsePrompt({
+      article: md, topic: finTopicFrom(title, md), title: title,
+      blog: blog, docMode: "blog", persona6: persona6, disclosure: finDisclosure(md)
+    });
+    setStatus($("#finishRunState"), '<span class="spin"></span>⚡ 스레드 훅·20초 클립을 같이 뽑는 중입니다…');
+    return finCall(req.system, req.user, { temperature: 0.85, topP: 0.95 }).then(function (text) {
+      var m = parseMultiUse(text);
+      if (!m) throw new Error("멀티유즈 응답을 읽지 못했습니다 — 다시 한 번 실행해 주세요");
+      var disc = finDisclosure(md);
+      if (disc.needed) {
+        m.disclosure = disc.text;
+        m.hook = ensureDisclosure(m.hook, disc.text);
+        m.firstComment = (m.firstComment || []).filter(function (c) {
+          return String(c).replace(/\s+/g, " ").indexOf(disc.text.replace(/\s+/g, " ")) < 0;
+        });
+      }
+      FIN.multi = m;
+      finRenderMulti();
+      var card = $("#finishResultCard");
+      if (card) card.hidden = false;
+      var empty = $("#finishResultEmpty");
+      if (empty) empty.hidden = true;
+      return m;
+    });
+  }
+
+  function finMultiText(m) {
+    if (!m) return "";
+    var L = [];
+    if (m.productPick) L.push("상품 선정: " + m.productPick);
+    L.push("【스레드】");
+    L.push(m.hook || "");
+    if ((m.firstComment || []).length) { L.push(""); L.push("[첫 댓글]"); m.firstComment.forEach(function (c) { L.push(c); }); }
+    L.push(""); L.push("【클립 20초 연출표】");
+    (m.clip || []).forEach(function (c) { L.push((c.time ? c.time + " " : "") + c.text); });
+    if (m.hashtags) { L.push(""); L.push(m.hashtags); }
+    return L.join("\n");
+  }
+
+  function finRenderMulti() {
+    var m = FIN.multi;
+    var block = $("#finishMultiResult");
+    var box = $("#finishMultiBody");
+    if (!m || !block || !box) return;
+    block.hidden = false;
+    var html = [];
+    if (m.disclosure) html.push('<div class="mu-disc">🧾 대가성 문구가 훅 첫 줄에 들어갔습니다 · ' + esc((BS.SNS_DISCLOSURE || {}).law || "") + "</div>");
+    if (m.productPick) html.push('<div class="mu-block"><h4>🛒 상품 선정</h4><p>' + esc(m.productPick) + "</p></div>");
+    html.push('<div class="mu-block"><h4>🧵 스레드 본문 훅</h4><p>' + esc(m.hook || "(없음)") + '</p><div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc(m.hook || "") + '">훅 복사</button></div></div>');
+    html.push('<div class="mu-block"><h4>💬 첫 댓글</h4><p>' + esc((m.firstComment || []).join("\n") || "(없음)") + '</p><div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc((m.firstComment || []).join("\n")) + '">첫 댓글 복사</button></div></div>');
+    var clip = (m.clip || []).map(function (c) {
+      return '<div class="mu-line"><b>' + esc(c.time || (c.no + ")")) + "</b><span>" + esc(c.text) + "</span></div>";
+    }).join("");
+    html.push('<div class="mu-block"><h4>🎬 클립 20초 연출표</h4>' + (clip || "<p>(없음)</p>") +
+      '<div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc((m.clip || []).map(function (c) { return (c.time ? c.time + " " : "") + c.text; }).join("\n")) + '">연출표 복사</button></div></div>');
+    if (m.hashtags) html.push('<div class="mu-block"><h4>#️⃣ 해시태그</h4><p>' + esc(m.hashtags) + '</p><div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc(m.hashtags) + '">해시태그 복사</button></div></div>');
+    box.innerHTML = html.join("");
+    bindFinCopyButtons(box);
+    finPaintUpload();
+  }
+
+  function bindFinCopyButtons(root) {
+    if (!root) return;
+    Array.prototype.slice.call(root.querySelectorAll("[data-fin-copy]")).forEach(function (b) {
+      b.addEventListener("click", function () {
+        copyPlain(b.getAttribute("data-fin-copy") || "").then(function (ok) { toast(ok ? "복사했습니다" : "복사 실패"); });
+      });
+    });
+  }
+
+  /* ---------------- 📮 올리기 (스레드·릴스·클립) ---------------- */
+  function finUploadCfg() { return FINCFG.upload || {}; }
+  function finUploadAccountsAll() {
+    return ((BS.THREAD_UPLOAD || {}).accounts || []);
+  }
+  function finLoadUploadPref() {
+    var j = null;
+    try { j = JSON.parse(localStorage.getItem(FINCFG.storageUpload || "bs.finish.upload") || "null"); } catch (e) { j = null; }
+    if (j && Array.isArray(j.accounts)) FIN.uploadAccounts = j.accounts.filter(function (id) { return BS.threadAccountById(id); });
+    if (j && j.when) FIN.uploadWhen = j.when;
+    if (j && j.whenCustom) FIN.uploadWhenCustom = j.whenCustom;
+    if (!FIN.uploadAccounts.length) {
+      var def = BS.threadAccountFor(FIN.blogId) || finUploadAccountsAll()[0];
+      if (def) FIN.uploadAccounts = [def.id];
+    }
+    if (!FIN.uploadWhen) FIN.uploadWhen = (BS.THREAD_UPLOAD || {}).defaultWhen || "now";
+  }
+  function finSaveUploadPref() {
+    try {
+      localStorage.setItem(FINCFG.storageUpload || "bs.finish.upload", JSON.stringify({
+        accounts: FIN.uploadAccounts, when: FIN.uploadWhen, whenCustom: FIN.uploadWhenCustom
+      }));
+    } catch (e) {}
+  }
+  function finSelectedAccounts() {
+    return FIN.uploadAccounts.map(function (id) { return BS.threadAccountById(id); }).filter(Boolean);
+  }
+  function finWhenText(now) {
+    now = (now instanceof Date) ? now : new Date();
+    var custom = String(FIN.uploadWhenCustom || "").trim();
+    if (custom) return custom;
+    var U = BS.THREAD_UPLOAD || {};
+    var id = FIN.uploadWhen || U.defaultWhen || "now";
+    var evening = typeof U.eveningHour === "number" ? U.eveningHour : 20;
+    var morning = typeof U.morningHour === "number" ? U.morningHour : 8;
+    var d;
+    if (id === "h1") { d = new Date(now.getTime() + 3600000); return "1시간 뒤 (" + dayWord(d, now) + " " + clockText(d) + ")"; }
+    if (id === "tonight") {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), evening, 0, 0);
+      if (d.getTime() <= now.getTime()) return "오늘 저녁 (오늘 안, 가능한 빨리)";
+      return "오늘 저녁 (" + dayWord(d, now) + " " + clockText(d) + ")";
+    }
+    if (id === "tomorrow8") {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, morning, 0, 0);
+      return "내일 아침 " + morning + "시 (" + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + clockText(d) + ")";
+    }
+    return "지금 바로";
+  }
+
+  function finPaintUpload() {
+    var box = $("#finishUploadBox");
+    if (!box) return;
+    var desc = $("#finishUploadDesc");
+    if (desc) desc.textContent = finUploadCfg().desc || "";
+    var accts = finUploadAccountsAll();
+    var ach = $("#finishUploadAccounts");
+    if (ach) {
+      ach.innerHTML = accts.map(function (a) {
+        var on = FIN.uploadAccounts.indexOf(a.id) >= 0;
+        return '<button type="button" class="sux-chip' + (on ? " active" : "") + '" data-fin-acct="' + esc(a.id) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+          (a.emoji ? '<span class="sux-emoji">' + esc(a.emoji) + "</span>" : "") +
+          '<span class="sux-h">' + esc(a.handle) + "</span>" +
+          '<span class="sux-s">' + esc(a.label + " · " + a.sub) + "</span></button>";
+      }).join("");
+    }
+    var whens = (BS.THREAD_UPLOAD || {}).whens || [];
+    var custom = String(FIN.uploadWhenCustom || "").trim();
+    var wch = $("#finishUploadWhens");
+    if (wch) {
+      wch.innerHTML = whens.map(function (w) {
+        var on = !custom && (FIN.uploadWhen || "now") === w.id;
+        return '<button type="button" class="sux-chip when' + (on ? " active" : "") + '" data-fin-when="' + esc(w.id) + '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(w.label) + "</button>";
+      }).join("");
+    }
+    var inp = $("#finishUploadWhenInput");
+    if (inp) {
+      inp.placeholder = (BS.THREAD_UPLOAD || {}).inputHint || "직접 입력 — 예: 내일 오전 9시 30분";
+      if (document.activeElement !== inp && inp.value !== String(FIN.uploadWhenCustom || "")) inp.value = String(FIN.uploadWhenCustom || "");
+    }
+    var hint = $("#finishUploadHint");
+    if (hint) {
+      var names = finSelectedAccounts().map(function (a) { return a.handle; }).join(", ") || "계정을 골라 주세요";
+      var hasContent = !!(FIN.threads || FIN.video);
+      hint.textContent = "계정 " + names + " / 시간 " + finWhenText() +
+        (hasContent ? "" : " · " + (finUploadCfg().noContent || ""));
+    }
+    var urlInp = $("#finishArticleUrl");
+    if (urlInp && !urlInp.value && finStoredArticleUrl()) urlInp.value = finStoredArticleUrl();
+  }
+  function finStoredArticleUrl() {
+    try { return localStorage.getItem("bs.finish.articleUrl") || ""; } catch (e) { return ""; }
+  }
+
+  function finUploadRequestText() {
+    var title = finTitleValue() || "(제목 없음)";
+    var blog = finBlog();
+    var url = $("#finishArticleUrl") ? String($("#finishArticleUrl").value || "").trim() : "";
+    var accts = finSelectedAccounts();
+    var L = [];
+    L.push("[스레드·릴스·클립 업로드 요청 — 지연님 블로그 작업실 v" + (BS.VERSION || "") + "]");
+    L.push("원글 제목: " + title);
+    L.push("블로그: " + (blog.name || "") + " (" + (blog.url || "") + ")");
+    L.push("원글 링크: " + (url || "(발행 후 링크를 넣어 주세요 — 첫 댓글 링크로 씁니다)"));
+    L.push("계정: " + (accts.length ? accts.map(function (a) { return a.handle + " (" + a.label + " · " + a.sub + ")"; }).join(" / ") : "(계정 미선택)"));
+    L.push("희망 시간: " + finWhenText());
+    L.push("");
+    if (FIN.threads) {
+      L.push("[스레드 타래]");
+      (FIN.threads.threads || []).forEach(function (it, i) {
+        L.push("[타래 " + (it.no || i + 1) + " · " + (it.role || "") + "]");
+        L.push(it.text);
+        L.push("");
+      });
+      L.push("첫 댓글: " + (oneLine(FIN.threads.comment) || "(없음)"));
+      L.push("해시태그: " + (oneLine(FIN.threads.hashtags) || "(없음)"));
+      L.push("");
+    }
+    if (FIN.video) {
+      L.push(finVideoText(FIN.video));
+      L.push("");
+    }
+    if (FIN.multi) {
+      L.push("[원소스 멀티유즈]");
+      L.push(finMultiText(FIN.multi));
+      L.push("");
+    }
+    if (FIN.images && FIN.images.cards.length) {
+      L.push("[이미지 프롬프트 세트 — 제미나이로 만들 이미지]");
+      FIN.images.cards.forEach(function (c) { L.push("- " + c.role + ": " + c.prompt); });
+      L.push("");
+    }
+    var names = accts.map(function (a) { return a.handle; }).join(", ") || "@mama062624";
+    L.push("[요청]");
+    L.push("위 스레드 타래는 스레드(" + names + ")에, 릴스·클립 대본은 인스타그램 릴스와 네이버 클립(" + names + ")에 " + finWhenText() + " 올려줘. 첫 댓글 링크는 원글 링크로 넣어 줘.");
+    return L.join("\n").trim();
+  }
+
+  /* ---------------- 작업 실행 ---------------- */
+  function finCheckedTasks() {
+    var t = [];
+    if ($("#finTaskLink") && $("#finTaskLink").checked) t.push("link");
+    if ($("#finTaskThread") && $("#finTaskThread").checked) t.push("thread");
+    if ($("#finTaskVideo") && $("#finTaskVideo").checked) t.push("video");
+    if ($("#finTaskImage") && $("#finTaskImage").checked) t.push("image");
+    if ($("#finTaskMulti") && $("#finTaskMulti").checked) t.push("multi");
+    return t;
+  }
+  var FIN_TASK_NAME = { link: "🔗 내부링크", thread: "🧵 스레드", video: "🎬 클립 대본", image: "🖼️ 이미지", multi: "⚡ 멀티유즈" };
+
+  function finSetBusy(on) {
+    ["#btnFinishRun", "#btnFinishLinkOnly", "#btnFinishThreadOnly", "#btnFinishVideoOnly",
+      "#btnFinishImageOnly", "#btnFinishMultiOnly", "#btnFinishCopyUpload"].forEach(function (sel) {
+      var b = $(sel);
+      if (!b) return;
+      if (on) { b.disabled = true; } else { b.disabled = false; }
+    });
+  }
+
+  function finTaskPromise(id, source) {
+    if (id === "link") return finDoLink().then(function (r) { return r; });
+    if (id === "thread") return finDoThread(source);
+    if (id === "video") return finDoVideo(source);
+    if (id === "image") return finDoImage(source);
+    if (id === "multi") return finDoMulti(source);
+    return Promise.resolve(null);
+  }
+
+  function finRunOnly(id) {
+    if (FIN.run) { toast("지금 작업이 돌고 있습니다 — 끝나면 다시 눌러 주세요"); return; }
+    if (!finBodyValue().trim()) { toast(finNote("emptyLink"), 3600); return; }
+    FIN.run = true;
+    finSetBusy(true);
+    setStatus($("#finishRunState"), '<span class="spin"></span>' + (FIN_TASK_NAME[id] || "작업") + " 실행 중…");
+    finTaskPromise(id, finSourceMd()).then(function () {
+      setStatus($("#finishRunState"), "✅ " + (FIN_TASK_NAME[id] || "작업") + " 완료", "ok");
+      if (id === "link" || id === "thread" || id === "video" || id === "image" || id === "multi") finScrollResults();
+    }, function (err) {
+      setStatus($("#finishRunState"), "⚠️ " + esc(err && err.message ? err.message : err), "err");
+    }).then(function () {
+      FIN.run = false;
+      finSetBusy(false);
+    });
+  }
+
+  function finRunAll() {
+    if (FIN.run) { toast("지금 작업이 돌고 있습니다 — 끝나면 다시 눌러 주세요"); return; }
+    if (!finBodyValue().trim()) { toast(finNote("emptyLink"), 3600); return; }
+    var tasks = finCheckedTasks();
+    if (!tasks.length) { toast("실행할 작업을 하나 이상 체크해 주세요"); return; }
+    FIN.run = true;
+    finSetBusy(true);
+    var ok = [], fails = [], i = 0;
+    function next() {
+      if (i >= tasks.length) return Promise.resolve();
+      var id = tasks[i];
+      setStatus($("#finishRunState"), '<span class="spin"></span>' + (FIN_TASK_NAME[id] || id) + " 실행 중… (" + (i + 1) + "/" + tasks.length + ")");
+      return finTaskPromise(id, finSourceMd()).then(function () {
+        ok.push(id);
+      }, function (err) {
+        fails.push({ id: id, msg: (err && err.message ? err.message : String(err)) });
+      }).then(function () { i += 1; return next(); });
+    }
+    next().then(function () {
+      var msg;
+      if (!ok.length) {
+        msg = "⚠️ 실행하지 못했습니다 — " + fails.map(function (f) { return FIN_TASK_NAME[f.id] + ": " + f.msg; }).join(" / ");
+      } else {
+        msg = "✅ " + ok.length + "개 완료 (" + ok.map(function (id) { return FIN_TASK_NAME[id]; }).join(" · ") + ")";
+        if (fails.length) msg += " · ⚠️ " + fails.length + "개 못 함 — " + fails.map(function (f) { return FIN_TASK_NAME[f.id] + ": " + f.msg; }).join(" / ");
+      }
+      setStatus($("#finishRunState"), msg, fails.length ? "warn" : "ok");
+      if (ok.length) finScrollResults();
+      FIN.run = false;
+      finSetBusy(false);
+    });
+  }
+
+  function finScrollResults() {
+    var card = $("#finishResultCard");
+    if (!card) return;
+    card.hidden = false;
+    var empty = $("#finishResultEmpty");
+    if (empty) empty.hidden = true;
+    if (card.scrollIntoView) { try { card.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
+  }
+
+  /* ---------------- 초기화 ---------------- */
+  function initFinish() {
+    if (FIN.booted) return;
+    FIN.booted = true;
+    FIN.blogId = (finBlogList()[0] || {}).id || "mama2624";
+    finLoadAdded();
+    finRestoreDraft();
+    finLoadUploadPref();
+    finPaintBlogs();
+    finPaintUpload();
+    finRecalc(true);
+    finPaintCounts();
+    var note = $("#finishRunHint");
+    if (note) note.textContent = (FINCFG.notes || {}).needKey || "";
+
+    var chips = $("#finishBlogChips");
+    if (chips) {
+      chips.addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-fin-blog]") : null;
+        if (!b) return;
+        var id = b.getAttribute("data-fin-blog");
+        if (!id || id === FIN.blogId) return;
+        FIN.blogId = id;
+        FIN.recos = [];
+        FIN.picked = {};
+        var def = BS.threadAccountFor(id);
+        if (def) FIN.uploadAccounts = [def.id];
+        finPaintBlogs();
+        finRecalc(true);
+        finPaintPicked();
+        finPaintUpload();
+        finSaveDraft();
+        toast("블로그를 " + (finBlog().name || id) + "로 바꿨습니다 — 그 블로그 기존 글에서 찾습니다");
+      });
+    }
+
+    ["#finishTitle", "#finishBody"].forEach(function (sel) {
+      if (!$(sel)) return;
+      $(sel).addEventListener("input", function () {
+        FIN.last = null;
+        finPaintCounts();
+        finQueueSave();
+        clearTimeout(FIN.matchTimer);
+        FIN.matchTimer = setTimeout(function () { finRecalc(true); }, 500);
+      });
+    });
+    if ($("#finishBody")) {
+      $("#finishBody").addEventListener("paste", function () { setTimeout(function () { finPaintCounts(); finQueueSave(); finRecalc(true); }, 60); });
+    }
+    if ($("#finishInsertMode")) $("#finishInsertMode").addEventListener("change", finQueueSave);
+    if ($("#finishAiLink")) $("#finishAiLink").addEventListener("change", finQueueSave);
+
+    if ($("#btnFinishClear")) {
+      $("#btnFinishClear").addEventListener("click", function () {
+        if (!finBodyValue().trim() && !finTitleValue()) { toast("비울 내용이 없습니다"); return; }
+        if (!window.confirm("붙여넣은 제목·본문을 비웁니다. 계속할까요?")) return;
+        if ($("#finishTitle")) $("#finishTitle").value = "";
+        if ($("#finishBody")) $("#finishBody").value = "";
+        FIN.last = null; FIN.threads = null; FIN.video = null; FIN.multi = null; FIN.images = null;
+        FIN.recos = []; FIN.picked = {};
+        ["#finishLinkResult", "#finishThreadResult", "#finishVideoResult", "#finishImageResult", "#finishMultiResult"].forEach(function (s) { show($(s), false); });
+        show($("#finishResultCard"), false);
+        show($("#finishResultEmpty"), true);
+        finRecalc(true); finPaintCounts(); finSaveDraft();
+      });
+    }
+
+    if ($("#btnFinishMatch")) {
+      $("#btnFinishMatch").addEventListener("click", function () {
+        if (finBodyValue().trim().length < (FINCFG.minBody || 40)) { toast(finNote("noBody"), 3200); return; }
+        finRecalc();
+        toast(FIN.recos.length ? "관련 글 " + FIN.recos.length + "편을 찾았습니다 — 체크해서 고르세요" : finNote("noMatch"), 3600);
+      });
+    }
+    if ($("#finishLinkSearch")) {
+      $("#finishLinkSearch").addEventListener("input", function () { finRenderLinks(); });
+    }
+    if ($("#btnFinishLinkClear")) {
+      $("#btnFinishLinkClear").addEventListener("click", function () {
+        if (!finPickedList().length) { toast("고른 내부링크가 없습니다"); return; }
+        FIN.picked = {};
+        finRenderLinks(); finPaintPicked();
+      });
+    }
+    if ($("#finishLinkList")) {
+      $("#finishLinkList").addEventListener("change", function (e) {
+        var t = e.target;
+        if (!t || !t.getAttribute || !t.getAttribute("data-fin-pick")) return;
+        finPick(t.getAttribute("data-fin-pick"), !!t.checked);
+      });
+    }
+    if ($("#finishPicked")) {
+      $("#finishPicked").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-fin-unpick]") : null;
+        if (!b) return;
+        finPick(b.getAttribute("data-fin-unpick"), false);
+      });
+    }
+    if ($("#btnFinishAdd")) {
+      $("#btnFinishAdd").addEventListener("click", function () {
+        var t = $("#finishAddTitle") ? String($("#finishAddTitle").value || "").trim() : "";
+        var u = $("#finishAddUrl") ? String($("#finishAddUrl").value || "").trim() : "";
+        if (!t || !u) { toast("글 제목과 주소를 모두 넣어 주세요"); return; }
+        if (!/^https?:\/\//i.test(u)) { toast("주소는 https:// 로 시작해야 합니다"); return; }
+        var item = { blog: FIN.blogId, title: t, url: u, date: "", tags: [], keywords: [], summary: "" };
+        FIN.added.push(item);
+        finSaveAdded();
+        FIN.picked[u] = { title: t, url: u, date: "", blog: FIN.blogId, score: 0 };
+        if ($("#finishAddTitle")) $("#finishAddTitle").value = "";
+        if ($("#finishAddUrl")) $("#finishAddUrl").value = "";
+        var q = $("#finishLinkSearch");
+        if (q) q.value = "";
+        finRenderLinks(); finPaintPicked();
+        toast("내부링크로 추가했습니다 — " + t);
+      });
+    }
+
+    [["#finTaskLink", "link"], ["#finTaskThread", "thread"], ["#finTaskVideo", "video"],
+      ["#finTaskImage", "image"], ["#finTaskMulti", "multi"]].forEach(function (p) {
+      var el = $(p[0]);
+      if (!el) return;
+      el.addEventListener("change", function () {
+        var row = el.closest ? el.closest(".fin-task") : null;
+        if (row) row.classList.toggle("on", !!el.checked);
+      });
+    });
+    if ($("#btnFinishRun")) $("#btnFinishRun").addEventListener("click", finRunAll);
+    if ($("#btnFinishLinkOnly")) $("#btnFinishLinkOnly").addEventListener("click", function () { finRunOnly("link"); });
+    if ($("#btnFinishThreadOnly")) $("#btnFinishThreadOnly").addEventListener("click", function () { finRunOnly("thread"); });
+    if ($("#btnFinishVideoOnly")) $("#btnFinishVideoOnly").addEventListener("click", function () { finRunOnly("video"); });
+    if ($("#btnFinishImageOnly")) $("#btnFinishImageOnly").addEventListener("click", function () { finRunOnly("image"); });
+    if ($("#btnFinishMultiOnly")) $("#btnFinishMultiOnly").addEventListener("click", function () { finRunOnly("multi"); });
+
+    if ($("#btnFinishCopyHtml")) {
+      $("#btnFinishCopyHtml").addEventListener("click", function () {
+        if (!FIN.last) { toast("내부링크를 먼저 꽂아 주세요"); return; }
+        var md = "# " + (FIN.last.title || "") + "\n\n" + FIN.last.md;
+        copyRich(finHtml(FIN.last.md, true), md).then(function (ok) {
+          toast(ok ? "스마트에디터에 붙여넣기 하세요 (서식 유지 · 제목은 따로)" : "복사가 막혔습니다 — 마크다운 원문에서 직접 복사해 주세요");
+        });
+      });
+    }
+    if ($("#btnFinishCopyMd")) {
+      $("#btnFinishCopyMd").addEventListener("click", function () {
+        if (!FIN.last) { toast("내부링크를 먼저 꽂아 주세요"); return; }
+        copyPlain("# " + (FIN.last.title || "") + "\n\n" + FIN.last.md).then(function (ok) { toast(ok ? "마크다운을 복사했습니다 (제목 포함)" : "복사 실패"); });
+      });
+    }
+    if ($("#btnFinishCopyTitle")) {
+      $("#btnFinishCopyTitle").addEventListener("click", function () {
+        var t = (FIN.last && FIN.last.title) || finTitleValue();
+        if (!t) { toast("제목이 비어 있습니다"); return; }
+        copyPlain(t).then(function (ok) { toast(ok ? "제목을 복사했습니다" : "복사 실패"); });
+      });
+    }
+    if ($("#btnFinishCopyThreads")) {
+      $("#btnFinishCopyThreads").addEventListener("click", function () {
+        if (!FIN.threads) { toast("스레드 타래가 없습니다 — 먼저 만들어 주세요"); return; }
+        copyPlain(finThreadsText(FIN.threads)).then(function (ok) { toast(ok ? "타래 전체를 복사했습니다" : "복사 실패"); });
+      });
+    }
+    if ($("#btnFinishCopyVideo")) {
+      $("#btnFinishCopyVideo").addEventListener("click", function () {
+        if (!FIN.video) { toast("클립 대본이 없습니다 — 먼저 만들어 주세요"); return; }
+        copyPlain(finVideoText(FIN.video)).then(function (ok) { toast(ok ? "대본 전체를 복사했습니다" : "복사 실패"); });
+      });
+    }
+    if ($("#btnFinishCopyImages")) {
+      $("#btnFinishCopyImages").addEventListener("click", function () {
+        if (!FIN.images || !FIN.images.cards.length) { toast("이미지 프롬프트가 없습니다 — 먼저 만들어 주세요"); return; }
+        copyPlain(FIN.images.cards.map(function (c) { return "[" + c.role + "]\n" + c.prompt; }).join("\n\n")).then(function (ok) {
+          toast(ok ? "이미지 프롬프트 전체를 복사했습니다" : "복사 실패");
+        });
+      });
+    }
+    if ($("#btnFinishCopyMulti")) {
+      $("#btnFinishCopyMulti").addEventListener("click", function () {
+        if (!FIN.multi) { toast("멀티유즈 결과가 없습니다 — 먼저 만들어 주세요"); return; }
+        copyPlain(finMultiText(FIN.multi)).then(function (ok) { toast(ok ? "멀티유즈 세트를 복사했습니다" : "복사 실패"); });
+      });
+    }
+
+    if ($("#finishUploadAccounts")) {
+      $("#finishUploadAccounts").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-fin-acct]") : null;
+        if (!b) return;
+        var id = b.getAttribute("data-fin-acct");
+        var at = FIN.uploadAccounts.indexOf(id);
+        if (at >= 0) {
+          if (FIN.uploadAccounts.length === 1) { toast("계정은 하나 이상 골라 두세요"); return; }
+          FIN.uploadAccounts.splice(at, 1);
+        } else {
+          FIN.uploadAccounts.push(id);
+        }
+        finSaveUploadPref();
+        finPaintUpload();
+      });
+    }
+    if ($("#finishUploadWhens")) {
+      $("#finishUploadWhens").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-fin-when]") : null;
+        if (!b) return;
+        FIN.uploadWhen = b.getAttribute("data-fin-when") || "now";
+        FIN.uploadWhenCustom = "";
+        if ($("#finishUploadWhenInput")) $("#finishUploadWhenInput").value = "";
+        finSaveUploadPref();
+        finPaintUpload();
+      });
+    }
+    if ($("#finishUploadWhenInput")) {
+      $("#finishUploadWhenInput").addEventListener("input", function (e) {
+        FIN.uploadWhenCustom = String(e && e.target ? e.target.value : "").trim();
+        finSaveUploadPref();
+        finPaintUpload();
+      });
+    }
+    if ($("#finishArticleUrl")) {
+      $("#finishArticleUrl").addEventListener("change", function (e) {
+        try { localStorage.setItem("bs.finish.articleUrl", String(e.target.value || "").trim()); } catch (e2) {}
+      });
+    }
+    if ($("#btnFinishCopyUpload")) {
+      $("#btnFinishCopyUpload").addEventListener("click", function () {
+        if (!finBodyValue().trim()) { toast("내 글을 먼저 붙여넣어 주세요"); return; }
+        if (!FIN.threads && !FIN.video) toast(finUploadCfg().noContent || "스레드·클립을 먼저 만들면 요청에 함께 담깁니다", 4200);
+        copyPlain(finUploadRequestText()).then(function (ok) {
+          toast(ok ? "업로드 요청을 복사했습니다 — 카톡 '나와의 채팅'에 붙여 피클에게 보내세요" : "복사가 막혔습니다 — 요청을 직접 선택해 복사해 주세요", 4200);
+        });
+      });
+    }
+    if ($("#btnFinishWrite")) $("#btnFinishWrite").addEventListener("click", function () { hotSwitchView("write"); });
+  }
+
+  /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
+     예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
+  BS.finish = {
+    version: (FINCFG.version || "v2.3.0"),
+    state: function () {
+      return {
+        blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
+        hasLink: !!FIN.last, hasThread: !!FIN.threads, hasVideo: !!FIN.video,
+        hasImage: !!(FIN.images && FIN.images.cards.length), hasMulti: !!FIN.multi,
+        threads: FIN.threads ? FIN.threads.threads.length : 0,
+        scenes: FIN.video ? (FIN.video.scenes || []).length : 0,
+        imageCards: FIN.images ? FIN.images.cards.length : 0,
+        uploadAccounts: FIN.uploadAccounts.slice(), uploadWhen: FIN.uploadWhen, running: FIN.run
+      };
+    },
+    items: function (blogId) { return finItems(blogId || FIN.blogId); },
+    match: function (title, body, blogId, items) { return finMatchList(title, body, blogId || FIN.blogId, items); },
+    insert: function (md, links, mode) { return finInsertMd(md, links, mode || "inline"); },
+    html: finHtml,
+    plainText: finPlainText,
+    request: finUploadRequestText,
+    whenText: finWhenText,
+    tasks: finCheckedTasks
+  };
 
   /* ---------------- 초기화·이벤트 ---------------- */
   function initHot() {
@@ -6630,6 +8088,7 @@
     loadToday();   // 오늘자 80선 → 도착하면 1번 키워드를 주제칸에 채운다
     initRealtime();   // 오른쪽 실시간 키워드 롤링 패널 (v1.7.0)
     initHot();        // 🔥 실시간 화제템 집합소 탭 + 지금 새로 수집 (v2.1.0)
+    initFinish();     // 📎 내 글 내부링크·후작업 탭 (v2.3.0)
     initHomefeed();   // 네이버 홈판 관찰 한 줄 + 제목 프롬프트 반영 (v1.9.7)
     initInternalLinks();  // 기존 글 자동 내부링크 목록 (v1.9.9)
 
