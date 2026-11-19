@@ -68,7 +68,10 @@ python3 work/bs226-live/live_v226.py                                            
 BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs226-live/live_v226.py      # 실서버
 ```
 
-- 이전 판 회귀 — `work/bs225-test/test_v225.py` 는 위에 적은 이유로 판본·버스터·v3.3 원문 항목만 실패하고, 잠금·대원칙·안전장치 항목은 통과합니다.
+- 결과 — 단위 **95항목 전부 통과** · 로컬 Chromium **78항목 전부 통과** · 실서버(https://mama2624.github.io/blog-studio/) **78항목 전부 통과**.
+- 실서버 확인 항목 — 판본·캐시 버스터 · 배포본 규격(`#000100`·`#FFFFFF`·`#FF6B00`·`full-frame`·`3D isometric comparison chart`) · 원고 프롬프트에 새 규격 · 이미지 세트 **카드 5장**(썸네일 2·목차 2·배너 1) · 카드별 `📋 프롬프트 복사` 클릭 → 클립보드에 따옴표 없는 영문만 · `✅ 복사됨` 표시 후 원상 복구 · 내부 규칙 문구 미노출 · 콘솔 오류 0 · 모바일 390px 넘침 0.
+- 이전 판 회귀 — `work/bs225-test/test_v225.py` 는 위에 적은 이유로 판본·버스터·v3.3 원문 대조 항목만 실패(53 통과 / 23 실패)하고, 잠금·대원칙·안전장치·복사 제외 항목은 통과합니다.
+- 스크린샷 — `browser/v226_result.png`(결과 화면) · `browser/v226_cards.png`(카드·복사 버튼) · `browser/v226_mobile.png`(390px).
 
 ## 🖼️ 이미지 프롬프트 v3.3 기준선 고정 (v2.2.5 · 2026-11-19) — 이전 판본
 
