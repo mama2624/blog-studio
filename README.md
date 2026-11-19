@@ -3,6 +3,57 @@
 지연님 전용 **반자동 멀티작업실** — **글 용도 3모드**(📝 블로그 10단계 · ☕ 네이버 카페 글 · 🛒 상품·여행 제휴 리뷰)로 원고를 만들고, 그 원고 하나로 **🧵 스레드 타래**와 **🎬 클립·릴스·유튜브 대본**까지 뽑아 스마트에디터·스레드·영상에 붙여넣는 정적 웹앱입니다.
 빌드 없이 순수 HTML/CSS/JS라서 GitHub Pages에 그대로 올리면 됩니다.
 
+## 🖼️ 이미지 프롬프트 v3.3 기준선 고정 (v2.2.5 · 2026-11-19)
+
+지연님·크리(@keuli8) 님 확정 — **`blog-studio` 의 이미지 생성 프롬프트 기준선을 `올인원 슈퍼젬 3.3 원본복재`(`work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt` 제4조)로 고정**하고, 앞으로 업데이트에서도 이 기준점이 훼손되지 않게 했습니다. v2.2.4 의 소비자·구독자 중심 대원칙과 안전장치 3종·잠금은 그대로입니다.
+
+### 기준선 6종 — `js/config.js` `BS.IMAGE_BASELINE` 한 곳에 고정
+
+| # | 기준 | 어디에 | 훼손되면 |
+|---|---|---|---|
+| ① | **썸네일 1·2번 = v3.3 제4조 영문 원문 그대로**(문구와 `[주제 상황]` 한 자리만 교체) | `BS.IMAGE_BASELINE.thumb1`·`.thumb2` → `imagePromptSetFormat()` | 단어 하나만 달라도 단위 테스트 실패 |
+| ② | **목차별 본문 이미지 = 1:1 full-bleed**(상단 여백 없음, `textless, no words`) | `imagePromptSetFormat()` 본문 칸 | 테스트가 `full-bleed` 문장 확인 |
+| ③ | **하단 3:1 슬림 허브 배너 = `BS.HUB_BANNER` 고정 디자인** | `BS.HUB_BANNER`(문구·비율·디자인) | 테스트가 3:1·고정 문구 확인 |
+| ④ | **한국인 30대 후반~40대 초반 실사**(K-pop 성형 미인 금지) | `BS.IMAGE_BASELINE.person`·`BS.IMAGE_GEM` | 문장 대조 |
+| ⑤ | **썸네일 2번 = textless + 상단 1/3 비움**(한글 문구는 지연님이 직접) | `thumb2`·`BS.IMAGE_THUMB_RULE` | 문장 대조 |
+| ⑥ | **장면의 중심 = 소비자·독자**(기관·판매자 시점 금지) | `BS.READER_CENTER`(v2.2.4) | v2.2.4 검증 그대로 |
+
+### 이번에 바꾼 것 — 썸네일 1·2번을 '한글 요약 가이드'에서 'v3.3 영문 원문'으로
+
+v2.2.3 에서는 `## 🖼️ 이미지 프롬프트 세트` 의 썸네일 1·2번 "복사용 영문 프롬프트" 자리에 **한글 요약 가이드**`(아이보리 단색 배경 + 딥네이비 포인트 바 …)` 가 들어 있었습니다. 제미나이에 그대로 붙여넣을 수 없는 자리였고, 원본 제4조와도 달랐습니다. v2.2.5 는 그 두 줄을 **v3.3 제4조의 원문 문장 그대로** 바꿔 넣습니다.
+
+```
+- 썸네일 1번(타이포형) — 삽입 한글 문구: 위: "(의외성·경고형 훅, 줄마다 2~12자)" / 아래: "(핵심 해결책, 2~12자)"
+  복사용 영문 프롬프트(v3.3 원문 그대로 — 문구만 바꾼다):
+  "A clean Korean typography-only thumbnail design, solid warm ivory background with a deep navy accent bar, ... aspect ratio 1:1"
+- 썸네일 2번(실사 결합형) — 삽입 한글 문구: 위: … 아래: …
+  복사용 영문 프롬프트(v3.3 원문 그대로 — [주제 상황] 자리에만 이 글의 장면을 넣는다):
+  "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [주제 상황], ... textless, no words, ... aspect ratio 1:1"
+```
+
+- **한 곳에서만 고친다**: 원문 두 문장은 `BS.IMAGE_BASELINE.thumb1`·`.thumb2` 에만 두고, `imagePromptSetFormat()`·`BS.IMAGE_GEM.typoPrompt` 가 이 값을 그대로 씁니다. 같은 문장이 두 곳에 적혀 한쪽만 낡는 일이 없습니다.
+- **바뀌는 것은 두 가지뿐**: 한글 훅 두 문구와 썸네일 2번의 `[주제 상황]` 한 자리. 문장 구조·`textless, no words`·`clean negative space in the upper third`·`late 30s to early 40s`·`aspect ratio 1:1` 은 고치지 않습니다.
+- **모델에게도 못박음**: 1단계 사용자 요청(`[이번 원고에 반드시 적용]`)·`outputRules()` `6-3`·2단계 검사에 같은 원문 두 문장과 "줄였거나 새로 쓴 영어로 바꿨으면 원문 그대로 되살린다"를 함께 넣었습니다.
+- **본문 이미지·배너는 v2.2.4 방식 그대로**: 목차별 본문은 1:1 full-bleed(상단 여백 없음), 배너는 `BS.HUB_BANNER` 3:1 고정 디자인. 제4조의 "본문 이미지도 상단 1/3을 비운다"는 **썸네일 2번에만** 적용되는 것으로 유지합니다(본문 사진 위 여백은 글을 끊어 보이게 해서 v1.6.2 에서 이미 뺐습니다).
+
+### 앞으로 업데이트할 때 (훼손 금지 규칙)
+
+1. `BS.IMAGE_BASELINE` 의 `thumb1`·`thumb2`·`person`·`noText`·`place` 문장을 **고치지 않습니다**. 문구·장면만 바꿉니다.
+2. 썸네일 1·2번을 다시 한글 요약으로 줄이거나, 본문 이미지에 상단 1/3 여백을 되살리거나, 배너 비율(3:1)·문구를 바꾸면 **단위 테스트 `test_v225.py` 가 실패**합니다(제4조 원문 파일과 글자 단위 대조).
+3. `work/bs225-test/fixtures/v224` 는 v2.2.4 판본입니다. 다음 판본을 올릴 때도 직전 판본을 `fixtures/` 에 남기고 `사라진 프롬프트 줄 0개` 회귀를 돌립니다(이번 판본에서 의도적으로 바꾼 2줄은 허용목록에 이름을 적습니다).
+
+### 검증 (v2.2.5)
+
+```bash
+python3 work/bs225-test/test_v225.py                                                      # 단위
+BS_PIN=… python3 work/bs225-live/live_v225.py                                             # 로컬 Chromium
+BS_BASE=https://mama2624.github.io/blog-studio/ BS_PIN=… python3 work/bs225-live/live_v225.py   # 실서버
+```
+
+- 결과 — 단위 **76항목 전부 통과** · 로컬 Chromium **73항목 전부 통과** · 실서버(https://mama2624.github.io/blog-studio/) **73항목 전부 통과**. 이전 판 단위 회귀(`work/bs224-test/test_v224.py`)는 116항목 통과 / 3항목 실패 — 판본·캐시 버스터 2항목과 "사라진 줄 0개"(이번에 의도적으로 바꾼 3줄이 허용목록 밖)뿐이고, 잠금·안전장치·대원칙 항목은 전부 통과했습니다.
+- 단위 테스트는 `work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt` 를 직접 읽어 제4조의 두 문장을 뽑고, `BS.IMAGE_BASELINE` 과 **글자 하나 다르지 않은지**, 원고 프롬프트 출력에 그 문장이 그대로 들어갔는지 확인합니다.
+- 실서버 스크린샷 — `browser/v225_result.png`(결과 화면) · `browser/v225_promptset.png`(이미지 프롬프트 박스) · `browser/v225_mobile.png`(390px).
+
 ## 🧭 소비자·구독자 중심 대원칙 — 모든 글쓰기 프롬프트 맨 앞 (v2.2.4 · 2026-11-19)
 
 지연님 지시 — "글 작성의 기본원칙은 소비자 중심, 구독자 중심의 글을 작성해야해. 손해.이익등 모든 단어의 중심은 소비자. 구독자를 가르켜야해. 작성된 글 가만히 보니 제일 큰 원칙이 빠졌어."
@@ -923,6 +974,7 @@ git add data/keywords-today.json && git commit -m "오늘자 80선 (11/17)" && g
 ### 버전 기록
 | 버전 | 내용 |
 |---|---|
+| **v2.2.5** | **🖼️ 이미지 프롬프트 v3.3 기준선 고정** — 지연님·크리(@keuli8) 님 확정. ① `imagePromptSetFormat()` 의 썸네일 1·2번 "복사용 영문 프롬프트"를 **한글 요약 가이드 → 슈퍼 젬 v3.3 제4조 영문 원문 그대로**로. 원문 두 문장은 `BS.IMAGE_BASELINE.thumb1`·`.thumb2` 한 곳에만 두고 `BS.IMAGE_GEM.typoPrompt` 도 같은 값을 가리킴(문구·`[주제 상황]`만 교체). ② 기준선 6종(썸네일 1·2 원문 / 본문 1:1 full-bleed / 하단 3:1 허브 배너 / 한국인 30대 후반~40대 초반 실사 / 썸네일 2번 textless·상단 1/3 비움 / 소비자·독자 중심)을 `BS.IMAGE_BASELINE.guard`·`.checklist` 에 고정하고 1단계 요청·`outputRules` 6-3·2단계 검사에 같은 문장을 넣음. ③ `test_v225.py` 가 제4조 원문 파일과 글자 단위로 대조 — 줄이거나 새로 쓰면 실패. ④ v2.2.4 대원칙·안전장치 3종·잠금 그대로, 사라진 프롬프트 줄 0개(의도적으로 바꾼 2줄만 허용목록). `BS.IMAGE_BASELINE`·`imagePromptSetFormat()` |
 | **v2.2.4** | **🧭 소비자·구독자 중심 대원칙** — 지연님 지시("손해·이익 등 모든 단어의 중심은 소비자·구독자"). ① `BS.READER_CENTER` 한 곳에 원칙 문구를 두고 `js/prompts.js` `readerCenterBlock()` 이 블로그·카페·제휴 리뷰·구글 블로거(한/영)·스레드·클립·영상 대본·멀티유즈·길잡이 **시스템 지침 맨 앞**과 2단계 검수 **0번 항목**에 싣는다. ② 문장의 주어가 기관·판매자여도 끝은 독자("보험사가 지급" → "독자가 청구하면 어떤 서류로 언제까지 얼마를 받는다"), 손해·이익·비용·선택·기준의 주인도 독자. ③ 1단계 사용자 요청·검수 1차 체크리스트에도 같은 기준. ④ v2.2.3 대비 **사라진 프롬프트 줄 0개** 회귀 검증. `readerCenterBlock()`·`BS.READER_CENTER` |
 | **v2.2.3** | **🖼️ 원고 속 이미지 프롬프트 세트 + ✍️ 썸네일 2번 textless 통일 + ⚡ 기본 모델 상향** — 크리 님 진단 반영. ① `imagePromptSetFormat()` — `[출력 형식]` 해시태그 뒤·작업 메모 앞에 `## 🖼️ 이미지 프롬프트 세트` (썸네일 1·2 복사용 영문 프롬프트 / 목차 1번~FAQ 직전 1:1 본문 이미지 / 하단 3:1 허브 배너)를 젬 지식 제4조 순서대로. 우선순위 3번에 "단, 이미지 프롬프트 세트는 원본 규격대로 출력한다" 예외 + `outputRules` 6-2. 앱은 화면에만 보여 주고 스마트에디터 복사본·글자수에서 제외(`isImagePromptSection()`). ② 썸네일 2번은 AI가 글자를 그리지 않고 상단 1/3만 비움(`textless`) — `BS.IMAGE_GEM.photoPrompt` 와 `thumbnailInstructions()` 충돌 해소, `BS.THUMB_RULES`·`BS.IMAGE_THUMB_RULE`·`BS.IMAGE_PRINCIPLES` 동일 기준. ③ `BS.DEFAULT_TEXT_MODEL` = `gemini-3.5-flash-lite`(무료 하루 500편), `BS.MODEL_MIGRATION`+`bs.modelMigrated.223` 로 저장된 옛 기본값 2.5-flash 1회 전환(이후 직접 고른 선택은 보존), 검색 미지원 배지·폴백 사슬 중복 없음 검증. `imagePromptSetFormat()`·`isImagePromptSection()`·`migrateDefaultModel()`·`BS.modelChain()`·`BS.webSearchAllowed()` |
 | **v2.2.2** | **🎬 쇼츠 절차형 4단계 연출표 + 🔊 상업 무료 TTS/BGM 라이선스 + 📅 기억 의존 금지** — 『유튜브 영상 분석』 보고서 4-1~4-4 반영. ① `BS.SHORTS_DIRECT` — 30초를 0~3초 훅 / 4~8초 원리 / 9~24초 절차 4단계(각 3~4초) / 25~30초 결론·CTA로 쪼개고 단계마다 화면·카메라·자막 12자·효과음·BGM을 따로 적는다. 영상 대본(숏폼)은 `## 30초 절차형 연출표` 7블록, 롱폼은 `## 연출표 (장면별)`, 멀티유즈 클립은 20초로 줄인 `## 클립 20초 연출표` 4줄(0~3 / 4~8 / 9~17 / 18~20초). 같은 카메라 세 구간 연속 금지 · 장면 프롬프트에 카메라 움직임 한 구절. ② `BS.MEDIA_LICENSE` — MeloTTS·GPT-SoVITS(MIT)·CosyVoice(Apache-2.0) 우선, XTTS-v2(비상업) 금지, Supertonic 3·Fish Speech는 조건부, 라이선스는 기억이 아니라 모델 카드의 오늘 표기로 확인하고 `## 라이선스 확인` 칸에 남긴다. ③ `BS.SOURCE_CHECK` — `factRules()`에 '기억 의존 금지·확인 날짜 병기·미확인 수치·일정 추정 금지' 3줄을 붙여 9종 프롬프트 전부에 적용. ④ README에 **실패 기록 4줄 규칙**(증상·원인·바꾼 것·확인법). 결과 화면에 연출표·라이선스 카드(`parseVideoScript()`·`renderVideoScript()` 확장). 확장: `BS.SHORTS_DIRECT`·`BS.MEDIA_LICENSE`·`BS.SOURCE_CHECK`·`shortsDirectBlock()`·`licenseBlock()` |
