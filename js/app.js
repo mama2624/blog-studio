@@ -6133,6 +6133,11 @@
     });
     var vtHint = $("#vtHint");
     if (vtHint) vtHint.hidden = v !== "hot";   // 화제템 설명은 화제템 탭에서만
+    /* v2.3.1 — 숨어 있을 때 만든 글상자는 보이는 순간 내용 높이로 다시 맞춘다 */
+    if (v === "write") {
+      autoGrowIn($("#threadList"));
+      autoGrowIn($("#threadExtra"));
+    }
     if (v === "hot") {
       if (!HOT.loaded && !HOT.loading) hotLoad(false);
       else hotRender();
