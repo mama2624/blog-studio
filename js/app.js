@@ -19,6 +19,7 @@
   var K_GH = "bs.ghToken";           // GitHub 토큰 — 화제템 '지금 새로 수집'용 (v2.1.0 · 이 브라우저에만)
   var K_PERSONA = (BS.PERSONAS && BS.PERSONAS.storagePrefix) || "bs.persona.";  // 🎭 페르소나 — 블로그별 기억 (v2.2.0)
   var K_AFF = "bs.affPlatform";   // 🛍️ 블로그 모드 제휴 플랫폼 선택 (v2.2.1 — 쿠팡·쇼핑커넥트·브랜드커넥트)
+  var K_MODEL_MIGRATED = (BS.MODEL_MIGRATION && BS.MODEL_MIGRATION.key) || "bs.modelMigrated.223";  // v2.2.3 — 옛 기본 모델 1회 전환
 
   var state = {
     blog: BS.BLOGS[0],
@@ -1857,6 +1858,24 @@
     return out;
   }
 
+  /* ---------------- 3-0. 저장된 옛 기본 모델 1회 전환 (v2.2.3 · 2026-11-19) ----------------
+     기본 모델을 gemini-3.5-flash-lite(무료 하루 500편)로 올렸지만, 이미 쓰던 브라우저의
+     localStorage(bs.textModel)에는 예전 기본값 "gemini-2.5-flash"가 남아 있다.
+     bs.modelMigrated.223 플래그로 딱 한 번만 새 기본값으로 바꾸고, 이후 설정에서 지연님이
+     2.5 Flash를 직접 다시 고른 선택은 덮어쓰지 않는다. 바뀌면 짧게 알린다. */
+  function migrateDefaultModel() {
+    var M = BS.MODEL_MIGRATION || {};
+    if (!M.key || !M.from || !M.to) return "";
+    try {
+      if (localStorage.getItem(K_MODEL_MIGRATED)) return "";
+      var saved = localStorage.getItem(K_TEXT);
+      localStorage.setItem(K_MODEL_MIGRATED, "1");   // 실패해도 다시 덮어쓰지 않게 먼저 표시
+      if (saved !== M.from) return "";
+      localStorage.setItem(K_TEXT, M.to);
+      return M.from + " → " + M.to;
+    } catch (e) { return ""; }
+  }
+
   /* 상태코드·한도 정보를 담은 오류 (자동 모델 전환이 이 값을 읽어 판단한다) */
   function apiError(status, bodyText, model) {
     var e = new Error(friendlyError(status, bodyText, model));
@@ -2355,6 +2374,11 @@
   function isMemoSection(label) {
     return /^작업\s*메모/.test(String(label || "").replace(/\s+/g, " "));
   }
+  /* 🖼️ 원고 속 이미지 프롬프트 세트 (v2.2.3) — 제미나이에 붙여넣을 작업용이라
+     스마트에디터 복사본·글자수에는 넣지 않고 화면에만 보여 준다. */
+  function isImagePromptSection(label) {
+    return /^이미지\s*프롬프트/.test(String(label || "").replace(/\s+/g, " "));
+  }
   /* 이 화면에서만 보여 주고 복사본에서는 빠지는 계획용 머리말 */
   function isPlanSection(label) {
     return /^제목\s*후보/.test(label) || /^최종\s*추천\s*제목/.test(label) || /^추천\s*제목/.test(label);
@@ -2364,6 +2388,7 @@
       .replace(/##\s*제목\s*후보[\s\S]*?(?=##\s|$)/, "")
       .replace(/##\s*(?:🏆\s*)?(?:최종\s*추천\s*제목|추천\s*제목)[\s\S]*?(?=##\s|$)/, "")
       .replace(/##\s*작업\s*메모[\s\S]*?(?=##\s|$)/, "")
+      .replace(/##\s*(?:🖼\uFE0F?\s*)?이미지\s*프롬프트(?:\s*세트)?[\s\S]*?(?=##\s|$)/, "")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
@@ -2454,6 +2479,12 @@
           sec.body.filter(function (l) { return l.trim(); })
             .map(function (l) { return "<li>" + mdInline(l.trim().replace(/^[-*•]\s+/, "")) + "</li>"; }).join("") +
           "</ul></div>");
+        return;
+      }
+      if (isImagePromptSection(label)) {
+        html.push('<div class="memo-box"><strong>🖼️ 이미지 프롬프트 세트 · 화면 확인용(복사본에는 빠집니다)</strong>' +
+          '<pre style="white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font:inherit;line-height:1.7">' +
+          esc(sec.body.join("\n").trim()) + "</pre></div>");
         return;
       }
       if (/^FAQ/.test(label)) {
@@ -2656,6 +2687,7 @@
       var label = sectionLabel(sec.h);
       if (!label || isPlanSection(label)) return;
       if (isMemoSection(label)) return; // 작업 메모는 스마트에디터 복사본에 넣지 않는다
+      if (isImagePromptSection(label)) return; // 🖼️ 이미지 프롬프트 세트도 화면 확인용 — 복사본에는 넣지 않는다 (v2.2.3)
 
       if (/^3초 핵심정리/.test(label)) {
         add('<div style="padding:16px 18px 8px;background:#fbf6f0;border:1px solid #f0e4d6;border-radius:10px">' +
@@ -6472,6 +6504,11 @@
 
   function initApp() {
     HOT.genOk = false;
+    /* 🔧 v2.2.3 — 예전 기본 모델(2.5 Flash)이 저장된 브라우저는 새로고침 1회로 새 기본값으로 바뀐다 */
+    var modelMoved = migrateDefaultModel();
+    if (modelMoved && BS.MODEL_MIGRATION && BS.MODEL_MIGRATION.notice) {
+      toast(BS.MODEL_MIGRATION.notice, 5200);
+    }
     // 셀렉트 채우기
     $("#toneSelect").innerHTML = BS.TONES.map(function (t) { return '<option value="' + t.id + '">' + esc(t.label) + "</option>"; }).join("");
     $("#lengthSelect").innerHTML = BS.LENGTHS.map(function (l) { return '<option value="' + l.id + '"' + (l.id === "std" ? " selected" : "") + ">" + esc(l.label) + "</option>"; }).join("");
@@ -6853,6 +6890,18 @@
   /* 검증용 — 1단계·2단계 응답 파서를 콘솔에서 직접 확인할 수 있게 열어 둔다.
      예: BS.parseResult("## 제목 후보\n1) ...").titles */
   BS.parseResult = parseResult;
+  /* v2.2.3 검증용 — 옛 기본 모델 1회 전환을 콘솔에서 직접 확인
+     예: BS.modelMigration.migrate()  ·  BS.modelMigration.key */
+  BS.modelMigration = {
+    key: K_MODEL_MIGRATED,
+    migrate: migrateDefaultModel,
+    notice: (BS.MODEL_MIGRATION && BS.MODEL_MIGRATION.notice) || "",
+    from: (BS.MODEL_MIGRATION && BS.MODEL_MIGRATION.from) || "",
+    to: (BS.MODEL_MIGRATION && BS.MODEL_MIGRATION.to) || ""
+  };
+  BS.modelChain = modelChain;   // v2.2.3 — 자동 전환 사슬에 같은 모델이 두 번 들어가지 않는지 검증용
+  BS.webSearchAllowed = webSearchAllowed;   // v2.2.3 — 기본 모델(Flash Lite)이 검색 미지원으로 바로 일반 작성으로 내려가는지 검증용
+  BS.renderArticle = renderArticle;   // v2.2.3 — 결과 화면의 이미지 프롬프트 박스 렌더 검증용
   BS.auditDefect = auditDefect;
   BS.parseGrounding = parseGrounding;
   /* v2.0.0 검증용 — 중복 경고·길잡이·블로거·멀티유즈를 콘솔에서 직접 확인 */

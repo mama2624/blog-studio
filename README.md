@@ -3,6 +3,42 @@
 지연님 전용 **반자동 멀티작업실** — **글 용도 3모드**(📝 블로그 10단계 · ☕ 네이버 카페 글 · 🛒 상품·여행 제휴 리뷰)로 원고를 만들고, 그 원고 하나로 **🧵 스레드 타래**와 **🎬 클립·릴스·유튜브 대본**까지 뽑아 스마트에디터·스레드·영상에 붙여넣는 정적 웹앱입니다.
 빌드 없이 순수 HTML/CSS/JS라서 GitHub Pages에 그대로 올리면 됩니다.
 
+## 🖼️ 이미지 프롬프트 세트 · ✍️ textless 통일 · ⚡ 기본 모델 상향 (v2.2.3 · 2026-11-19)
+
+크리(@keuli8) 님 진단 3건과 지연님·크리 님 PC 브라우저의 `localStorage` 마이그레이션을 함께 반영했습니다. 잠금(`LOCK_HASH`·`bs.unlock.v2`)과 **v2.2.2 연출표·라이선스·v2.2.1 안전장치 3종은 그대로**입니다.
+
+### ① 원고 속 이미지 프롬프트 세트 — `js/prompts.js` `imagePromptSetFormat()`
+
+젬 지식 제4조는 원고마다 **[썸네일 1·2 복사용 영문 프롬프트 + 목차별 본문 이미지 + 3:1 배너]**를 내라고 하는데, 작업실 `[출력 형식]`에는 그 칸이 없어 세트가 통째로 빠졌습니다. 해시태그 바로 뒤·`## 작업 메모` 바로 앞에 `## 🖼️ 이미지 프롬프트 세트` 칸을 넣고 세 묶음을 원본 순서대로 적게 했습니다(썸네일 1번 타이포형 / 2번 실사 결합형 / 목차 1번~FAQ 직전 목차별 1:1 본문 / 하단 3:1 슬림 허브 배너).
+
+- **우선순위 3번 예외** — "[출력 형식] 외 머리말 금지"가 이미지 프롬프트 세트까지 막지 않도록 "**단, 이미지 프롬프트 세트는 원본 규격대로 출력한다**"를 명시했습니다. `outputRules()` 에도 `6-2` 로 같은 자리를 못박았습니다.
+- **블로그 원고 전용** — 카페·제품 리뷰 `[출력 형식]`에는 들어가지 않습니다.
+- **앱 처리** — 이 칸은 제미나이에 붙여넣는 작업용이라 화면에는 "🖼️ 이미지 프롬프트 세트 · 화면 확인용(복사본에는 빠집니다)" 박스로 보여 주고, 스마트에디터 복사본·마크다운·글자수(`bodyChars`)에서는 뺍니다(`isImagePromptSection()`).
+
+### ② 썸네일 2번 글자 지시 통일 — `textless`
+
+`thumbnailInstructions()` 의 "사진 위에 한글 문구를 넣어라"와 `BS.IMAGE_GEM.photoPrompt` 의 `textless, no words` 가 정면으로 부딪히고 있었습니다. 젬 원본 원칙대로 **AI는 글자를 그리지 않고 상단 1/3만 비운다(textless)** 로 통일했습니다.
+
+- 썸네일 2번은 `textless, no text, no words, no letters` 로 만들고, 삽입 한글 문구는 "삽입 한글 문구"로 따로 적어 지연님이 스마트에디터·미리캔버스에서 직접 얹습니다.
+- 문구 자리는 상단 1/3 안의 좌우 정중앙 그대로입니다. 한글 글자를 그리는 유일한 예외는 썸네일 1번(타이포형)입니다 — `BS.THUMB_RULES`·`BS.IMAGE_THUMB_RULE`·`BS.IMAGE_PRINCIPLES` 도 같은 기준으로 고쳤습니다.
+
+### ③ 기본 원고 모델 `gemini-3.5-flash-lite` + 저장값 1회 전환 — `BS.DEFAULT_TEXT_MODEL`·`BS.MODEL_MIGRATION`
+
+- 기본 원고 모델을 `gemini-2.5-flash`(무료 하루 20편)에서 **`gemini-3.5-flash-lite`(무료 하루 500편)** 로 올렸습니다. 화면 안내도 "gemini-3.5-flash-lite 무료 하루 500편 지원 · 실시간 검색이 필요하면 설정에서 2.5 Flash로 변경" 으로 실제 동작과 맞췄습니다.
+- **브라우저 마이그레이션** — 이미 쓰던 브라우저 `localStorage(bs.textModel)`의 옛 기본값 `gemini-2.5-flash` 는 새로고침 한 번으로 `gemini-3.5-flash-lite` 로 바뀝니다. `bs.modelMigrated.223` 플래그로 **1회만** 동작하고, 그 뒤 설정에서 2.5 Flash를 다시 고른 선택은 덮어쓰지 않습니다.
+- **검색 미지원 경로** — Flash Lite는 `BS.WEB_SEARCH.unsupported` 라 `webSearchAllowed()` 가 `false` 를 돌려주고 배지(`검색 미지원 모델 → 일반 작성`)만 띄운 뒤 검색 없이 정상 작성합니다. 400/403 이 오면 `geminiText()` 가 tools 없이 한 번 더 부릅니다.
+- **폴백 사슬 중복 없음** — `modelChain('gemini-3.5-flash-lite')` = `['gemini-3.5-flash-lite','gemini-3.1-flash-lite']` (같은 모델을 두 번 부르지 않음).
+
+### 검증 (v2.2.3)
+
+```bash
+python3 work/bs223-test/test_v223.py                                                      # 단위
+BS_PIN=… python3 work/bs223-live/live_v223.py                                             # 로컬 Chromium
+BS_BASE=https://mama2624.github.io/blog-studio/ BS_PIN=… python3 work/bs223-live/live_v223.py   # 실서버
+```
+
+결과 — 단위 **139항목 통과** · 로컬 Chromium·실서버 결과는 아래에 이어 적습니다.
+
 ## 🎬 쇼츠 절차형 4단계 연출표 · 🔊 상업 무료 라이선스 · 📅 기억 의존 금지 (v2.2.2 · 2026-11-19)
 
 『유튜브 영상 분석 및 실전 적용점 추출』 보고서(메이커 「[무료강의] 코딩 몰라도 됩니다」 실측 분석)에서 가져온 3가지를 반영했습니다. 잠금(`LOCK_HASH`·`bs.unlock.v2`)과 **v2.2.1 안전장치 3종은 그대로**입니다.
@@ -841,6 +877,7 @@ git add data/keywords-today.json && git commit -m "오늘자 80선 (11/17)" && g
 ### 버전 기록
 | 버전 | 내용 |
 |---|---|
+| **v2.2.3** | **🖼️ 원고 속 이미지 프롬프트 세트 + ✍️ 썸네일 2번 textless 통일 + ⚡ 기본 모델 상향** — 크리 님 진단 반영. ① `imagePromptSetFormat()` — `[출력 형식]` 해시태그 뒤·작업 메모 앞에 `## 🖼️ 이미지 프롬프트 세트` (썸네일 1·2 복사용 영문 프롬프트 / 목차 1번~FAQ 직전 1:1 본문 이미지 / 하단 3:1 허브 배너)를 젬 지식 제4조 순서대로. 우선순위 3번에 "단, 이미지 프롬프트 세트는 원본 규격대로 출력한다" 예외 + `outputRules` 6-2. 앱은 화면에만 보여 주고 스마트에디터 복사본·글자수에서 제외(`isImagePromptSection()`). ② 썸네일 2번은 AI가 글자를 그리지 않고 상단 1/3만 비움(`textless`) — `BS.IMAGE_GEM.photoPrompt` 와 `thumbnailInstructions()` 충돌 해소, `BS.THUMB_RULES`·`BS.IMAGE_THUMB_RULE`·`BS.IMAGE_PRINCIPLES` 동일 기준. ③ `BS.DEFAULT_TEXT_MODEL` = `gemini-3.5-flash-lite`(무료 하루 500편), `BS.MODEL_MIGRATION`+`bs.modelMigrated.223` 로 저장된 옛 기본값 2.5-flash 1회 전환(이후 직접 고른 선택은 보존), 검색 미지원 배지·폴백 사슬 중복 없음 검증. `imagePromptSetFormat()`·`isImagePromptSection()`·`migrateDefaultModel()`·`BS.modelChain()`·`BS.webSearchAllowed()` |
 | **v2.2.2** | **🎬 쇼츠 절차형 4단계 연출표 + 🔊 상업 무료 TTS/BGM 라이선스 + 📅 기억 의존 금지** — 『유튜브 영상 분석』 보고서 4-1~4-4 반영. ① `BS.SHORTS_DIRECT` — 30초를 0~3초 훅 / 4~8초 원리 / 9~24초 절차 4단계(각 3~4초) / 25~30초 결론·CTA로 쪼개고 단계마다 화면·카메라·자막 12자·효과음·BGM을 따로 적는다. 영상 대본(숏폼)은 `## 30초 절차형 연출표` 7블록, 롱폼은 `## 연출표 (장면별)`, 멀티유즈 클립은 20초로 줄인 `## 클립 20초 연출표` 4줄(0~3 / 4~8 / 9~17 / 18~20초). 같은 카메라 세 구간 연속 금지 · 장면 프롬프트에 카메라 움직임 한 구절. ② `BS.MEDIA_LICENSE` — MeloTTS·GPT-SoVITS(MIT)·CosyVoice(Apache-2.0) 우선, XTTS-v2(비상업) 금지, Supertonic 3·Fish Speech는 조건부, 라이선스는 기억이 아니라 모델 카드의 오늘 표기로 확인하고 `## 라이선스 확인` 칸에 남긴다. ③ `BS.SOURCE_CHECK` — `factRules()`에 '기억 의존 금지·확인 날짜 병기·미확인 수치·일정 추정 금지' 3줄을 붙여 9종 프롬프트 전부에 적용. ④ README에 **실패 기록 4줄 규칙**(증상·원인·바꾼 것·확인법). 결과 화면에 연출표·라이선스 카드(`parseVideoScript()`·`renderVideoScript()` 확장). 확장: `BS.SHORTS_DIRECT`·`BS.MEDIA_LICENSE`·`BS.SOURCE_CHECK`·`shortsDirectBlock()`·`licenseBlock()` |
 | **v2.0.0** | **🪙🌙 구글 블로거 2곳 + 🧭 길잡이 + ⚠️ 중복 경고 + ⚡ 멀티유즈 (+🧾 공정위 표시)** — 크리(@keuli8) 님 제안 일괄 반영, 지연님 승낙. ① `BS.BLOGGER` — 🪙 부자닷컴(`sub.gold-queen.com`, 계산기·금융 한국어, 순수 본문 HTML · Google SEO) · 🌙 Daily Health & Pain Guide(`www.gold-queen.com`, 크리 님 원본 지침 v3 그대로: 5금지·글로벌 치환·900~1,200단어·PART 1~4). ② `BS.GUIDE` — 메인 블로그 1곳 + 추천 키워드·예시 제목(7각도), 큰 이슈만 가지글. ③ `BS.DUP` — 공개 RSS 121편+ 대조 중복 경고(긍정사랑 제외). ④ `BS.MULTIUSE` — 원고 1편 → 스레드 훅·첫 댓글 + 클립 20초 자막. ⑤ `BS.SNS_DISCLOSURE` — 제휴 시 대가성 문구를 본문 맨 앞 확정 표현으로(첫 댓글 금지 · 예규 제499호). `BS.BLOGGER`·`BS.GUIDE`·`BS.DUP`·`BS.MULTIUSE`·`BS.SNS_DISCLOSURE`·`bloggerArticlePrompt()`·`guidePrompt()`·`multiUsePrompt()`·`disclosureBlock()`·`dupList()`·`parseBloggerResult()`·`runGuide()`·`runMultiUse()` |
 | **v1.9.9** | **🔗 기존 글 자동 내부링크 '함께 보면 좋은 글'** — 지연님 지시("긍정사랑은 제외"). ① `tools/fetch_internal_links.py` 가 **공개 RSS**(네이버 `mama2624`·`jiyn74`·`2sunshines` + 구글 블로거 `gold-queen.com`·`sub.gold-queen.com`)에서 제목·주소·발행일·태그·요약만 모아 `data/internal-links.json` 에 저장하고, 매시 도는 `fetch_realtime_trends.py` 가 `data/realtime-trends.json` 의 `internalLinks` 로 함께 커밋(새 워크플로 없이 · 피클 사용량 0 · **하루 1회 가드**). ② 앱이 주제와 겹치는 기존 글을 점수로 골라 **최대 3편**을 `[🔗 함께 보면 좋은 글]` 목록으로 1단계에 넘기고, 원고는 **해시태그 바로 위**에 `## 함께 보면 좋은 글` 칸으로 넣는다(관련 글 없으면 칸 없음). ③ 2단계 검수는 제목·주소를 **한 글자 단위로** 대조해 목록 밖 링크를 지운다. ④ **긍정사랑(000jinjin000)은 수집·매칭·주입·교차 링크 모두 제외** — 예전처럼 관리대장에서 직접 고른다. ⑤ 긍정사랑 1단계 프롬프트의 `docMode` ReferenceError 수정. `BS.INTERNAL_LINKS`·`internalLinkBlock()`·`autoLinksFor()`·`currentInternalLinks()`·`tools/fetch_internal_links.py` |

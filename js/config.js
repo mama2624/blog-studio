@@ -5,8 +5,8 @@
 
 window.BS = window.BS || {};
 
-BS.VERSION = "2.2.2";
-BS.RULESET = "슈퍼 젬 v3.3 원본 통째 이식(지침 3,730자 + 지식 파일 25,009자, 요약 없음) · 2026-11-18 원고 깊이(공백 제외 1,800자 이상·소제목 4~5개) · 홈판 트렌드형 제목 7각도 · 홈판 클릭 3축 · 🔗 기존 글 자동 내부링크(공개 RSS 5곳 — 네이버 3대 + 구글 블로거 2 · '함께 보면 좋은 글' 2~3편 · 긍정사랑 제외) · 🪙🌙 구글 블로거 2곳 전용 카드(부자닷컴 sub.gold-queen.com · Daily Health & Pain Guide www.gold-queen.com — 순수 본문 HTML·Google SEO·영문 현지화 원본 지침) · 🧭 블로그·가지글 길잡이(1블로그 1메인 · 큰 이슈만 가지글) · ⚠️ 기발행 주제 중복 경고(공개 RSS) · ⚡ 원소스 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 자막 동시 출력) · 🗞 뉴스 → 독자 행동 가이드(예약·주차·입장료 / 모델명·가격·차이 / 신청 방법·이용 조건·공식 경로) · 🛒 상품 역순 전략(상품 선정 → 대본) · 젬스 v3.3 이미지 프롬프트 · 형광펜 2색 강조 · 썸네일 호기심 훅 · 2단계 전수 검수 · 🎭 6대 페르소나(살림 팩트체커·TV이슈·돈정책·식단건강·증상병원·유튜브클립 — 원고 1·2단계와 스레드·클립에 함께 적용) · 🛡️ v2.2.1 안전장치 3종(건강 카테고리 식품표시광고법 제8조 금지어 필터 · 네이버 쇼핑커넥트·크리에이터샵 대가성 문구 · 제품 리뷰 허위 체험·미확인 수치 금지)";  // 원고에 적용하는 규칙 판본
+BS.VERSION = "2.2.3";
+BS.RULESET = "슈퍼 젬 v3.3 원본 통째 이식(지침 3,730자 + 지식 파일 25,009자, 요약 없음) · 2026-11-18 원고 깊이(공백 제외 1,800자 이상·소제목 4~5개) · 홈판 트렌드형 제목 7각도 · 홈판 클릭 3축 · 🔗 기존 글 자동 내부링크(공개 RSS 5곳 — 네이버 3대 + 구글 블로거 2 · '함께 보면 좋은 글' 2~3편 · 긍정사랑 제외) · 🪙🌙 구글 블로거 2곳 전용 카드(부자닷컴 sub.gold-queen.com · Daily Health & Pain Guide www.gold-queen.com — 순수 본문 HTML·Google SEO·영문 현지화 원본 지침) · 🧭 블로그·가지글 길잡이(1블로그 1메인 · 큰 이슈만 가지글) · ⚠️ 기발행 주제 중복 경고(공개 RSS) · ⚡ 원소스 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 자막 동시 출력) · 🗞 뉴스 → 독자 행동 가이드(예약·주차·입장료 / 모델명·가격·차이 / 신청 방법·이용 조건·공식 경로) · 🛒 상품 역순 전략(상품 선정 → 대본) · 젬스 v3.3 이미지 프롬프트 · 형광펜 2색 강조 · 썸네일 호기심 훅 · 2단계 전수 검수 · 🎭 6대 페르소나(살림 팩트체커·TV이슈·돈정책·식단건강·증상병원·유튜브클립 — 원고 1·2단계와 스레드·클립에 함께 적용) · 🛡️ v2.2.1 안전장치 3종(건강 카테고리 식품표시광고법 제8조 금지어 필터 · 네이버 쇼핑커넥트·크리에이터샵 대가성 문구 · 제품 리뷰 허위 체험·미확인 수치 금지) · 🖼️ v2.2.3 원고 속 이미지 프롬프트 세트(썸네일 1·2 복사용 영문 프롬프트 · 목차별 본문 이미지 · 3:1 허브 배너) 정본 출력 · 썸네일 2번 textless 통일 · 기본 원고 모델 gemini-3.5-flash-lite(무료 하루 500편)";  // 원고에 적용하는 규칙 판본
 BS.APP_NAME = "지연님 블로그 작업실";
 BS.KEYWORDS_TODAY = "data/keywords-today.json";   // 매일 06시 80선 (블로그당 20개) — 정기 작업이 갱신
 /* ---------- 🔥 실시간 화제템 집합소 (v2.1.0 · 2026-11-18) ----------
@@ -738,11 +738,11 @@ BS.HUB_BANNER = {
    ② 한글 텍스트 + 한국 실사가 결합된 썸네일 1개 (메인 제목 그대로 쓰지 않고 문구는 서로 다르게) */
 BS.THUMB_RULES = [
   "썸네일 1번은 글자만(타이포)으로 만든다. 사진 없이 큰 한글 두 줄.",
-  "썸네일 2번은 한국인 실사 사진 위에 다른 한글 문구를 얹는다.",
+  "썸네일 2번은 한국인 실사 사진 위에 다른 한글 문구를 얹는다 — 사진에는 글자를 그리지 않고(textless), 지연님이 상단 1/3 여백에 직접 얹는다.",
   "두 썸네일 문구는 서로 달라야 하고, 블로그 메인 제목을 그대로 쓰지 않는다.",
   "두 문구 모두 교과서식 요약어가 아닌 짧은 호기심 훅(BS.THUMB_HOOK_RULE)이다 — 1번은 의외성·경고형, 2번은 질문·숫자·핵심 포인트형.",
   "둘 다 1:1 정사각형이고, 글자는 좌우 정확히 정중앙에 배치한다(centered horizontally, never left-aligned).",
-  "썸네일 2번은 상단 1/3을 문구 자리로 비우고, 그 문구도 그 안의 좌우 정중앙에 둔다."
+  "썸네일 2번은 상단 1/3을 문구 자리로 비우고(AI는 글자를 그리지 않는다), 그 문구는 그 안의 좌우 정중앙에 얹는다."
 ];
 
 /* ---------- v3.3 제목 공식 (노마드 로빅) ----------
@@ -1479,16 +1479,30 @@ BS.IMAGE_GEM = {
   light: "soft morning daylight through a window, warm natural tones, gentle soft shadows, no harsh flash, no over-saturation",
   color: "muted warm Korean home palette — beige, off-white, light wood, a single muted accent color",
   typoPrompt: "A clean Korean typography-only thumbnail design, solid warm ivory background with a deep navy accent bar, bold legible Korean sans-serif text lines arranged in the center, no people, no photos, flat vector poster style, high contrast, sharp Korean typography, no English letters, 8k resolution, aspect ratio 1:1",
-  photoPrompt: "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [scene from the article], healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, soft morning daylight, clean negative space in the upper third for Korean text overlay, textless, no words, photorealistic, 8k resolution, aspect ratio 1:1"
+  photoPrompt: "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [scene from the article], healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, soft morning daylight, clean empty negative space in the upper third where the author will place the Korean phrase later, textless, no text, no words, no letters, no watermark, photorealistic, 8k resolution, aspect ratio 1:1"
 };
 
-/* ---------- 기본 모델 ---------- */
-BS.DEFAULT_TEXT_MODEL = "gemini-2.5-flash";
+/* ---------- 기본 모델 (v2.2.3 · 2026-11-19 상향) ----------
+   기본을 gemini-2.5-flash(무료 하루 20편)에서 gemini-3.5-flash-lite(무료 하루 500편)로 올렸다.
+   Flash Lite는 구글 실시간 검색(google_search)을 붙일 수 없어 검색 없이 일반 작성으로 내려간다.
+   최신 확인이 필요한 날은 설정에서 2.5 Flash로 바꾸면 된다(하루 20편 · 검색 지원). */
+BS.DEFAULT_TEXT_MODEL = "gemini-3.5-flash-lite";
 BS.DEFAULT_IMAGE_MODEL = "gemini-2.5-flash-image";
 
+/* ---------- 저장된 옛 기본값 1회 전환 (v2.2.3) ----------
+   지연님·크리 님 브라우저 localStorage(bs.textModel)에 예전 기본값 "gemini-2.5-flash"가 남아 있으면
+   새로고침만 해도 계속 하루 20편 한도에 걸린다. bs.modelMigrated.223 플래그로 딱 한 번만 새 기본값으로 바꾸고,
+   그 뒤 설정에서 2.5 Flash를 직접 다시 고른 선택은 덮어쓰지 않는다. */
+BS.MODEL_MIGRATION = {
+  key: "bs.modelMigrated.223",
+  from: "gemini-2.5-flash",
+  to: "gemini-3.5-flash-lite",
+  notice: "원고 기본 모델을 gemini-3.5-flash-lite(무료 하루 500편)로 바꿨습니다 — 검색이 필요하면 설정에서 2.5 Flash로 변경"
+};
+
 BS.TEXT_MODEL_HINTS = [
-  "gemini-2.5-flash",
   "gemini-3.5-flash-lite",
+  "gemini-2.5-flash",
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash-lite",
   "gemini-3-flash-preview",
@@ -1496,8 +1510,9 @@ BS.TEXT_MODEL_HINTS = [
 ];
 
 /* ---------- 무료 한도 자동 모델 전환 (v1.6.1 · 2026-11-17) ----------
-   기본 모델(2.5 Flash 등 무료 하루 20회)의 한도가 끝나면 지연님이 설정을 건드리지
-   않아도 아래 순서의 '무료 500편/일' 모델로 자동 전환해 1단계 초안·2단계 검수를
+   기본 모델(v2.2.3부터 3.5 Flash Lite, 무료 하루 500편)의 한도가 끝나거나 2.5 Flash를
+   골라 하루 20편을 다 쓴 경우에도, 지연님이 설정을 건드리지 않아도 아래 순서의
+   '무료 500편/일' 모델로 자동 전환해 1단계 초안·2단계 검수를
    그대로 이어서 마칩니다. 바뀐 사실은 결과 위 배너에 짧게 적어 투명하게 알립니다.
 
    - 전환 대상 오류: 429(한도 초과) · 404(모델 없음/미지원) · 500/502/503/504(서버 혼잡)
@@ -1526,7 +1541,7 @@ BS.IMAGE_MODEL_HINTS = [
    본문에 들어가는 사진은 위쪽이 비면 글이 끊겨 보인다. 상단 여백 지시는 글자를 얹는
    대표 썸네일에만 남기고, 본문 사진은 프레임을 꽉 채우는 구도로 만든다. */
 BS.IMAGE_BODY_RULE = "상단 빈 공백 없이 피사체와 배경이 프레임 전체를 자연스럽게 꽉 채우는 구도(full-bleed, no empty top margin or blank wall space above subject)";
-BS.IMAGE_THUMB_RULE = "상단 1/3 문구 자리 여백은 대표 썸네일 2번(실사 + 한글 문구)에서만 쓰고, 그 문구는 캔버스 좌우 정확히 정중앙에 배치한다";
+BS.IMAGE_THUMB_RULE = "상단 1/3 여백은 대표 썸네일 2번(실사)에서만 쓰고, 그 사진에는 글자를 그리지 않는다(textless) — 이 여백은 지연님이 한글 문구를 얹을 자리이며, 문구는 캔버스 좌우 정확히 정중앙에 놓는다";
 
 /* ---------- 형광펜 2색 + 굵게 강조 (v1.7.2 · 2026-11-17 지연님 요청) ----------
    지연님이 스마트에디터 사진 두 장을 보내며 "상황에 따라 이렇게 표시도 해 줄 수 있어?"라고
@@ -1569,10 +1584,11 @@ BS.CENTER_RULE_SHORT = "좌우 정확히 정중앙(centered, never left-aligned)
 BS.IMAGE_PRINCIPLES = [
   "모든 사진은 1:1 정사각형",
   "인물은 단정하고 건강한 30대 후반~40대 초반 한국인 실사 (성형 얼굴·과장된 미소 금지)",
-  "이미지 안에 글자·간판 문구·워터마크를 넣지 않는다 (textless) — 단, 대표 썸네일 2종은 예외",
+  "이미지 안에 글자·간판 문구·워터마크를 넣지 않는다 (textless) — 단, 대표 썸네일 1번(타이포형)만 예외이고 2번 실사는 글자 없이 상단 1/3만 비운다",
+  "대표 썸네일 2번의 한글 문구는 AI가 그리지 않는다 — 상단 1/3을 빈 자리로 받아 지연님이 스마트에디터·미리캔버스에서 직접 얹는다",
   "본문 사진은 상단에 빈 공백을 두지 않는다 — 피사체와 배경이 프레임 전체를 자연스럽게 꽉 채우는 구도(full-bleed)",
   "상단 1/3 여백은 글자를 얹는 대표 썸네일에서만 쓴다 (본문 사진에는 절대 쓰지 않는다)",
-  "대표 썸네일 1·2번에 넣는 한글 글자는 좌우 정확히 정중앙에 둔다 — 왼쪽 정렬·한쪽 치우침 금지(centered horizontally, never left-aligned)",
+  "대표 썸네일 1·2번의 한글 글자(1번은 AI가 그리고, 2번은 지연님이 얹는다)는 좌우 정확히 정중앙에 둔다 — 왼쪽 정렬·한쪽 치우침 금지(centered horizontally, never left-aligned)",
   "배경은 실제 한국의 장소·집·시장·주방·병원처럼 구체적으로 고증",
   "자연광, 스마트폰으로 찍은 듯한 자연스러운 구도. CF 같은 연출 금지",
   "AI 느낌(플라스틱 피부, 과도한 보정, 손가락 왜곡) 금지"
@@ -2089,7 +2105,7 @@ BS.WEB_SEARCH = {
   version: "v1.9.4",
   name: "🔍 구글 실시간 검색",
   label: "🔍 구글 실시간 검색으로 최신 확인 후 작성",
-  hint: "gemini-2.5-flash 무료 하루 500회 지원 · 미지원 모델(Flash Lite 등)은 자동으로 일반 작성으로 전환",
+  hint: "gemini-3.5-flash-lite 무료 하루 500편 지원 · 실시간 검색이 필요하면 설정에서 2.5 Flash로 변경",
   storageKey: "bs.webSearch",
   defaultOn: true,
   /* 요청 본문에 그대로 들어가는 도구 정의 */
