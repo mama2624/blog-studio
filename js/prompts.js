@@ -246,7 +246,9 @@ BS.prompts = (function () {
     }
     L.push("[이 원고에 넣을 실제 글 목록 — 제목·주소를 글자 하나 바꾸지 않는다]");
     links.forEach(function (l) {
-      L.push("  · [" + l.title + "](" + l.url + ")" + (l.cross ? " — " + ((C.cross || {}).label || "다른 블로그(교차)") : ""));
+      var label = "";
+      if (l.other) label = " — " + ((C.otherBlogs || {}).label || "내 다른 블로그") + (l.blogName ? " · " + l.blogName : "");
+      L.push("  · [" + l.title + "](" + l.url + ")" + label);
     });
     return L.join("\n");
   }
@@ -2582,7 +2584,8 @@ BS.prompts = (function () {
     thumbnailInstructions: thumbnailInstructions,
     bannerInstruction: bannerInstruction,
     hubSignature: function (blogName) { return blogName + " · " + BS.GOLD_QUEEN_HUB; },
-    systemPrompt: systemPrompt
+    systemPrompt: systemPrompt,
+    internalLinkBlock: internalLinkBlock   // v2.3.1 — 다른 블로그 표시가 프롬프트에 찍히는지 검증용
   };
   return BS.prompts;
 })();

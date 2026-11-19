@@ -721,6 +721,9 @@
      · 매칭: 주제·키워드를 낱말로 쪼개 제목(3배)·태그(2배)·요약(1배)에 걸리는 만큼 점수를
        매기고, 낱말 2개 이상이 걸려 10점을 넘거나 네 글자 이상 낱말이 12점을 넘는 글만
        최대 3편 고른다. 걸리는 글이 없으면 빈 배열 — 억지로 넣지 않는다.
+     · v2.3.1(2026-11-19 지연님 "나의 다른 블로그에 있는 내용도 내부링크 걸 수 있게 해 줘") —
+       내 다른 블로그(행복한긍정씨·긍정예찬·부자닷컴·영문) 글도 같은 문턱으로 후보에 올리고,
+       같은 블로그 글은 sameBoost 배 우선한다. 화면의 [내 다른 블로그 포함] 으로 끌 수 있다.
      · 긍정사랑은 BS.INTERNAL_LINKS.exclude 에 있어 여기서 바로 빈 배열이다. */
   var IL_STOP = {
     "방법": 1, "정보": 1, "확인": 1, "비교": 1, "추천": 1, "이유": 1,
@@ -798,13 +801,22 @@
     return scored.filter(function (x) { return x.score >= min; }).slice(0, C.maxLinks || 3);
   }
 
-  /* 보조 교차 링크 — 다른 블로그 글이 이 주제를 훨씬 잘 덮을 때만 1편 (v1.9.9)
-     지연님 지시 — "기본은 같은 블로그. 다른 블로그 글은 검색어나 각도가 다른 큰 이슈일 때만
-     보조 교차 링크로. 긍정사랑은 수집·추천·교차 모두에서 제외." */
-  function crossLinksFor(blog, topic, extra, same) {
+  /* 🔗 내 다른 블로그 링크 (v2.3.1) — 같은 블로그 글만 고르던 v1.9.9 를 넓혔다.
+     지연님 — "나의 다른 블로그에 있는 내용도 내부링크 걸 수 있게 해 줘"
+     · 다른 블로그 글도 같은 관련도 문턱(minScore·낱말 2개)을 넘으면 후보에 올린다.
+     · 어느 블로그 글인지 blogName 을 붙여 화면·프롬프트 목록에서 구분할 수 있게 한다.
+     · 긍정사랑(000jinjin000)은 targets·exclude 에서 빠져 있어 후보에 들지 않는다. */
+  function ilBlogName(id) {
+    var D = BS.INTERNAL_DATA || {};
+    var meta = (D.blogs || []).filter(function (b) { return b && b.id === id; })[0];
+    if (meta && meta.name) return meta.name;
+    var b = BS.blogById ? BS.blogById(id) : null;
+    return (b && b.name) || id;
+  }
+
+  function otherBlogLinksFor(blog, topic, extra) {
     var C = BS.INTERNAL_LINKS || {};
-    var X = C.cross || {};
-    if (!X.enabled) return [];
+    var O = C.otherBlogs || {};
     if (!blog || !blog.id) return [];
     if ((C.exclude || []).indexOf(blog.id) >= 0) return [];
     var D = BS.INTERNAL_DATA || null;
@@ -813,8 +825,7 @@
     ilTokens(extra).forEach(function (t) { if (toks.indexOf(t) < 0) toks.push(t); });
     if (!toks.length) return [];
     var flat = String(topic || "").toLowerCase().replace(/[^0-9a-z가-힣]+/g, "");
-    var sameBest = (same && same.length) ? same[0].score : 0;
-    var need = Math.max(X.minScore || 16, Math.ceil(sameBest * (X.mustBeat || 1.3)));
+    var min = Math.max(12, O.minScore || 14);
     var scored = [];
     (D.items || []).forEach(function (item) {
       if (!item || !item.url) return;
@@ -822,21 +833,75 @@
       if ((C.targets || []).indexOf(item.blog) < 0) return;      // 긍정사랑 등 제외
       if ((C.exclude || []).indexOf(item.blog) >= 0) return;
       var m = ilMatch(item, toks, flat);
-      if (m.score < need) return;
-      var ok = (m.hits >= 2 && m.score >= (X.minScore || 16)) ||
-               (m.hits === 1 && m.longest >= 4 && m.score >= (X.minScore || 16));
+      if (!m.score) return;
+      /* 다른 블로그 글은 같은 블로그보다 까다롭게 본다 — '11월'·'여행'처럼 흔한 낱말 두 개로
+         엉뚱한 글이 올라오지 않게, 세 글자 이상 낱말이 걸리거나 세 낱말 이상 맞아야 한다. */
+      var ok = (m.hits >= 2 && m.longest >= 3 && m.score >= min) ||
+               (m.hits >= 3 && m.score >= min - 2) ||
+               (m.hits === 1 && m.longest >= 4 && m.score >= min + 2);
       if (!ok) return;
-      var meta = null;
-      (D.blogs || []).forEach(function (b) { if (b.id === item.blog) meta = b; });
       scored.push({ title: item.title, url: item.url, date: item.date || "", score: m.score,
-                    cross: true, blog: item.blog, blogName: (meta && meta.name) || item.blog });
+                    other: true, blog: item.blog, blogName: ilBlogName(item.blog) });
     });
     if (!scored.length) return [];
     scored.sort(function (a, b) { return b.score - a.score || (b.date > a.date ? 1 : -1); });
-    return scored.slice(0, X.maxLinks || 1);
+    return scored;
   }
 
-  /* 화면·요청에 실제로 넘길 내부링크 — 직접 고른 것 + 같은 블로그 자동 + 보조 교차 */
+  /* 화면의 [내 다른 블로그 포함] 값 — 칸이 있으면 그 값, 없으면 설정 기본값(v2.3.1 켜짐) */
+  function otherBlogsOn() {
+    var O = (BS.INTERNAL_LINKS || {}).otherBlogs || {};
+    var box = $("#internalOtherBlogs");
+    if (box && typeof box.checked === "boolean") return !!box.checked;
+    return !!O.enabled;
+  }
+
+  /* 같은 블로그 + 다른 블로그를 한 목록으로 (v2.3.1)
+     · 같은 블로그 글은 항상 우선 — 비슷하면 sameBoost 배로 앞선다
+     · 다른 블로그 최고점이 같은 블로그 최고점의 mustBeat(0.8) 이상이면 함께 올린다
+       (같은 블로그 글 3편으로 자리가 다 차 있어도 한 자리를 내준다 — '막지 않는다')
+     · 다른 블로그는 maxLinks(3)편까지만 */
+  function mixedLinksFor(blog, topic, extra, cap) {
+    var C = BS.INTERNAL_LINKS || {};
+    var O = C.otherBlogs || {};
+    cap = cap || C.maxLinks || 3;
+    var same = autoLinksFor(blog, topic, extra);
+    if (!otherBlogsOn()) return same.slice(0, cap);
+    var others = otherBlogLinksFor(blog, topic, extra);
+    if (!others.length) return same.slice(0, cap);
+    var boost = O.sameBoost || 1.15;
+    same.forEach(function (l) { l.rank = (l.score || 0) * boost; });
+    others.forEach(function (l) { l.rank = l.score || 0; });
+    var topOther = others[0];
+    /* 같은 블로그 글이 아예 없으면 다른 블로그 글이 그대로 후보 — 큰 이슈·새 주제에서 유용.
+       같은 블로그 글이 자리를 다 채웠어도 다른 블로그 글이 그 3등 점수의 mustBeat(0.7) 이상이면
+       한 자리를 내준다 — '막지 않는다'. */
+    var keepOther = false, sameRoom = same.length;
+    if (!same.length) {
+      keepOther = true;
+      sameRoom = 0;
+    } else if (same.length < cap) {
+      keepOther = true;
+    } else {
+      var weakest = same[cap - 1].score || 0;
+      keepOther = topOther.score >= weakest * (O.mustBeat || 0.7);
+      if (keepOther) sameRoom = cap - 1;
+    }
+    var out = same.slice(0, sameRoom);
+    if (keepOther) {
+      var maxOther = O.maxLinks || 3, otherN = 0;
+      for (var i = 0; i < others.length && out.length < cap && otherN < maxOther; i++) {
+        out.push(others[i]);
+        otherN += 1;
+      }
+    }
+    out.sort(function (a, b) {
+      return (b.rank - a.rank) || (b.score - a.score) || (b.date > a.date ? 1 : -1);
+    });
+    return out.slice(0, cap);
+  }
+
+  /* 화면·요청에 실제로 넘길 내부링크 — 직접 고른 것 + 같은 블로그 자동 + 내 다른 블로그 */
   function currentInternalLinks() {
     var C = BS.INTERNAL_LINKS || {};
     var cap = C.maxLinks || 3;
@@ -848,16 +913,8 @@
       if (off.indexOf(l.url) >= 0) return false;
       return !manual.some(function (m) { return m.url === l.url; });
     }
-    var auto = autoLinksFor(state.blog, topic, extra).filter(unseen).slice(0, cap);
-    var picked = manual.concat(auto).slice(0, cap);
-    // 보조 교차 링크 — 같은 블로그 글을 다 놓고도 자리가 남을 때만 1편
-    if (picked.length < cap) {
-      var cross = crossLinksFor(state.blog, topic, extra, auto).filter(function (l) {
-        return unseen(l) && !picked.some(function (p) { return p.url === l.url; });
-      }).slice(0, (C.cross && C.cross.maxLinks) || 1);
-      picked = picked.concat(cross).slice(0, cap);
-    }
-    return picked;
+    var mixed = mixedLinksFor(state.blog, topic, extra, cap).filter(unseen);
+    return manual.concat(mixed).slice(0, cap);
   }
 
   function renderInternal(q) {
@@ -866,18 +923,20 @@
     var isTarget = (C.targets || []).indexOf(state.blog.id) >= 0;
     var manualUrls = state.internal.map(function (x) { return x.url; });
     var added = isTarget ? currentInternalLinks().filter(function (l) { return manualUrls.indexOf(l.url) < 0; }) : [];
-    var auto = added.filter(function (l) { return !l.cross; });
-    var cross = added.filter(function (l) { return !!l.cross; });
+    var auto = added.filter(function (l) { return !l.other; });
+    var other = added.filter(function (l) { return !!l.other; });
     if (isJin) {
       $("#internalHint").textContent = "(긍정사랑은 기존 글 2~3편 필수 · " +
         (BS.INTERNAL_POSTS ? BS.INTERNAL_POSTS.length : 0) + "편 목록 · 자동 내부링크 없음)";
-    } else if (isTarget && (auto.length || cross.length)) {
-      $("#internalHint").textContent = "(이 블로그 기존 글 " + ilPoolSize(state.blog.id) +
-        "편에서 " + auto.length + "편" + (cross.length ? " + 다른 블로그 교차 " + cross.length + "편" : "") +
+    } else if (isTarget && added.length) {
+      $("#internalHint").textContent = "(이 블로그 기존 글 " + ilPoolSize(state.blog.id) + "편" +
+        (otherBlogsOn() ? " + 내 다른 블로그 " + ilOtherPoolSize(state.blog.id) + "편" : "") +
+        "에서 " + auto.length + "편" + (other.length ? " + 내 다른 블로그 " + other.length + "편" : "") +
         "을 자동으로 넣습니다)";
     } else if (isTarget) {
-      $("#internalHint").textContent = "(기존 글 " + ilPoolSize(state.blog.id) +
-        "편을 모아 뒀습니다 — 주제가 겹치면 본문 아래 '함께 보면 좋은 글'로 자동으로 들어갑니다)";
+      $("#internalHint").textContent = "(기존 글 " + ilPoolSize(state.blog.id) + "편" +
+        (otherBlogsOn() ? " + 내 다른 블로그 " + ilOtherPoolSize(state.blog.id) + "편" : "") +
+        "을 모아 뒀습니다 — 주제가 겹치면 본문 아래 '함께 보면 좋은 글'로 자동으로 들어갑니다)";
     } else {
       $("#internalHint").textContent = "(선택 · 다른 글로 연결할 때)";
     }
@@ -888,20 +947,24 @@
     if (!isJin && !query) {
       res.innerHTML = '<div class="ir-empty">' + (isTarget
         ? (added.length
-            ? "지금 주제로 " + added.length + "편이 자동 매칭됐습니다" + (cross.length ? " (다른 블로그 교차 포함)" : "") +
-              " — 아래 목록에서 ✕로 빼거나, 제목을 검색해 직접 넣을 수 있습니다."
+            ? "지금 주제로 " + added.length + "편이 자동 매칭됐습니다" + (other.length ? " (내 다른 블로그 " + other.length + "편 포함)" : "") +
+              " — 아래 목록에서 ✕로 뺐거나, 제목을 검색해 직접 넣을 수 있습니다."
             : "주제와 겹치는 기존 글이 아직 없습니다 — 관련 글이 없으면 '함께 보면 좋은 글'은 넣지 않습니다.")
         : "긍정사랑을 고르면 기존 글 201편에서 바로 고를 수 있습니다.") + "</div>";
       renderSelected();
       return;
     }
-    var pool = isJin ? (BS.INTERNAL_POSTS || []) : [];
+    /* v2.3.1 — 검색은 내 다른 블로그 글까지 찾는다(칸에 그 글의 블로그 이름을 붙인다) */
+    var pool = isJin
+      ? (BS.INTERNAL_POSTS || []).map(function (p) { return { title: p[0], url: p[1], blog: "jinjin2624" }; })
+      : ilSearchPool(state.blog.id);
     if (!query) {
       res.innerHTML = '<div class="ir-empty">제목을 검색해 넣을 글을 고르세요 (최대 3편)</div>';
       renderSelected();
       return;
     }
-    var hits = pool.filter(function (p) { return p[0].indexOf(query) >= 0; }).slice(0, 30);
+    var ql = query.toLowerCase();
+    var hits = pool.filter(function (p) { return String(p.title || "").toLowerCase().indexOf(ql) >= 0; }).slice(0, 30);
     if (!hits.length) {
       res.innerHTML = '<div class="ir-empty">"' + esc(query) + '"가 들어간 기존 글이 없습니다.</div>';
       renderSelected();
@@ -913,28 +976,59 @@
       row.className = "ir-item";
       var cb = document.createElement("input");
       cb.type = "checkbox";
-      cb.checked = selected.indexOf(p[1]) >= 0;
+      cb.checked = selected.indexOf(p.url) >= 0;
       cb.addEventListener("change", function () {
-        var idx = state.internal.findIndex(function (x) { return x.url === p[1]; });
+        var idx = state.internal.findIndex(function (x) { return x.url === p.url; });
         if (cb.checked) {
-          if (state.internal.length >= 3) { cb.checked = false; toast("내부링크는 3편까지 넣습니다"); return; }
-          if (idx < 0) state.internal.push({ title: p[0], url: p[1] });
+          if (state.internal.length >= (C.maxLinks || 3)) { cb.checked = false; toast("내부링크는 " + (C.maxLinks || 3) + "편까지 넣습니다"); return; }
+          if (idx < 0) state.internal.push({ title: p.title, url: p.url, blog: p.blog, blogName: ilBlogName(p.blog) });
         } else if (idx >= 0) {
           state.internal.splice(idx, 1);
         }
         renderSelected();
       });
       var sp = document.createElement("span");
-      sp.textContent = p[0];
+      sp.textContent = p.title;
+      if (p.blog && p.blog !== state.blog.id && (C.exclude || []).indexOf(p.blog) < 0) {
+        var tag = document.createElement("i");
+        tag.className = "ir-blog";
+        tag.textContent = ilBlogName(p.blog);
+        sp.appendChild(document.createTextNode(" "));
+        sp.appendChild(tag);
+      }
       row.appendChild(cb);
       row.appendChild(sp);
       res.appendChild(row);
     });
     renderSelected();
   }
+
+  /* 검색용 목록 — 이 블로그 + (켜져 있으면) 내 다른 블로그 글. 긍정사랑은 빠진다 */
+  function ilSearchPool(blogId) {
+    var C = BS.INTERNAL_LINKS || {};
+    var D = BS.INTERNAL_DATA || {};
+    var withOther = otherBlogsOn();
+    return (D.items || []).filter(function (it) {
+      if (!it || !it.url || !it.title) return false;
+      if ((C.exclude || []).indexOf(it.blog) >= 0) return false;
+      if ((C.targets || []).indexOf(it.blog) < 0) return false;
+      return it.blog === blogId || withOther;
+    });
+  }
+
   function ilPoolSize(blogId) {
     var D = BS.INTERNAL_DATA || {};
     return (D.items || []).filter(function (i) { return i && i.blog === blogId; }).length;
+  }
+  /* 내 다른 블로그 글 수 (v2.3.1) — 이 블로그·긍정사랑은 뺀 targets 글 */
+  function ilOtherPoolSize(blogId) {
+    var C = BS.INTERNAL_LINKS || {};
+    var D = BS.INTERNAL_DATA || {};
+    return (D.items || []).filter(function (i) {
+      if (!i || !i.blog || i.blog === blogId) return false;
+      if ((C.exclude || []).indexOf(i.blog) >= 0) return false;
+      return (C.targets || []).indexOf(i.blog) >= 0;
+    }).length;
   }
 
   function renderSelected() {
@@ -944,9 +1038,9 @@
     links.forEach(function (l) {
       var manual = state.internal.some(function (m) { return m.url === l.url; });
       var d = document.createElement("div");
-      d.className = "sel-link" + (manual ? "" : (l.cross ? " auto cross" : " auto"));
-      d.title = l.url + (l.cross && l.blogName ? " · " + l.blogName : "");
-      d.innerHTML = (manual ? "" : '<i class="sel-auto">' + (l.cross ? "교차" : "자동") + "</i>") +
+      d.className = "sel-link" + (manual ? "" : (l.other ? " auto other" : " auto"));
+      d.title = l.url + (l.other && l.blogName ? " · " + l.blogName : "");
+      d.innerHTML = (manual ? "" : '<i class="sel-auto">' + (l.other ? (l.blogName || "다른 블로그") : "자동") + "</i>") +
         "<span>" + esc(l.title) + "</span>";
       var x = document.createElement("button");
       x.type = "button";
@@ -4707,8 +4801,19 @@
 
   function autoGrow(ta) {
     if (!ta) return;
+    /* v2.3.1 — 숨겨 둔 카드에서 부르면 scrollHeight 가 0 이라 높이가 4px 로 줄어
+       글자가 위아래로 잘렸다(지연님 화면 제보). 숨은 동안은 인라인 높이를 지워
+       CSS 기본 높이(min-height)로 두고, 보인 뒤 autoGrowIn 이 다시 키운다. */
+    if (ta.offsetParent === null || !ta.scrollHeight) { ta.style.height = ""; return; }
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight + 4, 460) + "px";
+    ta.style.height = Math.min(Math.max(ta.scrollHeight + 4, 72), 900) + "px";   // v2.3.1 — 상한을 900px 로 넓혀 모바일에서도 글자가 잘리지 않게
+  }
+
+  /* 카드가 화면에 보인 직후 안의 글상자를 내용 높이에 맞춘다 (v2.3.1) */
+  function autoGrowIn(root) {
+    if (!root || !root.querySelectorAll) return;
+    var list = root.querySelectorAll("textarea");
+    for (var i = 0; i < list.length; i++) autoGrow(list[i]);
   }
 
   function renderImgPrompts() {
@@ -6037,6 +6142,8 @@
         finRenderLinks();
         finPaintPicked();
         finPaintUpload();
+        /* v2.3.1 — 숨어 있을 때 만든 타래·첫 댓글 글상자를 이제 보이는 상태에서 다시 키운다 */
+        autoGrowIn($("#finishThreadList"));
       }
     }
     try {
@@ -6326,6 +6433,7 @@
   var FINCFG = BS.FINISH || {};
   var FIN = {
     blogId: "",
+    includeOther: null,  // [내 다른 블로그 포함] 상태 — null이면 설정 기본값(v2.3.1 켜짐)
     recos: [],          // 지금 보여 주는 후보 (추천 또는 검색 결과)
     picked: {},         // url → {title,url,date,blog,score}
     added: [],          // 직접 추가한 글
@@ -6371,22 +6479,37 @@
     try { localStorage.setItem(FINCFG.storageAdded || "bs.finish.added", JSON.stringify(FIN.added)); } catch (e) {}
   }
 
-  function finItems(blogId) {
+  function finItems(blogId, includeOther) {
     var out = [];
     if (blogId === "jinjin2624") {
       (BS.INTERNAL_POSTS || []).forEach(function (p) {
         if (p && p[0] && p[1]) out.push({ blog: "jinjin2624", title: p[0], url: p[1], date: "", tags: [], keywords: [], summary: "" });
       });
     } else {
+      var C = BS.INTERNAL_LINKS || {};
       var D = BS.INTERNAL_DATA || null;
       ((D && D.items) || []).forEach(function (it) {
-        if (it && it.blog === blogId && it.url && it.title) out.push(it);
+        if (!it || !it.url || !it.title) return;
+        if (it.blog === blogId) { out.push(it); return; }
+        /* v2.3.1 — 내 다른 블로그 글도 함께. 긍정사랑(exclude)은 제외 */
+        if (!includeOther) return;
+        if ((C.exclude || []).indexOf(it.blog) >= 0) return;
+        if ((C.targets || []).indexOf(it.blog) < 0) return;
+        out.push(it);
       });
     }
     (FIN.added || []).forEach(function (a) {
       if (!blogId || a.blog === blogId) out.push(a);
     });
     return out;
+  }
+
+  /* [내 다른 블로그 포함] 값 — 화면 칸 → FIN 상태 → 설정 기본값(v2.3.1 켜짐) */
+  function finOtherOn() {
+    var box = $("#finishOtherBlogs");
+    if (box && typeof box.checked === "boolean") return !!box.checked;
+    if (typeof FIN.includeOther === "boolean") return FIN.includeOther;
+    return !!((FINCFG.otherBlogs || {}).enabled);
   }
   function finHasList(blogId) {
     return finItems(blogId).length > 0;
@@ -6485,9 +6608,28 @@
         score: m.score, hits: m.hits, spec: m.spec, matched: m.matched });
     });
     if (!scored.length) return [];
-    scored.sort(function (a, b) { return b.score - a.score || (b.date > a.date ? 1 : -1); });
-    var best = scored[0].score;
-    return scored.filter(function (x) { return x.score >= Math.max(8, best * 0.45); }).slice(0, FINCFG.maxRecos || 8);
+    /* v2.3.1 — 고른 블로그 글은 sameBoost 배 먼저, 다른 블로그 글은 maxOther 까지 상위에 섞는다.
+       (같은 블로그 자리가 다 차 있어도 다른 블로그 글이 더 잘 맞으면 보여 준다) */
+    var O = FINCFG.otherBlogs || {};
+    var boost = O.sameBoost || 1.12;
+    scored.forEach(function (x) { x.rank = (x.score || 0) * (x.blog === blogId ? boost : 1); });
+    scored.sort(function (a, b) {
+      return (b.rank - a.rank) || (b.score - a.score) || (b.date > a.date ? 1 : -1);
+    });
+    var best = 0;
+    scored.forEach(function (x) { if (x.score > best) best = x.score; });
+    var min = Math.max(8, best * 0.45);
+    var maxOther = O.maxOther || 3, otherN = 0, out = [], cap = FINCFG.maxRecos || 8;
+    for (var i = 0; i < scored.length && out.length < cap; i++) {
+      var x = scored[i];
+      if (x.score < min) continue;
+      if (x.blog !== blogId) {
+        if (otherN >= maxOther) continue;
+        otherN += 1;
+      }
+      out.push(x);
+    }
+    return out;
   }
 
   /* ---------------- 내부링크 삽입 (순수 함수) ---------------- */
@@ -6676,7 +6818,9 @@
     var cnt = $("#finishBlogCount");
     if (cnt) {
       var n = finItems(FIN.blogId).length;
-      cnt.textContent = n ? n + "편에서 찾기" : "자동 목록 없음";
+      var extra = (FIN.blogId === "jinjin2624" || !finOtherOn()) ? 0
+        : finItems(FIN.blogId, true).length - n;
+      cnt.textContent = n ? n + "편" + (extra ? " + 다른 블로그 " + extra + "편" : "") + "에서 찾기" : "자동 목록 없음";
     }
     var note = $("#finishBlogNote");
     if (note) {
@@ -6684,7 +6828,9 @@
       var msg = "";
       if (FIN.blogId === "jinjin2624") msg = finNote("jinjin");
       else if (!finHasList(FIN.blogId)) msg = finNote("noList");
-      else msg = (b.name || "") + " 기존 글 " + finItems(FIN.blogId).length + "편에서 제목·태그·요약을 대조해 찾습니다 (긍정사랑은 201편 관리대장에서 직접 고르기).";
+      else msg = (b.name || "") + " 기존 글 " + finItems(FIN.blogId).length + "편" +
+        (finOtherOn() ? " + 내 다른 블로그 글까지 제목·태그·요약을 대조해 찾습니다" : "에서 제목·태그·요약을 대조해 찾습니다") +
+        " (긍정사랑은 201편 관리대장에서 직접 고르기).";
       note.textContent = msg;
     }
   }
@@ -6716,7 +6862,7 @@
     var q = String($("#finishLinkSearch") ? $("#finishLinkSearch").value : "").trim().toLowerCase();
     var list;
     if (q) {
-      list = finItems(FIN.blogId).filter(function (it) {
+      list = finItems(FIN.blogId, finOtherOn()).filter(function (it) {
         return String(it.title || "").toLowerCase().indexOf(q) >= 0;
       }).slice(0, 30);
       var cnt0 = $("#finishLinkCount");
@@ -6736,12 +6882,15 @@
       var on = finIsPicked(it.url);
       var date = it.date ? String(it.date).slice(2).replace(/-/g, ".") : "";
       var score = it.score ? '<span class="fl-score">관련 ' + it.score + "</span>" : "";
-      return '<div class="fin-link' + (on ? " on" : "") + '" data-fin-url="' + esc(it.url) + '">' +
+      var blogId = it.blog || FIN.blogId;
+      var other = blogId !== FIN.blogId;
+      var blogName = ilBlogName(blogId);
+      return '<div class="fin-link' + (on ? " on" : "") + (other ? " other" : "") + '" data-fin-url="' + esc(it.url) + '">' +
         '<input type="checkbox" id="finPick' + i + '" data-fin-pick="' + esc(it.url) + '"' + (on ? " checked" : "") + ' aria-label="' + esc(it.title) + '">' +
         '<label class="fl-main" for="finPick' + i + '">' +
           '<span class="fl-title">' + esc(it.title) + "</span>" +
           '<span class="fl-meta">' + (date ? "<span>" + esc(date) + "</span>" : "") +
-            "<span>" + esc(it.blog || FIN.blogId) + "</span></span>" +
+            '<span class="' + (other ? "fl-other-blog" : "") + '">' + esc(other ? "내 다른 블로그 · " + blogName : blogName) + "</span></span>" +
         "</label>" + score +
         '<a class="fl-open" href="' + esc(it.url) + '" target="_blank" rel="noopener" aria-label="새 창에서 열기">↗</a>' +
         "</div>";
@@ -6792,7 +6941,7 @@
 
   function finRecalc(silent) {
     var title = finTitleValue(), body = finBodyValue();
-    FIN.recos = finMatchList(title, body, FIN.blogId);
+    FIN.recos = finMatchList(title, body, FIN.blogId, finItems(FIN.blogId, finOtherOn()));
     /* 이미 본문에 들어간 내부링크는 후보에서도 뺀다 */
     finRenderLinks();
     finPaintPicked();
@@ -6800,9 +6949,12 @@
     if (!silent) {
       var note = $("#finishLinkNote");
       if (note) {
+        var otherN = FIN.recos.filter(function (r) { return (r.blog || FIN.blogId) !== FIN.blogId; }).length;
         note.textContent = FIN.recos.length
-          ? "관련도 순 " + FIN.recos.length + "편 — 체크해서 고르세요 (최대 " + (FINCFG.maxPick || 5) + "편). 본문 속 문단 끝에 자연스럽게 꽂거나, 글 맨 아래에 모을 수 있습니다."
-          : finNote("noMatch") === "" ? "" : (body.trim().length < (FINCFG.minBody || 40) ? finNote("noBody") : finNote("noMatch"));
+          ? "관련도 순 " + FIN.recos.length + "편" +
+            (otherN ? " (내 다른 블로그 " + otherN + "편 포함)" : "") +
+            " — 체크해서 고르세요 (최대 " + (FINCFG.maxPick || 5) + "편). 본문 속 문단 끝에 자연스럽게 꽂거나, 글 맨 아래에 모을 수 있습니다."
+          : (body.trim().length < (FINCFG.minBody || 40) ? finNote("noBody") : finNote("noMatch"));
       }
     }
   }
@@ -6812,7 +6964,7 @@
     if (!url) return;
     if (on) {
       var item = null;
-      FIN.recos.concat(finItems(FIN.blogId)).some(function (it) { if (it.url === url) { item = it; return true; } return false; });
+      FIN.recos.concat(finItems(FIN.blogId, finOtherOn())).some(function (it) { if (it.url === url) { item = it; return true; } return false; });
       if (!item) return;
       var max = FINCFG.maxPick || 5;
       if (Object.keys(FIN.picked).length >= max) {
@@ -6967,6 +7119,8 @@
       if (card) card.hidden = false;
       var empty = $("#finishResultEmpty");
       if (empty) empty.hidden = true;
+      /* 카드를 연 뒤에 글상자 높이를 내용에 맞춘다 (v2.3.1 — 숨은 채 계산해 글자가 잘리던 문제) */
+      setTimeout(function () { autoGrowIn($("#finishThreadList")); }, 0);
       return parsed;
     });
   }
@@ -7040,6 +7194,11 @@
       });
       box.appendChild(h);
     }
+    /* v2.3.1 — 위에서 카드는 숨은 채로 만들어진다. 결과 카드가 열린 뒤 한 번 더 키운다. */
+    setTimeout(function () {
+      autoGrowIn(block);
+      autoGrowIn(box);
+    }, 30);
     finPaintUpload();
   }
 
@@ -7543,8 +7702,17 @@
       });
     }
 
-    ["#finishTitle", "#finishBody"].forEach(function (sel) {
-      if (!$(sel)) return;
+    /* v2.3.1 — [내 다른 블로그 포함] 체크박스 */
+    if ($("#finishOtherBlogs")) {
+      $("#finishOtherBlogs").addEventListener("change", function (e) {
+        FIN.includeOther = !!e.target.checked;
+        finPaintBlogs();
+        finRecalc();
+        toast(FIN.includeOther ? finNote("otherOn") : finNote("otherOff"), 3800);
+      });
+    }
+
+    ["#finishTitle", "#finishBody"].forEach(function (sel) {      if (!$(sel)) return;
       $(sel).addEventListener("input", function () {
         FIN.last = null;
         finPaintCounts();
@@ -7743,7 +7911,7 @@
   /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
      예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
   BS.finish = {
-    version: (FINCFG.version || "v2.3.0"),
+    version: (FINCFG.version || "v2.3.1"),
     state: function () {
       return {
         blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
@@ -8301,6 +8469,15 @@
       });
     }
     $("#internalSearch").addEventListener("input", function (e) { renderInternal(e.target.value); });
+    /* v2.3.1 — [내 다른 블로그 포함] 을 끄면 이 블로그 글만 다시 보여 준다 */
+    if ($("#internalOtherBlogs")) {
+      $("#internalOtherBlogs").addEventListener("change", function (e) {
+        renderInternal($("#internalSearch") ? $("#internalSearch").value : "");
+        toast(e.target.checked
+          ? "내 다른 블로그(행복한긍정씨·긍정예찬·부자닷컴·영문) 글까지 함께 찾습니다"
+          : "이 블로그 글만 찾습니다", 3200);
+      });
+    }
 
     $("#btnCopyHtml").addEventListener("click", function () {
       if (!state.result) return;
@@ -8472,6 +8649,17 @@
   BS.renderArticle = renderArticle;   // v2.2.3 — 결과 화면의 이미지 프롬프트 박스 렌더 검증용
   BS.parseImagePromptCards = parseImagePromptCards;   // v2.2.6 — 이미지 프롬프트 세트 카드 파싱 검증용
   BS.imagePromptCardsHtml = imagePromptCardsHtml;     // v2.2.6 — 카드 HTML·복사 버튼 검증용
+  /* v2.3.1 검증용 — 내 다른 블로그 내부링크 매칭을 콘솔에서 직접 확인
+     예: BS.ilLinks.mixed('mama2624', '겨울 창문 단열')  ·  BS.finMatch.items('mama2624', true).length */
+  BS.ilLinks = { auto: autoLinksFor, other: otherBlogLinksFor, mixed: mixedLinksFor, on: otherBlogsOn };
+  BS.finMatch = { list: finMatchList, items: finItems, otherOn: finOtherOn };
+  /* v2.3.1 검증용 — 타래 결과 카드를 직접 그려 글상자 높이를 확인
+     예: BS.finThreads.set({threads:[{no:1,role:'훅',text:'...'}], comment:'...', hashtags:'#태그'}) */
+  BS.finThreads = {
+    render: finRenderThreads,
+    set: function (t) { FIN.threads = t; finRenderThreads(); return true; },
+    grow: function () { autoGrowIn($("#finishThreadList")); return true; }
+  };
   BS.auditDefect = auditDefect;
   BS.parseGrounding = parseGrounding;
   /* v2.0.0 검증용 — 중복 경고·길잡이·블로거·멀티유즈를 콘솔에서 직접 확인 */

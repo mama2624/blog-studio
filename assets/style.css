@@ -128,6 +128,11 @@ textarea{resize:vertical;line-height:1.6}
 .sel-link.auto.cross{background:#fdf5ea;border-color:#efe0c9;color:#7a5320}
 .sel-link.auto.cross button{color:#b08a55}
 .sel-link.auto.cross .sel-auto{background:#f6e3c6;color:#7a5320}
+/* v2.3.1 — 내 다른 블로그 글 (구 '교차' 자리) */
+.sel-link.auto.other{background:#fdf5ea;border-color:#efe0c9;color:#7a5320}
+.sel-link.auto.other button{color:#b08a55}
+.sel-link.auto.other .sel-auto{background:#f6e3c6;color:#7a5320;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ir-blog{font-style:normal;font-size:10.5px;color:#8a5a1e;background:#f8ecd8;border-radius:5px;padding:0 5px;margin-left:2px;white-space:nowrap}
 .sel-auto{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.2px;background:#e7e1f7;color:#5b4b95;border-radius:6px;padding:1px 5px;flex:0 0 auto}
 
 /* buttons */
@@ -579,7 +584,7 @@ textarea{resize:vertical;line-height:1.6}
 .thread-extra{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .thread-card{border:1.5px solid #e3ddf6;border-radius:12px;padding:12px 14px;background:#fff}
 .thread-card.extra{border-color:#d9e4f6;background:#fafcff}
-.thread-card textarea{font-size:13px;line-height:1.65;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;resize:vertical;font-family:inherit;color:inherit}
+.thread-card textarea{font-size:13px;line-height:1.65;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;resize:vertical;font-family:inherit;color:inherit;min-height:96px;height:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-y:auto}
 .thread-card .ipc-head strong{font-size:13.5px;color:#3f3568}
 .tc-len{margin-left:auto;font-size:11px;color:var(--ink-3)}
 .vf-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 10px}
@@ -1055,6 +1060,11 @@ html.locked body > :not(#lockScreen){display:none !important}
 .fin-link .fl-open{flex:0 0 auto;font-size:11.5px;color:var(--ink-3);text-decoration:none;padding:2px 4px}
 .fin-link .fl-open:hover{color:var(--accent-2)}
 .fin-links-empty{padding:14px;border:1px dashed #e6ded2;border-radius:12px;font-size:12.5px;color:var(--ink-3);background:#fcfbf9;line-height:1.6}
+/* v2.3.1 — 내 다른 블로그 글 표시 */
+.fin-link.other{border-style:dashed}
+.fin-link .fl-other-blog{color:#7a5320;background:#fdf3e2;border-radius:6px;padding:1px 6px}
+.fin-other,.internal-other{display:flex;align-items:flex-start;gap:8px;margin:8px 0 2px;font-size:12.5px;line-height:1.45;word-break:keep-all}
+.fin-other input,.internal-other input{flex:0 0 auto;margin-top:1px}
 .fin-picked{margin-top:12px;padding:10px 12px;border-radius:12px;background:#f7f3ec;border:1px solid #ece3d6}
 .fin-picked-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
 .fin-picked-head .fp-n{font-weight:400;color:var(--ink-3);font-size:11px}
