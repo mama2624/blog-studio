@@ -6402,6 +6402,19 @@
     "지만", "는데", "면서", "한테", "에는", "에도", "에만", "에서는", "들이", "들을", "은", "는", "이", "가",
     "을", "를", "의", "에", "도", "만", "과", "와", "로", "랑", "나", "께"];
 
+  /* 낱말처럼 생겼지만 어디에나 붙는 말 — 이것만 겹쳐서 추천이 올라오지 않게 */
+  var FIN_NOSTOP = {
+    "가야": 1, "하면": 1, "하는": 1, "자꾸": 1, "그냥": 1, "위한": 1, "대한": 1, "관한": 1,
+    "따라": 1, "통해": 1, "정도": 1, "경우": 1, "때문": 1, "생각": 1, "사람": 1, "이야기": 1,
+    "모두": 1, "다시": 1, "먼저": 1, "아주": 1, "너무": 1, "정말": 1, "진짜": 1, "완전": 1,
+    "많이": 1, "조금": 1, "가장": 1, "특히": 1, "사실": 1, "바로": 1, "이제": 1, "여기": 1,
+    "거기": 1, "이것": 1, "그것": 1, "저것": 1, "넘기면": 1, "보면": 1, "있으면": 1, "없으면": 1
+  };
+  function finKeys(item) {
+    return ilTokens([item.title || "", (item.tags || []).join(" "), (item.keywords || []).join(" ")].join(" "))
+      .filter(function (t) { return !FIN_NOSTOP[t]; });
+  }
+
   function finNormWord(w) {
     var t = String(w || "");
     for (var i = 0; i < FIN_PARTICLES.length; i++) {
@@ -6423,7 +6436,7 @@
   }
 
   function finScoreItem(item, titleSet, bodySet, df, N) {
-    var keys = ilTokens([item.title || "", (item.tags || []).join(" "), (item.keywords || []).join(" ")].join(" "));
+    var keys = finKeys(item);
     var titleToks = finWordSet(item.title || "");
     var raw = 0, hits = 0, spec = 0, titleStrong = 0, matched = [];
     keys.forEach(function (t) {
@@ -6490,7 +6503,7 @@
 
   function finBlockScore(text, link) {
     var set = finWordSet(text);
-    var keys = ilTokens([link.title || "", (link.tags || []).join(" "), (link.keywords || []).join(" ")].join(" "));
+    var keys = finKeys(link);
     var s = 0, kw = "", kwLen = 0;
     keys.forEach(function (k) {
       if (!set[k]) return;
@@ -6804,6 +6817,7 @@
       var max = FINCFG.maxPick || 5;
       if (Object.keys(FIN.picked).length >= max) {
         toast("내부링크는 한 글에 " + max + "편까지 고를 수 있습니다 — 하나를 빼고 다시 골라 주세요");
+        finRenderLinks();   // 막힌 체크는 화면에서도 풀어 둔다
         return;
       }
       FIN.picked[url] = { title: item.title, url: url, date: item.date || "", blog: item.blog || FIN.blogId, score: item.score || 0 };
