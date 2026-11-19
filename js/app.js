@@ -929,13 +929,14 @@
       $("#internalHint").textContent = "(긍정사랑은 기존 글 2~3편 필수 · " +
         (BS.INTERNAL_POSTS ? BS.INTERNAL_POSTS.length : 0) + "편 목록 · 자동 내부링크 없음)";
     } else if (isTarget && added.length) {
-      $("#internalHint").textContent = "(이 블로그 기존 글 " + ilPoolSize(state.blog.id) + "편" +
-        (otherBlogsOn() ? " + 내 다른 블로그 " + ilOtherPoolSize(state.blog.id) + "편" : "") +
-        "에서 " + auto.length + "편" + (other.length ? " + 내 다른 블로그 " + other.length + "편" : "") +
-        "을 자동으로 넣습니다)";
+      var otherTotal = otherBlogsOn() ? ilOtherPoolSize(state.blog.id) : 0;
+      $("#internalHint").textContent = "(이 블로그 " + ilPoolSize(state.blog.id) + "편" +
+        (otherTotal ? " + 내 다른 블로그 " + otherTotal + "편" : "") + " 중 " + added.length + "편을 자동으로 넣습니다" +
+        (other.length ? " — 내 다른 블로그 " + other.length + "편 포함" : "") + ")";
     } else if (isTarget) {
-      $("#internalHint").textContent = "(기존 글 " + ilPoolSize(state.blog.id) + "편" +
-        (otherBlogsOn() ? " + 내 다른 블로그 " + ilOtherPoolSize(state.blog.id) + "편" : "") +
+      var otherTotal2 = otherBlogsOn() ? ilOtherPoolSize(state.blog.id) : 0;
+      $("#internalHint").textContent = "(이 블로그 " + ilPoolSize(state.blog.id) + "편" +
+        (otherTotal2 ? " + 내 다른 블로그 " + otherTotal2 + "편" : "") +
         "을 모아 뒀습니다 — 주제가 겹치면 본문 아래 '함께 보면 좋은 글'로 자동으로 들어갑니다)";
     } else {
       $("#internalHint").textContent = "(선택 · 다른 글로 연결할 때)";
@@ -1037,11 +1038,14 @@
     var links = currentInternalLinks();
     links.forEach(function (l) {
       var manual = state.internal.some(function (m) { return m.url === l.url; });
+      var manualOther = manual && l.blog && l.blog !== state.blog.id;
       var d = document.createElement("div");
-      d.className = "sel-link" + (manual ? "" : (l.other ? " auto other" : " auto"));
-      d.title = l.url + (l.other && l.blogName ? " · " + l.blogName : "");
-      d.innerHTML = (manual ? "" : '<i class="sel-auto">' + (l.other ? (l.blogName || "다른 블로그") : "자동") + "</i>") +
-        "<span>" + esc(l.title) + "</span>";
+      d.className = "sel-link" + (manual ? (manualOther ? " manual-other" : "") : (l.other ? " auto other" : " auto"));
+      d.title = l.url + ((l.other || manualOther) && (l.blogName || l.blog) ? " · " + (l.blogName || ilBlogName(l.blog)) : "");
+      var tag = "";
+      if (manualOther) tag = '<i class="sel-auto">' + esc(l.blogName || ilBlogName(l.blog)) + "</i>";
+      else if (!manual) tag = '<i class="sel-auto">' + (l.other ? esc(l.blogName || "다른 블로그") : "자동") + "</i>";
+      d.innerHTML = tag + "<span>" + esc(l.title) + "</span>";
       var x = document.createElement("button");
       x.type = "button";
       x.textContent = "✕";

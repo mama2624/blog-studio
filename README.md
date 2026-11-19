@@ -44,13 +44,13 @@ v1.9.9 는 **같은 블로그 글만** 2~3편 넣고, 다른 블로그 글은 `c
 
 ```
 python3 work/bs231-test/test_v231.py                          # 단위 — 70 PASS
-python3 work/bs231-live/live_v231.py                          # 로컬 Playwright
-BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs231-live/live_v231.py   # 실서버
+python3 work/bs231-live/live_v231.py                          # 로컬 Playwright — 26 PASS
+BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs231-live/live_v231.py   # 실서버 — 26 PASS (2026-11-19 배포본 확인)
 ```
 
 - 단위 테스트는 순수 함수(`mixedLinksFor`·`otherBlogLinksFor`·`finMatchList`·`finItems`)를 브라우저 없이 돌려 ① 다른 블로그 글이 함께 오는지 ② 긍정사랑이 한 번도 안 나오는지(121편 제목 전수) ③ 같은 블로그 우선 ④ 토글을 끄면 예전 동작인지 확인합니다.
 - **회귀** — `test_v231.py` D절이 v2.2.5·v2.2.6 이미지 프롬프트 기준선(`BS.IMAGE_BASELINE`·`BS.IMAGE_BASELINE_V33`·`BS.HUB_BANNER`·`BS.IMAGE_GEM`, `imagePromptSetFormat()`·`parseImagePromptCards()`·`imagePromptCardsHtml()`)을 v2.3.0 판본과 **글자 단위로 대조**해 하나도 바뀌지 않았음을 고정합니다.
-- 실서버 테스트는 라이브 배포본에서 토글·추천 목록의 블로그 라벨, 그리고 타래 글상자의 `scrollHeight <= clientHeight`(글자 잘림 없음)를 확인합니다.
+- 실서버 테스트는 라이브 배포본에서 토글·추천 목록의 블로그 라벨, 1·2단계 프롬프트 표시, 그리고 타래 글상자의 `scrollHeight <= clientHeight`(글자 잘림 없음)를 1280px·390px 두 폭에서 확인합니다.
 
 ## 📎 내 글 내부링크·후작업 탭 (v2.3.0 · 2026-11-19)
 
