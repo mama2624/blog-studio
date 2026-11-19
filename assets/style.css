@@ -702,6 +702,10 @@ textarea{resize:vertical;line-height:1.6}
 .wss-list li{margin:0}
 .wss-list a{color:#1b5e46;text-decoration:underline;word-break:break-all}
 .wss-q{margin:8px 0 0;font-size:11.5px;color:var(--ink-3);line-height:1.5;word-break:break-all}
+/* 🛡️ 출처 등급 — 광고성(체험단·협찬·원고료) 표시 (v2.3.3) — 자동 삭제 없이 짚어만 준다 */
+.wss-ad{display:inline-block;font-size:10.5px;font-weight:700;color:#8a4b06;background:#ffeccc;border-radius:999px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.wss-adw{font-size:11px;font-weight:800;color:#8a2a22;background:#fde4e1;border-radius:999px;padding:2px 8px}
+.wss-adhint{margin:6px 0 0;font-size:11px;line-height:1.5;color:#8a5a2a}
 @media (max-width:560px){
   .ws-box{padding:10px 11px}
   .ws-sources{padding:10px 11px}

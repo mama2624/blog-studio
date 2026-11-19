@@ -497,6 +497,18 @@ BS.prompts = (function () {
     (H.rewrite || []).forEach(function (r) { L.push("   · " + r); });
     return L.join("\n");
   }
+  /* 🎯 해당 없는 사람 먼저 (v2.3.3 · 2026-11-20)
+     스레드 ①·④에서 서로 다른 두 사람이 같은 결로 말한 것 — '이 상품 안 맞는 분'을
+     장점보다 먼저 쓰면, 그다음 장점이 광고가 아니라 정보로 읽힌다.
+     리뷰·비교·제휴·체험 글과 지원금·보험·검사·제도 글에서만 실질적으로 발동한다(문구에 발동 조건을 적어 둔다). */
+  function targetFilterBlock() {
+    var T = BS.TARGET_FILTER || {};
+    if (!T.rules || !T.rules.length) return "";
+    var L = [];
+    L.push("[" + (T.title || "🎯 해당 없는 사람 먼저") + " · " + (T.version || "v2.3.3") + "]");
+    (T.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    return L.join("\n");
+  }
   /* 제품·제휴 리뷰·추천 안전장치 — 허위 체험·미확인 수치 금지 (v2.2.1) */
   function productSafetyBlock() {
     var S = (BS.PRODUCT && BS.PRODUCT.reviewSafety) || {};
@@ -1126,6 +1138,8 @@ BS.prompts = (function () {
     if (personaLineCafe) { parts.push(""); parts.push(personaLineCafe); }
     var healthCafe = healthFilterBlock(o);
     if (healthCafe) { parts.push(""); parts.push(healthCafe); }
+    var targetCafe = targetFilterBlock();
+    if (targetCafe) { parts.push(""); parts.push(targetCafe); }
     var refBlock = articleRefBlock(o);
     if (refBlock) { parts.push(""); parts.push(refBlock); }
     parts.push("");
@@ -1171,6 +1185,8 @@ BS.prompts = (function () {
     if (personaLineProduct) { parts.push(""); parts.push(personaLineProduct); }
     var healthProduct = healthFilterBlock(o);
     if (healthProduct) { parts.push(""); parts.push(healthProduct); }
+    var targetProduct = targetFilterBlock();
+    if (targetProduct) { parts.push(""); parts.push(targetProduct); }
     var safetyProduct = productSafetyBlock();
     if (safetyProduct) { parts.push(""); parts.push(safetyProduct); }
     var pickBlock = pickFirstBlock(o, false, false);
@@ -1221,6 +1237,8 @@ BS.prompts = (function () {
     if (personaLineBlog) { parts.push(""); parts.push(personaLineBlog); }
     var healthBlog = healthFilterBlock(o);
     if (healthBlog) { parts.push(""); parts.push(healthBlog); }
+    var targetBlog = targetFilterBlock();
+    if (targetBlog) { parts.push(""); parts.push(targetBlog); }
     var refBlock = articleRefBlock(o);
     if (refBlock) { parts.push(""); parts.push(refBlock); }
     parts.push("");
@@ -1881,6 +1899,11 @@ BS.prompts = (function () {
       : "★소비자·구독자 중심 대원칙(v2.2.4, 시스템 지침 맨 앞): 계산기를 찾아온 독자가 중심이다. 기관·브랜드를 주어로 두고 끝나는 문장은 '독자가 무엇을 넣으면 얼마가 나오는지, 무엇을 신청해 언제 받는지, 무엇을 고르면 손해를 피하는지'로 끝낸다. H2·H3·표·FAQ에도 같은 기준.");
     var personaLineBlogger = personaBlock(o.persona, "article", { english: S.lang === "en" });
     if (personaLineBlogger) { parts.push(""); parts.push(personaLineBlogger); }
+    /* 🎯 v2.3.3 — 영문 카드는 크리 님 v3 원본을 그대로 쓰므로 한국어 카드에만 붙인다 */
+    if (S.lang !== "en") {
+      var targetBlogger = targetFilterBlock();
+      if (targetBlogger) { parts.push(""); parts.push(targetBlogger); }
+    }
     var refBlock = articleRefBlock(o);
     if (refBlock) { parts.push(""); parts.push(refBlock); }
     var ilBlock = bloggerInternalBlock(o);
@@ -2574,6 +2597,7 @@ BS.prompts = (function () {
     pickFirstBlock: pickFirstBlock,
     personaBlock: personaBlock,
     healthFilterBlock: healthFilterBlock,
+    targetFilterBlock: targetFilterBlock,
     productSafetyBlock: productSafetyBlock,
     shortsDirectBlock: shortsDirectBlock,
     licenseBlock: licenseBlock,

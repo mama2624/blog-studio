@@ -3023,6 +3023,23 @@
     var m = String(uri == null ? "" : uri).match(/^https?:\/\/([^\/?#]+)/i);
     return m ? m[1].toLowerCase() : "";
   }
+  /* 🛡️ 출처 등급 (v2.3.3 · 2026-11-20) — 제목·주소에 체험단·협찬·원고료 표기가 있거나
+     리뷰노트·레뷰 같은 체험단 플랫폼 주소인 페이지를 짚는다. 지우지는 않고 표시만 한다. */
+  function wsAdHit(s) {
+    if (!s) return "";
+    var text = String((s.title || "") + " " + (s.url || ""));
+    var words = WS.adWords || [];
+    var i;
+    for (i = 0; i < words.length; i++) {
+      if (words[i] && text.indexOf(words[i]) >= 0) return words[i];
+    }
+    var host = String(s.host || wsHost(s.url || "")).toLowerCase();
+    var doms = WS.adDomains || [];
+    for (i = 0; i < doms.length; i++) {
+      if (doms[i] && host && host.indexOf(doms[i]) >= 0) return doms[i];
+    }
+    return "";
+  }
   /* groundingMetadata → {queries:[], sources:[{title,url,host,redirect,label}]} */
   function parseGrounding(json) {
     var out = { queries: [], sources: [] };
@@ -3130,20 +3147,48 @@
         srcEl.innerHTML = "";
       } else {
         srcEl.hidden = false;
-        srcEl.innerHTML = '<div class="wss-head"><strong>' + esc(WS.sourcesTitle || "🔍 실제 구글 검색 출처") +
-          '</strong><span class="wss-tag">' + list.length + "건 · " + esc(WS.sourcesTag || "글의 출처·수치 근거") + "</span></div>" +
-          '<ol class="wss-list">' + list.map(function (s) {
-            var label = esc(s.label || s.title || s.url || "출처");
-            return "<li>" + (s.url
+        var adCount = 0;
+        var rows = list.map(function (s) {
+          var label = esc(s.label || s.title || s.url || "출처");
+          var hit = wsAdHit(s);
+          if (hit) adCount++;
+          return "<li>" + (s.url
               ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener nofollow">' + label + "</a>"
-              : label) + "</li>";
-          }).join("") + "</ol>" +
+              : label) +
+            (hit ? ' <span class="wss-ad" title="받은 표시: ' + esc(hit) + ' — 근거로 쓰기 전에 공식 출처로 다시 확인하세요">' +
+              esc(WS.adMark || "⚠️ 광고성") + "</span>" : "") + "</li>";
+        }).join("");
+        srcEl.innerHTML = '<div class="wss-head"><strong>' + esc(WS.sourcesTitle || "🔍 실제 구글 검색 출처") +
+          '</strong><span class="wss-tag">' + list.length + "건 · " + esc(WS.sourcesTag || "글의 출처·수치 근거") + "</span>" +
+          (adCount ? '<span class="wss-adw">' + esc(WS.adWarnTitle || "🛡️ 출처 확인: 광고성 의심") + " " + adCount + "건</span>" : "") +
+          "</div>" +
+          '<ol class="wss-list">' + rows + "</ol>" +
+          (adCount ? '<p class="wss-adhint">' + esc(WS.adWarnHint || "") + "</p>" : "") +
           (list && state.grounding.queries.length
             ? '<p class="wss-q">검색어: ' + esc(state.grounding.queries.join(" · ")) + "</p>"
             : "");
       }
     }
   }
+
+  /* v2.3.3 검증용(화면 동작에는 영향 없음) — 실제 검색 없이 출처 목록을 넣어 배너·표시를 본다
+     예: BS.webSourceTest.set([{title:'협찬 리뷰', url:'https://blog.naver.com/x/1'}]) */
+  BS.webSourceTest = {
+    set: function (list) {
+      state.grounding = {
+        queries: [],
+        sources: (list || []).map(function (s) {
+          return {
+            title: s.title || "", url: s.url || "", host: s.host || wsHost(s.url || ""),
+            redirect: false, label: (s.title || s.url || "") + (wsHost(s.url || "") ? " (" + wsHost(s.url || "") + ")" : "")
+          };
+        })
+      };
+      paintWebSearch();
+      return state.grounding.sources.length;
+    },
+    adHit: function (s) { return wsAdHit(s || {}); }
+  };
 
   /* 🛡️ 결과물 검사기 (v2.2.1 · 2026-11-19 크리 님 합의)
      ① 건강 카테고리(긍정예찬·긍정사랑·식단건강·증상병원) — 식품표시광고법 제8조 위반 소지 표현
@@ -8036,7 +8081,7 @@
   /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
      예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
   BS.finish = {
-    version: (FINCFG.version || "v2.3.2"),
+    version: (FINCFG.version || "v2.3.3"),
     state: function () {
       return {
         blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
