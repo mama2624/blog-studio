@@ -21,6 +21,35 @@ BS.prompts = (function () {
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
+  /* ---------- 🧭 소비자·구독자 중심 대원칙 블록 (v2.2.4 · 2026-11-19) ----------
+     지연님 — "글 작성의 기본원칙은 소비자 중심, 구독자 중심의 글을 작성해야해.
+     손해.이익등 모든 단어의 중심은 소비자. 구독자를 가르켜야해. 작성된 글 가만히 보니
+     제일 큰 원칙이 빠졌어".
+     원고(4대 블로그·카페·제휴 리뷰·구글 블로거)·2단계 검수·스레드·클립·영상 대본·
+     멀티유즈 프롬프트의 **맨 앞**에 이 블록을 먼저 놓는다. 문구는 BS.READER_CENTER 한 곳에만 둔다. */
+  function readerCenterBlock(place, opts) {
+    var R = BS.READER_CENTER || {};
+    if (!R.rules || !R.rules.length) return "";
+    var L = [];
+    L.push("[" + (R.heading || "🧭 소비자·구독자 중심 대원칙") + "]");
+    L.push("0. " + (R.lead || ""));
+    (R.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    L.push("→ 문장마다 스스로 묻는다: " + (R.questions || []).map(function (q, i) { return "(" + (i + 1) + ") " + q + "?"; }).join(" / "));
+    if (place === "review") {
+      L.push("→ 이 검수의 **첫 번째 기준**도 이 원칙이다. 기관·판매자를 주어로 두고 끝난 문장, 독자가 아무것도 하지 않아도 되는 중립 설명, 의례적 마무리가 하나라도 남아 있으면 그 문장을 독자 편으로 다시 쓴다.");
+    } else if (place === "thread") {
+      L.push("→ 타래·첫 댓글도 같은 기준이다. '회사가 ~합니다'로 끝내지 말고, 읽는 사람이 오늘 저장·확인·신청할 것을 남긴다.");
+    } else if (place === "clip") {
+      L.push("→ 자막·나레이션도 같은 기준이다. 기관·브랜드를 주어로 세우지 말고, 보는 사람이 얻는 것·피하는 손해를 말한다.");
+    } else if (place === "blogger") {
+      L.push("→ 구글 블로거(한국어·영문) 글도 같은 기준이다. 검색으로 들어온 독자가 계산·신청·비교로 바로 행동할 수 있게 쓴다.");
+    } else if (place === "guide") {
+      L.push("→ 예시 제목도 같은 기준이다. 기관이 무엇을 한다는 제목이 아니라, 독자가 무엇을 얻고 무엇을 피하는지가 제목에 보이게 뽑는다.");
+    }
+    if (opts && opts.english) L.push("· English: " + (R.english || ""));
+    return L.join("\n");
+  }
+
   /* ---------- 📚 젬스 원본 통째 이식 (v1.9.6 · 2026-11-18) ----------
      지연님 — "두 파일을 요약·축약하지 말고 원문 통째로".
      js/gem_raw.js 에 담긴 지침 확정판(3,730자)과 지식 파일(25,009자)을
@@ -500,6 +529,8 @@ BS.prompts = (function () {
     var tone = (BS.TONES.filter(function (t) { return t.id === toneId; })[0] || BS.TONES[0]);
     var toneLine = tone.id === "blog" ? blog.tone : tone.label + " — " + tone.hint + ". 기본 성격은 " + blog.tone;
     return [
+      readerCenterBlock("article"),
+      "",
       "너는 네이버 블로그 '" + blog.name + "'(" + blog.account + ")의 전속 작가다. 규칙 판본은 '슈퍼 젬 v3.3'이다.",
       "블로그 성격: " + blog.desc,
       "주로 다루는 주제: " + blog.categoryHint,
@@ -534,6 +565,8 @@ BS.prompts = (function () {
   /* ---------- ☕ 카페 글 시스템 프롬프트 (v1.8.0) ---------- */
   function cafeSystemPrompt(blog, toneId) {
     return [
+      readerCenterBlock("cafe"),
+      "",
       "너는 네이버 카페에 글을 쓰는 50대 생활 블로거다. 다루는 분야는 '" + blog.name + "'에서 쓰는 " + blog.categoryHint + " 쪽이고, 글을 읽을 사람은 " + blog.audience + "이다.",
       "이번 글은 블로그 원고가 아니라 카페 게시판에 올릴 글이다. 규칙 판본은 '슈퍼 젬 v3.3 카페판(1.8.0)'이다.",
       "",
@@ -561,6 +594,8 @@ BS.prompts = (function () {
   function productSystemPrompt(blog, toneId, platformId) {
     var pf = BS.platform(platformId);
     return [
+      readerCenterBlock("product"),
+      "",
       "너는 한국 50대 블로거를 도우는 제품·여행 리뷰 작가다. 글은 '" + blog.name + "'(" + blog.account + ")에 올라가고, 독자는 " + blog.audience + "이다.",
       "이번 글은 상품·여행 제휴 리뷰다. 규칙 판본은 '슈퍼 젬 v3.3 제휴 리뷰판(1.8.0)'이다.",
       "",
@@ -1096,6 +1131,7 @@ BS.prompts = (function () {
     if (guideBlock) { parts.push(""); parts.push(guideBlock); }
     parts.push("");
     parts.push("[이번 글에 반드시 적용]");
+    parts.push("- ★소비자·구독자 중심 대원칙(v2.2.4, 시스템 지침 맨 앞): 이 카페 글도 읽는 사람이 중심이다. 손해·이익·비용·기준 같은 말의 주인을 독자로 두고, 기관·판매자를 주어로 두고 끝나는 문장은 독자가 무엇을 하면 되는지로 끝낸다.");
     parts.push("- 블로그 10단계 규격을 그대로 쓰지 않는다. 아래는 하나도 넣지 않는다: " + ((c.remove || []).join(" / ")) + ".");
     parts.push("- 말토: 카페 회원에게 말을 거는 친근한 경험 공유·정보 나눔 구어체. '혹시 저만 헷갈렸나요?', '직접 알아보니 이렇더라고요' 처럼 시작한다.");
     parts.push("- 보고서 말토('~에 대해 알아보겠습니다', '결론적으로', '본 글에서는', '정리하자면')와 자기 홍보·구매 유도 문구는 쓰지 않는다.");
@@ -1144,6 +1180,7 @@ BS.prompts = (function () {
     if (guideBlock) { parts.push(""); parts.push(guideBlock); }
     parts.push("");
     parts.push("[이번 글에 반드시 적용]");
+    parts.push("- ★소비자·구독자 중심 대원칙(v2.2.4, 시스템 지침 맨 앞): 제품·여행 글도 독자가 중심이다. '업체가 제공·호텔이 운영·브랜드가 출시'로 끝내지 말고, '독자가 얼마를 내고 무엇을 받는지, 무엇을 확인하고 무엇을 피하면 되는지'로 쓴다. 기준·장단점·추천/패스가 모두 독자 판단을 돕는 방향이어야 한다.");
     parts.push("- 링크만으로는 상품 페이지를 읽어올 수 없다(CORS). 위 상품명·메모에서 확인된 사실만 쓰고, 모르는 성분·스펙·가격은 '확인 필요: (필요한 자료)'로 남긴다.");
     parts.push("- 지연님은 '비쇼핑파'다. 링크를 산 사람처럼 흥분한 추천·'인생템'·억지 찬양·'무조건 사세요'는 쓰지 않는다.");
     parts.push("- 기준을 먼저 밝힌다(성분·소재·용량·구성·인증·사용 조건·관리 난이도). 기준 없이 좋다고 하지 않는다.");
@@ -1190,6 +1227,7 @@ BS.prompts = (function () {
     parts.push("");
 
     parts.push("[이번 원고에 반드시 적용]");
+    parts.push("- ★소비자·구독자 중심 대원칙(v2.2.4, 시스템 지침 맨 앞): 이 원고의 모든 문장·모든 단어(손해·이익·비용·선택·기준)의 중심은 읽는 사람이다. 기관·보험사·병원·판매자를 주어로 두고 끝나는 문장이 있으면 '독자가 청구하면 얼마를 받는다 / 어느 과에서 무엇을 물어본다 / 어디서 무엇으로 신청한다 / 얼마를 아끼고 무엇을 고르면 된다'로 끝낸다. 제목·3초 정리·본문·비교표·FAQ·맺음말·썸네일 문구에 다 적용하고, 검수 단계에서 다시 본다.");
     parts.push("- 규칙의 뿌리는 시스템 지침에 통째로 들어 있는 '제미나이 슈퍼 젬 v3.3 확정판 원본'이다. 원본과 이 화면 규칙이 어긋나면 시스템 지침의 [⚖️ 우선순위]대로 처리하고, 출력은 아래 [출력 형식] 그대로 낸다. 메뉴판·분기 질문·다음 거미줄 객관식은 내지 않고 원고만 끝까지 쓴다.");
     parts.push("- 제목 7종은 아래 일곱 각도에서 하나씩(① 생활 속 실수·손해 회피형 ② 확인 1가지형 ③ 반전·상식 뒤집기형 ④ 공감·내 얘기형 ⑤ 시즌·시의성 선점형 ⑥ 따옴표 인용·말맛 차용형 ⑦ 숫자 실험·기록형), 제목마다 [필터: ③④⑤ = 3개 통과] 형식의 채점표를 붙인다. 검색 메인 키워드는 제목 앞쪽 15자 안에 살리고, '~조회·~신청·~비교·~계산기' 끝말을 기계적으로 붙이지 않는다.");
     parts.push("- 제목 금지: 상투어('총정리·완벽정리·꿀팁·비교 가이드·알아보기·모음·모음집·노하우·추천해줘'), '후기'·'모음집'·'추천해줘'·'추천'만으로 끝나는 끝맺음, '추천'으로 시작하는 문두. 그리고 ① 대중성은 고유명사 1개(브랜드·질환·제도명), ③ 손익 명확성은 숫자·금액이 없으면 미통과다 — 둘 중 하나라도 비면 그 제목을 버리고 다시 뽑는다. ⑥·⑦만 45~50자까지 허용하고 나머지는 37~44자다.");
@@ -1476,13 +1514,14 @@ BS.prompts = (function () {
       head = "[1차 검수 — 지침 위에서 아래로: 사실·금지문구·블로그 개인화·10대 규격·제휴 연관성·내부링크·제목·사진 배치 대조]";
     }
     var p2 = (BS.AUDIT_PASS2 || []).map(function (r, i) { return "  " + (i + 1) + ") " + r; }).join("\n");
-    return [
-      head,
-      p1,
-      "",
-      "[2차 검수 — 다시 처음부터: AI티·번역투·모바일 문단 호흡·중복 제거·강조 표시(형광펜 2색·굵게)]",
-      p2
-    ].join("\n");
+    var rc = (BS.READER_CENTER || {}).audit || "";
+    var L = [head];
+    if (rc) L.push("  0) " + rc);   // v2.2.4 — 어떤 검수보다 먼저 보는 기준
+    L.push(p1);
+    L.push("");
+    L.push("[2차 검수 — 다시 처음부터: AI티·번역투·모바일 문단 호흡·중복 제거·강조 표시(형광펜 2색·굵게)]");
+    L.push(p2);
+    return L.join("\n");
   }
 
   /* 2단계 검수자 시스템 프롬프트 — 글 용도별 분기 (v1.8.0) */
@@ -1587,7 +1626,7 @@ BS.prompts = (function () {
         outputRules()
       ].join("\n");
     }
-    return [body].concat([""], head).join("\n");
+    return [readerCenterBlock("review"), ""].concat([body], [""], head).join("\n");
   }
 
   /* ---------- 모드 변환 프롬프트 (v1.8.0) ----------
@@ -1686,6 +1725,8 @@ BS.prompts = (function () {
     var S = bloggerSpec(blog);
     if (S.lang === "en") {
       return [
+        readerCenterBlock("blogger", { english: true }),
+        "",
         S.role,
         "",
         S.sessionRule,
@@ -1720,6 +1761,8 @@ BS.prompts = (function () {
       ].join("\n");
     }
     return [
+      readerCenterBlock("blogger"),
+      "",
       "너는 구글 블로거 '" + (S.name || blog.name) + "'(" + (S.url || blog.url) + ")의 전속 작가다. 이 글은 네이버 블로그가 아니라 구글 블로거에 올린다.",
       "블로그 성격: " + (blog.desc || S.lead || ""),
       "주로 다루는 주제: " + (blog.categoryHint || ""),
@@ -1827,6 +1870,9 @@ BS.prompts = (function () {
       ? "Length: body 900–1,200 English words (6th–8th grade level), no skipped sections."
       : "분량: 본문 텍스트(HTML 태그 제외) 1,500자 이상. H2 4~5개, 소제목당 250자 이상.");
     parts.push("오늘 날짜: " + todayKR());
+    parts.push(S.lang === "en"
+      ? "Reader-first (v2.2.4, applies to every line before any other rule): " + ((BS.READER_CENTER || {}).english || "")
+      : "★소비자·구독자 중심 대원칙(v2.2.4, 시스템 지침 맨 앞): 계산기를 찾아온 독자가 중심이다. 기관·브랜드를 주어로 두고 끝나는 문장은 '독자가 무엇을 넣으면 얼마가 나오는지, 무엇을 신청해 언제 받는지, 무엇을 고르면 손해를 피하는지'로 끝낸다. H2·H3·표·FAQ에도 같은 기준.");
     var personaLineBlogger = personaBlock(o.persona, "article", { english: S.lang === "en" });
     if (personaLineBlogger) { parts.push(""); parts.push(personaLineBlogger); }
     var refBlock = articleRefBlock(o);
@@ -1856,6 +1902,8 @@ BS.prompts = (function () {
     var S = bloggerSpec(blog);
     var draft = String(o.draft || "").replace(/\r/g, "").trim();
     var sys = [
+      readerCenterBlock("review", { english: S.lang === "en" }),
+      "",
       "너는 구글 블로거 '" + (S.name || blog.name) + "'의 최종 검수자다. 새로 쓰는 것이 아니라, 초안을 아래 규격과 처음부터 끝까지 대조해 고친 최종본을 내는 사람이다.",
       "",
       "[검수 원칙]",
@@ -1879,6 +1927,10 @@ BS.prompts = (function () {
     var user = [];
     user.push("[검수 요청]");
     user.push("아래 초안을 지침 처음부터 끝까지 대조해 고친 최종본을 내라.");
+    user.push("");
+    user.push("[★검수 0번 — 소비자·구독자 중심 대원칙 (v2.2.4) — 이 검수를 먼저 한다]");
+    user.push(BS.READER_CENTER ? BS.READER_CENTER.audit : "");
+    user.push("→ 영문·한국어 구분 없이 적용한다. 브랜드·기관을 주어로 끝난 문장은 독자 행동·손익으로 다시 쓴다.");
     user.push("");
     user.push("[이 원고의 요청 조건 — 초안이 이 조건을 지켰는지도 대조한다]");
     user.push("- 블로그: " + (S.name || blog.name) + " (" + (S.url || blog.url) + ")");
@@ -1924,6 +1976,8 @@ BS.prompts = (function () {
       return "- " + b.emoji + " " + b.name + " (" + b.id + ") · 맡는 글감: " + b.when + " · 각도: " + b.angle;
     }).join("\n");
     var sys = [
+      readerCenterBlock("guide"),
+      "",
       "너는 지연님의 블로그 6곳을 모두 아는 편집장이다. 새 글감 하나를 어느 블로그에서 쓸지, 어떤 검색어와 제목으로 쓸지 정해 준다.",
       "",
       "[원칙]",
@@ -2010,6 +2064,8 @@ BS.prompts = (function () {
     var C = M.clip || {};
     var pb = personaBlock(o.persona6, "multiuse");      // 🎭 v2.2.0 — 없으면 빈 문자열(회귀 0)
     var sysLines = [
+      readerCenterBlock("thread"),
+      "",
       "너는 지연님의 블로그 원고를 스레드와 네이버 클립으로 옮기는 SNS 편집자다. 원고를 다시 쓰지 않고, 원고에서 가장 날카로운 한두 지점만 SNS 문법으로 옮긴다.",
       "",
       "[스레드 규칙]",
@@ -2087,6 +2143,10 @@ BS.prompts = (function () {
     var user = [];
     user.push("[검수 요청]");
     user.push("아래 초안을 지침 처음부터 끝까지 대조해 고친 최종본을 내라.");
+    user.push("");
+    user.push("[★검수 0번 — 소비자·구독자 중심 대원칙 (v2.2.4) — 이 검수를 먼저 한다]");
+    user.push(BS.READER_CENTER ? BS.READER_CENTER.audit : "");
+    user.push("→ 문장마다 중심이 독자인지 보고, 기관·판매자 편 문장은 '독자가 무엇을 하고 무엇을 얻는가'로 다시 쓴다. 이 검수를 빠뜨린 채 다른 항목만 고치고 끝내지 않는다.");
     user.push("");
     user.push("[이 원고의 요청 조건 — 초안이 이 조건을 지켰는지도 대조한다]");
     user.push("- 블로그: " + blog.name + " (" + blog.account + ") · " + (blog.cats || ""));
@@ -2221,6 +2281,8 @@ BS.prompts = (function () {
     var T = BS.THREADS || {};
     var p = persona || (T.personas || [{}])[0];
     var lines = [];
+    lines.push(readerCenterBlock("thread"));
+    lines.push("");
     lines.push("[역할]");
     lines.push("너는 지연님의 스레드(Threads) 계정에 올릴 연속 타래를 쓰는 사람이다. 지연님은 4대 블로그를 운영하는 50대 생활정보 작성자이고, 스레드는 '비쇼핑파' 원칙으로 쓴다.");
     lines.push("아래 원고는 이미 " + (blog && blog.name ? blog.name + " 블로그" : "블로그") + " 형식으로 쓴 글이다. 그 내용을 스레드에서 읽히는 타래 4~5개로 다시 쓴다. 원고 문장을 그대로 옮기거나 줄이지 말고, 스레드 말투로 새로 쓴다.");
@@ -2328,6 +2390,8 @@ BS.prompts = (function () {
     var V = BS.VIDEO || {};
     var f = fmt || (V.formats || [{}])[0];
     var lines = [];
+    lines.push(readerCenterBlock("clip"));
+    lines.push("");
     lines.push("[역할]");
     lines.push("너는 지연님의 유튜브·릴스·쇼츠 채널 대본 작가다. 채널 페르소나는 '" + (V.persona || "4050 실속 살림·건강 팩트체커") + "'이다.");
     lines.push("아래 원고의 내용만 가지고, 실제로 말로 읽히는 영상 대본과 장면 프롬프트를 만든다. 블로그 문장을 그대로 읽지 않는다.");
