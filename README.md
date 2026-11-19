@@ -47,9 +47,9 @@
 ### 검증 (v2.3.3)
 
 ```
-python3 work/bs233-test/test_v233.py                          # 단위
-python3 work/bs233-live/live_v233.py                          # 로컬 Playwright (파일 직접 열기)
-BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs233-live/live_v233.py   # 실서버
+python3 work/bs233-test/test_v233.py                          # 단위 — 128 PASS
+python3 work/bs233-live/live_v233.py                          # 로컬 Playwright — 38 PASS
+BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs233-live/live_v233.py   # 실서버 — 38 PASS (2026-11-20 06:58 배포본)
 ```
 
 - 회귀 — `BS.IMAGE_BASELINE`·`BS.IMAGE_BASELINE_V33`·`BS.HUB_BANNER`·`BS.IMAGE_GEM` 4블록과 `imagePromptSetFormat()` 이 v2.3.2 판본과 **글자 단위 동일**, 내부링크·타래 글상자 함수·CSS·`id` 그대로.
