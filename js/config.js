@@ -5,8 +5,8 @@
 
 window.BS = window.BS || {};
 
-BS.VERSION = "2.2.5";
-BS.RULESET = "🧭 소비자·구독자 중심 대원칙(v2.2.4 — 모든 문장·모든 단어의 중심은 읽는 사람, 기관·판매자 편 금지) · 슈퍼 젬 v3.3 원본 통째 이식(지침 3,730자 + 지식 파일 25,009자, 요약 없음) · 2026-11-18 원고 깊이(공백 제외 1,800자 이상·소제목 4~5개) · 홈판 트렌드형 제목 7각도 · 홈판 클릭 3축 · 🔗 기존 글 자동 내부링크(공개 RSS 5곳 — 네이버 3대 + 구글 블로거 2 · '함께 보면 좋은 글' 2~3편 · 긍정사랑 제외) · 🪙🌙 구글 블로거 2곳 전용 카드(부자닷컴 sub.gold-queen.com · Daily Health & Pain Guide www.gold-queen.com — 순수 본문 HTML·Google SEO·영문 현지화 원본 지침) · 🧭 블로그·가지글 길잡이(1블로그 1메인 · 큰 이슈만 가지글) · ⚠️ 기발행 주제 중복 경고(공개 RSS) · ⚡ 원소스 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 자막 동시 출력) · 🗞 뉴스 → 독자 행동 가이드(예약·주차·입장료 / 모델명·가격·차이 / 신청 방법·이용 조건·공식 경로) · 🛒 상품 역순 전략(상품 선정 → 대본) · 젬스 v3.3 이미지 프롬프트 · 형광펜 2색 강조 · 썸네일 호기심 훅 · 2단계 전수 검수 · 🎭 6대 페르소나(살림 팩트체커·TV이슈·돈정책·식단건강·증상병원·유튜브클립 — 원고 1·2단계와 스레드·클립에 함께 적용) · 🛡️ v2.2.1 안전장치 3종(건강 카테고리 식품표시광고법 제8조 금지어 필터 · 네이버 쇼핑커넥트·크리에이터샵 대가성 문구 · 제품 리뷰 허위 체험·미확인 수치 금지) · 🖼️ v2.2.3 원고 속 이미지 프롬프트 세트(썸네일 1·2 복사용 영문 프롬프트 · 목차별 본문 이미지 · 3:1 허브 배너) 정본 출력 · 🖼️ v2.2.5 이미지 프롬프트 v3.3 기준선 고정(썸네일 1·2번은 젬 지식 제4조 영문 원문 그대로 · 본문 1:1 full-bleed · 하단 3:1 허브 배너 · 한국인 30대 후반~40대 초반 실사 · 썸네일 2번 textless·상단 1/3 비움) · 썸네일 2번 textless 통일 · 기본 원고 모델 gemini-3.5-flash-lite(무료 하루 500편)";  // 원고에 적용하는 규칙 판본
+BS.VERSION = "2.2.6";
+BS.RULESET = "🧭 소비자·구독자 중심 대원칙(v2.2.4 — 모든 문장·모든 단어의 중심은 읽는 사람, 기관·판매자 편 금지) · 슈퍼 젬 v3.3 원본 통째 이식(지침 3,730자 + 지식 파일 25,009자, 요약 없음) · 2026-11-18 원고 깊이(공백 제외 1,800자 이상·소제목 4~5개) · 홈판 트렌드형 제목 7각도 · 홈판 클릭 3축 · 🔗 기존 글 자동 내부링크(공개 RSS 5곳 — 네이버 3대 + 구글 블로거 2 · '함께 보면 좋은 글' 2~3편 · 긍정사랑 제외) · 🪙🌙 구글 블로거 2곳 전용 카드(부자닷컴 sub.gold-queen.com · Daily Health & Pain Guide www.gold-queen.com — 순수 본문 HTML·Google SEO·영문 현지화 원본 지침) · 🧭 블로그·가지글 길잡이(1블로그 1메인 · 큰 이슈만 가지글) · ⚠️ 기발행 주제 중복 경고(공개 RSS) · ⚡ 원소스 멀티유즈(스레드 훅·첫 댓글 + 클립 20초 자막 동시 출력) · 🗞 뉴스 → 독자 행동 가이드(예약·주차·입장료 / 모델명·가격·차이 / 신청 방법·이용 조건·공식 경로) · 🛒 상품 역순 전략(상품 선정 → 대본) · 젬스 v3.3 이미지 프롬프트 · 형광펜 2색 강조 · 썸네일 호기심 훅 · 2단계 전수 검수 · 🎭 6대 페르소나(살림 팩트체커·TV이슈·돈정책·식단건강·증상병원·유튜브클립 — 원고 1·2단계와 스레드·클립에 함께 적용) · 🛡️ v2.2.1 안전장치 3종(건강 카테고리 식품표시광고법 제8조 금지어 필터 · 네이버 쇼핑커넥트·크리에이터샵 대가성 문구 · 제품 리뷰 허위 체험·미확인 수치 금지) · 🖼️ v2.2.3 원고 속 이미지 프롬프트 세트(썸네일 1·2 복사용 영문 프롬프트 · 목차별 본문 이미지 · 3:1 허브 배너) 정본 출력 · 🖼️ v2.2.5 이미지 프롬프트 v3.3 기준선 고정(썸네일 1·2번은 젬 지식 제4조 영문 원문 그대로 · 본문 1:1 full-bleed · 하단 3:1 허브 배너 · 한국인 30대 후반~40대 초반 실사) · 🖼️ v2.2.6 썸네일 한글 문구 슬롯(썸네일 1·2번 모두 그 글의 한글 훅 두 줄을 영문 프롬프트 안에 넣어 AI가 글자까지 그린다 — 1번은 `arranged in the center` 뒤 · 2번은 상단 1/3 · 목차별 본문 이미지만 textless) · 기본 원고 모델 gemini-3.5-flash-lite(무료 하루 500편)";  // 원고에 적용하는 규칙 판본
 BS.APP_NAME = "지연님 블로그 작업실";
 BS.KEYWORDS_TODAY = "data/keywords-today.json";   // 매일 06시 80선 (블로그당 20개) — 정기 작업이 갱신
 /* ---------- 🔥 실시간 화제템 집합소 (v2.1.0 · 2026-11-18) ----------
@@ -587,7 +587,7 @@ BS.THUMB_HOOK_RULE = {
   /* ⑦ 기존 규칙은 그대로 */
   keep: [
     "글자는 좌우 정확히 정중앙(v1.7.1) — 왼쪽 정렬·한쪽 치우침 금지",
-    "상단 1/3 문구 자리 여백은 2번 실사 썸네일에서만(v1.6.2)"
+    "글자는 사진·배경 위에 얹되 빈 공란을 남기지 않는다 — 2번 실사 썸네일도 화면을 꽉 채우고 상단 영역에 글자를 얹는다(v2.2.6)"
   ]
 };
 
@@ -604,8 +604,8 @@ BS.AUDIT_PASS1 = [
   "긍정사랑 내부링크: 긍정사랑(jinjin2624) 원고는 기존 글 내부링크 2~3개가 본문 문장 안에 있는가. 앱이 준 후보 URL만 쓰고, 주소를 새로 만들었으면 지운다. 후보가 없는데 링크를 지어냈으면 '[내부링크] 관련 기존 글 링크를 여기에' 한 줄로 바꾼다.",
   "제목 7종+추천 제목(v1.9.7): 검색 메인 키워드가 제목 앞쪽 15자 안에 살아 있는가. 7종이 아래 일곱 각도를 하나씩 담았는가 — ① 생활 속 실수·손해 회피형 ② 확인 1가지형 ③ 반전·상식 뒤집기형 ④ 공감·내 얘기형 ⑤ 시즌·시의성 선점형 ⑥ 따옴표 인용·말맛 차용형 ⑦ 숫자 실험·기록형. 금지어('총정리·완벽정리·꿀팁·비교 가이드·완벽 가이드·알아보기·모음·모음집·노하우·추천해줘')가 들어갔거나, 제목이 '후기'·'모음집'·'추천해줘'·'추천'만으로 끝나거나, '추천'으로 시작하거나, [키워드]+[행동형 끝말]을 기계적으로 붙였으면 새로 뽑는다. ① 대중성은 고유명사(브랜드·질환·제도명) 1개, ③ 손익 명확성은 숫자·금액이 없으면 미통과로 다시 채점한다(숫자 없는 제목은 버린다). 길이는 37~44자이고 ⑥·⑦만 45~50자까지 허용한다. 제목마다 [필터: ①②③ = 3개 통과] 형식이 있는가. 추천 제목이 7종 중 하나를 그대로 쓴 것인가. 추천 이유가 '왜 누르는지(나만 모르는 손해·이득 / 비교 심리 / 구체적 변화)'를 짚은 두 문장인가.",
   "사진 배치: 작업 메모의 사진 배치 줄에 장수와 위치가 적혀 있는가. 본문에 [사진 3] 같은 자리표시자가 들어갔으면 지운다.",
-  "사진 여백: 본문 사진을 '상단 1/3 여백'·'위쪽 벽 빈 공간'으로 지시했는가. 본문 사진은 상단 빈 공백 없이 피사체·배경이 프레임을 꽉 채우는 구도(full-bleed)로 고치고, 상단 여백은 대표 썸네일 2번에만 남긴다.",
-  "썸네일 글자 정렬: 대표 썸네일 1·2번 문구를 '왼쪽 정렬'·'좌측 상단'·'상단 왼쪽'처럼 한쪽에 붙이라고 지시했는가. 그런 지시는 '캔버스 좌우 정확히 정중앙(centered, never left-aligned)'으로 고치고, 썸네일 2번은 상단 1/3 안의 정중앙에 두게 한다. 작업 메모의 사진·썸네일 배치 줄에도 정중앙 기준으로 적는다.",
+  "사진 여백: 본문 사진을 '상단 1/3 여백'·'위쪽 벽 빈 공간'으로 지시했는가. 본문 사진은 상단 빈 공백 없이 피사체·배경이 프레임을 꽉 채우는 구도(full-bleed)로 고치고, 대표 썸네일 2번도 상단을 비우지 않고 글자를 얹은 full-frame으로 만든다.",
+  "썸네일 글자 정렬: 대표 썸네일 1·2번 문구를 '왼쪽 정렬'·'좌측 상단'·'상단 왼쪽'처럼 한쪽에 붙이라고 지시했는가. 그런 지시는 '캔버스 좌우 정확히 정중앙(centered, never left-aligned)'으로 고치고, 썸네일 2번은 상단 영역 안의 정중앙에 두게 한다. 작업 메모의 사진·썸네일 배치 줄에도 정중앙 기준으로 적는다.",
   "썸네일 문구 호기심 훅(v1.7.3): 작업 메모의 썸네일 1·2번 문구가 '" + BS.THUMB_HOOK_RULE.banned.join("·") + "' 같은 교과서식 요약어이거나 제목을 줄여 쓴 것이면 다시 뽑는다. 1번은 의외성·경고형, 2번은 질문·숫자·핵심 포인트형으로 서로 다른 각도여야 하고, 각 줄 2~12자(2번은 한두 줄)의 짧은 훅이어야 한다. '왜?·뭐가?·나도 해당되나?'가 안 떠오르는 문구는 버리고 새로 만든다. 두 문구가 같은 말을 반복해도 다시 뽑는다. 나쁜 예: " + BS.THUMB_HOOK_RULE.bad.join(" / ") + " / 좋은 예(1번): " + BS.THUMB_HOOK_RULE.goodTypo.join(" / ") + " / 좋은 예(2번): " + BS.THUMB_HOOK_RULE.goodPhoto.join(" / "),
   "건강·식품 표현(v2.2.1 · 식품표시광고법 제8조): '면역 특효·감기 예방·기관지 예방·항암·질병 치료·치료 효과·완치·만병통치·기적의 효능·부작용 없음'이 제목·본문·표·해시태그·썸네일 문구·작업 메모에 하나라도 있으면 그 문장을 지우고, '면역에 도움이 되는 식사 습관·감기 철에 챙기면 좋은 생활 습관·이런 신호면 진료·관리와 경과 관찰'처럼 사실·습관·진료 안내로 다시 쓴다.",
 ];
@@ -738,11 +738,11 @@ BS.HUB_BANNER = {
    ② 한글 텍스트 + 한국 실사가 결합된 썸네일 1개 (메인 제목 그대로 쓰지 않고 문구는 서로 다르게) */
 BS.THUMB_RULES = [
   "썸네일 1번은 글자만(타이포)으로 만든다. 사진 없이 큰 한글 두 줄.",
-  "썸네일 2번은 한국인 실사 사진 위에 다른 한글 문구를 얹는다 — 사진에는 글자를 그리지 않고(textless), 지연님이 상단 1/3 여백에 직접 얹는다.",
+  "썸네일 2번은 한국인 실사 사진을 화면 끝까지 꽉 채우고(full-frame) 그 위 상단 영역에 다른 한글 문구 두 줄을 그려 넣는다 — 사진과 글자가 한 장에 함께 나오고, 글자는 AI가 그린다.",
   "두 썸네일 문구는 서로 달라야 하고, 블로그 메인 제목을 그대로 쓰지 않는다.",
   "두 문구 모두 교과서식 요약어가 아닌 짧은 호기심 훅(BS.THUMB_HOOK_RULE)이다 — 1번은 의외성·경고형, 2번은 질문·숫자·핵심 포인트형.",
   "둘 다 1:1 정사각형이고, 글자는 좌우 정확히 정중앙에 배치한다(centered horizontally, never left-aligned).",
-  "썸네일 2번은 상단 1/3을 문구 자리로 비우고(AI는 글자를 그리지 않는다), 그 문구는 그 안의 좌우 정중앙에 얹는다."
+  "썸네일 2번은 상단 영역에 한글 두 줄을 그린다(AI가 글자까지), 문구는 그 안의 좌우 정중앙에 놓는다."
 ];
 
 /* ---------- v3.3 제목 공식 (노마드 로빅) ----------
@@ -1498,68 +1498,86 @@ BS.TITLE_TREND = {
    work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt의
    제4조(이미지 생성 프롬프트 정밀 규격) 문장을 그대로 옮겨 왔다.
    썸네일 2종·본문 1:1 이미지 프롬프트가 이 문장을 같이 쓴다. */
-/* ---------- 🖼️ v3.3 이미지 프롬프트 기준선 (v2.2.5 · 2026-11-19 지연님·크리 님 확정) ----------
+/* ---------- 🖼️ 이미지 프롬프트 실전 확정 규격 (v2.2.6 · 2026-11-19 지연님 확정) ----------
    원고 속 이미지 프롬프트 세트의 기준은 이 한 곳이다.
-   출처: `work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt` 제4조 '이미지 생성 프롬프트 정밀 규격'.
+   출처: 제미나이 젬 `올인원 슈퍼 젬 v3.3 (062624 원본 복제)` 의 지연님 실사용 대화방에서 2026-11-19 직접 확인한
+         최신 확정 규격(지연님 "[#29887] 실사형에 글씨가 나와야 정상이야"). 아래 세 문장을 그대로 쓴다.
 
-   ● 썸네일 1·2번 복사용 영문 프롬프트는 아래 thumb1·thumb2 를 **글자 하나 바꾸지 않고** 원고에 그대로 내보낸다.
-     주제에 따라 바뀌는 것은 문구(한글 훅)와 thumb2 의 `[주제 상황]` 한 자리뿐이다.
-   ● 앞으로 어떤 업데이트에서도 아래 6가지가 빠지거나 변형되면 안 된다.
-     ① 썸네일 1·2번 v3.3 영문 원문  ② 목차별 본문 1:1 full-bleed(상단 여백 없음)
-     ③ 하단 3:1 슬림 허브 배너(BS.HUB_BANNER 고정 디자인)  ④ 한국인 30대 후반~40대 초반 실사
-     ⑤ 썸네일 2번 textless + 상단 1/3 비움  ⑥ 소비자·독자 중심 대원칙
-   ● 이 값은 `work/bs225-test/test_v225.py` 가 제4조 원문 파일과 대조해 지킨다. */
+   ● 썸네일 1번 = 빛 흡수형 리얼 블랙(#000100) 고대비 타이포. 하단 바·테두리 없음. 순백(#FFFFFF) 윗줄 + 네온 오렌지(#FF6B00) 아랫줄.
+   ● 썸네일 2번 = 한국 3040 실사 사진을 화면 끝까지 꽉 채우고(full-frame, 상단 빈 공란 없음) 그 위 상단 영역에
+     다크네이비 윗줄 + 번트오렌지 아랫줄 한글 문구를 직접 렌더링한다. textless·상단 1/3 여백은 폐기(v2.2.6).
+   ● 목차별 본문 이미지 = ① 비교·구조·수치 설명 목차는 한국어 라벨이 들어간 3D 입체 비교 차트·인포그래픽
+     ② 일반 상황·행동 목차는 화면을 꽉 채운(full-frame) 한국 3040 실사 + textless, no words.
+   ● 하단 배너는 BS.HUB_BANNER 고정 디자인(3:1) 그대로.
+   ● 바뀌는 것은 이 글의 한글 문구 두 줄과 썸네일 2번의 `[주제 상황]` 한 자리뿐이다.
+   ● 이 값은 `work/bs226-test/test_v226.py` 가 지키고, v3.3 제4조 영문 원문은 `BS.IMAGE_BASELINE_V33` 에 참고용으로 남긴다. */
 BS.IMAGE_BASELINE = {
   version: "v3.3",
-  fixedAt: "v2.2.5",
-  source: "work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt",
-  clause: "제4조 이미지 생성 프롬프트 정밀 규격",
-  /* 썸네일 1번 — 제4조 원문 그대로 (한글 글자가 들어가는 유일한 이미지) */
-  thumb1: "A clean Korean typography-only thumbnail design, solid warm ivory background with a deep navy accent bar, bold legible Korean sans-serif text lines arranged in the center, no people, no photos, flat vector poster style, high contrast, sharp Korean typography, no English letters, 8k resolution, aspect ratio 1:1",
-  /* 썸네일 2번 — 제4조 원문 그대로. `[주제 상황]` 자리에만 이 글의 장면을 넣는다 */
-  thumb2: "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [주제 상황], healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, soft morning daylight, clean negative space in the upper third for Korean text overlay, textless, no words, photorealistic, 8k resolution, aspect ratio 1:1",
+  spec: "2026-11-19 실전 확정 규격",
+  fixedAt: "v2.2.6",
+  source: "제미나이 젬 '올인원 슈퍼 젬 v3.3 (062624 원본 복제)' 지연님 실사용 대화방 확정본(2026-11-19)",
+  clause: "이미지 프롬프트 실전 확정 규격 — 썸네일 1번 리얼 블랙 타이포 · 썸네일 2번 full-frame 실사+한글 · 본문 3D 차트/full-frame 실사",
+  /* 썸네일 1번 — 빛 흡수형 리얼 블랙(#000100) 고대비 타이포. 두 줄 한글을 AI가 직접 그린다 */
+  thumb1: "A striking Korean typography-only blog thumbnail poster, solid pitch-black light-absorbing matte black background (#000100) with no bottom bar, no border, and zero light reflection, extra-large ultra-bold legible Korean sans-serif typography centered and filling the frame, reading \"(윗줄 한글 문구)\" on the top line in crisp pure white (#FFFFFF) and \"(아랫줄 한글 문구)\" on the second line in vivid neon orange (#FF6B00), no people, no photos, minimal modern Korean graphic design, maximum stark contrast, sharp crisp Korean letters, aspect ratio 1:1",
+  /* 썸네일 2번 — 한국 3040 실사 full-frame + 상단 영역 한글 문구 직접 렌더링. `[주제 상황]` 자리에만 이 글의 장면을 넣는다 */
+  thumb2: "A full-frame candid lifestyle photograph of a realistic stylish Korean woman in her late 30s to early 40s in a modern Korean apartment, [주제 상황], warm morning sunlight, cozy Korean interior filling the entire background naturally from top to bottom with no blank cutout space, healthy clear Korean skin, natural authentic skin texture, bold legible Korean sans-serif typography overlay positioned neatly in the upper portion reading \"(윗줄 한글 문구)\" on the top line in dark navy and \"(아랫줄 한글 문구)\" on the second line in burnt orange, sharp crisp Korean letters, photorealistic, aspect ratio 1:1",
   /* 썸네일 2번에서 주제에 따라 바뀌는 한 자리 (이 자리 말고는 고치지 않는다) */
   thumb2Slot: "[주제 상황]",
+  /* 원고 예시에 보여 주는 한글 자리 표시자 — AI는 이 자리에 그 글의 실제 한글 훅을 넣는다 */
+  krSlot: { above: "(윗줄 한글 문구)", below: "(아랫줄 한글 문구)" },
+  /* 목차별 본문 이미지 ① — 비교·구조·수치 설명 목차용 3D 입체 비교 차트·인포그래픽 */
+  bodyChart: "A clean modern Korean 3D isometric comparison chart infographic, [비교 주제와 항목], labeled blocks, icons and numbers arranged in a balanced layout, crisp legible Korean sans-serif typography for every label and figure, muted warm Korean palette, soft even lighting, full-frame balanced composition, no watermark, aspect ratio 1:1",
+  /* 목차별 본문 이미지 ② — 일반 상황·행동 목차용 full-frame 한국 3040 실사(textless) */
+  bodyPhoto: "A full-frame candid lifestyle photograph of a realistic stylish Korean woman in her late 30s to early 40s in a modern Korean apartment, [주제 상황], warm morning sunlight, cozy Korean interior filling the entire background naturally from top to bottom with no blank cutout space, healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, textless, no words, no letters, no watermark, photorealistic, 8k resolution, aspect ratio 1:1",
+  /* 목차별 본문 이미지 공통 규칙 — 1:1 · 화면을 꽉 채우는 구도(상단 여백 없음) */
+  body: "목차별 본문 이미지는 1:1 정사각형 · 화면을 꽉 채우는 full-frame(full-bleed, 상단 빈 공간 없음) 구도 · 비교·구조·수치 목차는 한국어 라벨 3D 입체 비교 차트, 일반 목차는 textless 한국 3040 실사",
   /* 3대 절대 원칙 1 — 인물 고정 문장 */
   person: "A realistic stylish Korean woman in her late 30s to early 40s (or a Korean man in his late 30s to early 40s), healthy clear Korean skin, natural authentic skin texture, comfortable daily Korean home clothes, subtle natural facial expression, candid photography style, warm realistic lighting, photorealistic 8k",
-  /* 3대 절대 원칙 2 — 글자 금지·상단 1/3 여백 */
-  noText: "Textless, no text, no letters, no watermark, clean negative space in the upper third for typography overlay",
+  /* 3대 절대 원칙 2 — 본문 사진 글자 금지(썸네일 1·2번은 한글 문구가 들어간다) */
+  noText: "Textless, no text, no letters, no watermark, full-frame composition with no blank cutout space",
   /* 3대 절대 원칙 3 — 한국 장소 고증 */
   place: "Authentic Korean apartment interior, realistic Korean kitchen sink, cozy Korean living room, clean Korean hospital consultation room, warm daylight",
-  /* 목차별 본문 이미지 — 1:1, 상단 여백 없는 full-bleed, textless */
-  body: "목차별 본문 이미지는 1:1 정사각형 · 상단 여백 없는 full-bleed(피사체·배경이 프레임을 꽉 채움) · textless, no words · 한국 아파트·주방·병원 고증",
   /* 하단 배너 — 3:1 고정 디자인 (문구·비율·디자인은 BS.HUB_BANNER 한 곳) */
   banner: "하단 3:1 슬림 허브 배너 — BS.HUB_BANNER 고정 디자인(크림 베이지 + 골드 테두리 + 체크리스트·돋보기 아이콘 + 네이비 알약 버튼) · 링크 https://link.gold-queen.com",
   /* 대원칙 — 이미지 장면 설명에도 적용 */
   reader: "손해·이익·비용·선택의 주인은 언제나 소비자·독자 — 이미지 장면도 독자가 겪는 상황을 그린다",
   /* 원고 [출력 형식]과 2단계 검수가 같이 쓰는 고정 문장 */
-  guard: "이미지 프롬프트 세트의 썸네일 1·2번 복사용 영문 프롬프트는 슈퍼 젬 v3.3 제4조 원문 그대로 낸다 — 문구(한글 훅)와 썸네일 2번의 [주제 상황]만 바꾸고, 문장 구조·textless·상단 1/3 여백·한국인 30대 후반~40대 초반·한국 배경 고증·1:1(배너 3:1) 비율은 고치지 않는다.",
+  guard: "이미지 프롬프트 세트는 지연님이 2026-11-19 제미나이 젬 대화방에서 확정한 실전 규격 그대로 낸다 — ① 썸네일 1번은 빛 흡수형 리얼 블랙(#000100) 바탕에 순백(#FFFFFF)·네온 오렌지(#FF6B00) 두 줄 한글 타이포, 하단 바·테두리 없음 ② 썸네일 2번은 한국 3040 실사 full-frame(상단 빈 공란·textless 없음) 위 상단 영역에 다크네이비·번트오렌지 두 줄 한글을 직접 렌더링 ③ 목차별 본문은 비교·수치 목차면 한국어 라벨 3D 입체 비교 차트, 일반 목차면 full-frame 실사 + textless, no words ④ 하단은 BS.HUB_BANNER 3:1 고정. 한글 문구 두 줄과 [주제 상황] 한 자리만 바뀐다.",
   /* 기준선 6종 — README·테스트·검수가 같은 말을 쓴다 */
   checklist: [
-    "썸네일 1·2번 복사용 영문 프롬프트 = v3.3 제4조 영문 원문(문구·[주제 상황]만 교체)",
-    "목차별 본문 이미지 = 1:1 full-bleed, 상단 여백 없음, textless",
+    "썸네일 1번 = 리얼 블랙(#000100) 타이포 + 순백(#FFFFFF)·네온 오렌지(#FF6B00) 두 줄 한글(하단 바 없음)",
+    "썸네일 2번 = 한국 3040 실사 full-frame + 상단 영역 다크네이비·번트오렌지 두 줄 한글(상단 빈 공란 없음)",
+    "목차별 본문 = 비교·수치 목차는 한국어 라벨 3D 입체 비교 차트, 일반 목차는 full-frame 실사 + textless",
     "하단 배너 = 3:1 슬림 허브 배너(BS.HUB_BANNER 고정 디자인 · 링크 link.gold-queen.com)",
     "인물 = 한국인 30대 후반~40대 초반 실사(성형 미인·아이돌 얼굴 금지)",
-    "썸네일 2번 = textless + 상단 1/3 비움(한글 문구는 지연님이 직접 얹음)",
     "장면의 중심 = 소비자·독자(기관·판매자 시점 금지)"
   ]
+};
+
+/* ---------- 참고 보존 — 슈퍼 젬 v3.3 제4조 영문 원문 (v2.2.5 기준선, 2026-11-19 실전 확정 규격으로 교체됨) ----------
+   v2.2.6 부터 원고에 나가는 프롬프트는 위 BS.IMAGE_BASELINE 이다. 아래 두 문장은 비교·역사 기록용이며
+   원고 출력에 쓰지 않는다(출처: `work/gem-upload-1117/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본.txt` 제4조). */
+BS.IMAGE_BASELINE_V33 = {
+  version: "v3.3",
+  fixedAt: "v2.2.5",
+  thumb1: "A clean Korean typography-only thumbnail design, solid warm ivory background with a deep navy accent bar, bold legible Korean sans-serif text lines arranged in the center, no people, no photos, flat vector poster style, high contrast, sharp Korean typography, no English letters, 8k resolution, aspect ratio 1:1",
+  thumb2: "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [주제 상황], healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, soft morning daylight, clean negative space in the upper third for Korean text overlay, textless, no words, photorealistic, 8k resolution, aspect ratio 1:1"
 };
 
 BS.IMAGE_GEM = {
   version: "v3.3",
   personWoman: "a realistic stylish Korean woman in her late 30s to early 40s, healthy clear Korean skin, natural authentic skin texture, comfortable daily Korean home clothes, subtle natural facial expression, candid documentary photography style, warm realistic lighting, photorealistic 8k",
   personMan: "a realistic stylish Korean man in his late 30s to early 40s, healthy clear Korean skin, natural authentic skin texture, comfortable daily Korean home clothes, subtle natural facial expression, candid documentary photography style, warm realistic lighting, photorealistic 8k",
-  textless: "textless, no text, no letters, no watermark, clean negative space in the upper third for typography overlay",
+  textless: "textless, no text, no letters, no watermark, full-frame composition with no blank cutout space",
   place: "Authentic Korean apartment interior, realistic Korean kitchen sink, cozy Korean living room, clean Korean hospital consultation room, warm daylight",
   light: "soft morning daylight through a window, warm natural tones, gentle soft shadows, no harsh flash, no over-saturation",
   color: "muted warm Korean home palette — beige, off-white, light wood, a single muted accent color",
-  typoPrompt: BS.IMAGE_BASELINE.thumb1,   // v2.2.5 — v3.3 제4조 원문 한 곳(기준선)을 그대로 쓴다
-  /* 원고 속 세트의 썸네일 2번은 `BS.IMAGE_BASELINE.thumb2`(v3.3 원문)를 쓴다.
-     이 photoPrompt 는 '이미지 프롬프트' 화면의 영문 템플릿으로, v2.2.3 에서 글자 금지
-     (no text, no letters, no watermark)를 덧붙여 강화한 판본이다 — 기준선을 줄인 것이 아니라 늘린 것이다. */
-  photoPrompt: "A realistic photo of a Korean woman in her late 30s to early 40s in a modern Korean apartment, [scene from the article], healthy clear Korean skin, natural authentic skin texture, candid documentary photography style, soft morning daylight, clean empty negative space in the upper third where the author will place the Korean phrase later, textless, no text, no words, no letters, no watermark, photorealistic, 8k resolution, aspect ratio 1:1"
+  /* v2.2.6 — '이미지 프롬프트' 화면도 원고와 같은 실전 확정 규격을 쓴다(BS.IMAGE_BASELINE 한 곳) */
+  typoPrompt: BS.IMAGE_BASELINE.thumb1,
+  /* 썸네일 2번 영문 템플릿 — full-frame 실사 + 상단 한글 두 줄. `[위 한글 문구]`·`[아래 한글 문구]` 자리에 그 글의 두 줄을 넣는다 */
+  photoPrompt: "A full-frame candid lifestyle photograph of a realistic stylish Korean woman in her late 30s to early 40s in a modern Korean apartment, [scene from the article], warm morning sunlight, cozy Korean interior filling the entire background naturally from top to bottom with no blank cutout space, healthy clear Korean skin, natural authentic skin texture, bold legible Korean sans-serif typography overlay positioned neatly in the upper portion reading \"[위 한글 문구]\" on the top line in dark navy and \"[아래 한글 문구]\" on the second line in burnt orange, sharp crisp Korean letters, photorealistic, aspect ratio 1:1"
 };
-BS.IMAGE_GEM.baseline = BS.IMAGE_BASELINE.version;   // v2.2.5 — 이 화면도 같은 기준선을 가리킨다
+BS.IMAGE_GEM.baseline = BS.IMAGE_BASELINE.version;   // v2.2.6 — 이 화면도 같은 기준선을 가리킨다
 
 /* ---------- 기본 모델 (v2.2.3 · 2026-11-19 상향) ----------
    기본을 gemini-2.5-flash(무료 하루 20편)에서 gemini-3.5-flash-lite(무료 하루 500편)로 올렸다.
@@ -1620,7 +1638,7 @@ BS.IMAGE_MODEL_HINTS = [
    본문에 들어가는 사진은 위쪽이 비면 글이 끊겨 보인다. 상단 여백 지시는 글자를 얹는
    대표 썸네일에만 남기고, 본문 사진은 프레임을 꽉 채우는 구도로 만든다. */
 BS.IMAGE_BODY_RULE = "상단 빈 공백 없이 피사체와 배경이 프레임 전체를 자연스럽게 꽉 채우는 구도(full-bleed, no empty top margin or blank wall space above subject)";
-BS.IMAGE_THUMB_RULE = "상단 1/3 여백은 대표 썸네일 2번(실사)에서만 쓰고, 그 사진에는 글자를 그리지 않는다(textless) — 이 여백은 지연님이 한글 문구를 얹을 자리이며, 문구는 캔버스 좌우 정확히 정중앙에 놓는다";
+BS.IMAGE_THUMB_RULE = "상단 1/3 문구 자리는 대표 썸네일 2번(실사)에서만 쓰고, 그 안에 그 글의 한글 두 줄을 AI가 그려 넣는다 — 사진과 글자가 한 장에 함께 나오며, 문구는 캔버스 좌우 정확히 정중앙에 놓는다";
 
 /* ---------- 형광펜 2색 + 굵게 강조 (v1.7.2 · 2026-11-17 지연님 요청) ----------
    지연님이 스마트에디터 사진 두 장을 보내며 "상황에 따라 이렇게 표시도 해 줄 수 있어?"라고
@@ -1663,11 +1681,11 @@ BS.CENTER_RULE_SHORT = "좌우 정확히 정중앙(centered, never left-aligned)
 BS.IMAGE_PRINCIPLES = [
   "모든 사진은 1:1 정사각형",
   "인물은 단정하고 건강한 30대 후반~40대 초반 한국인 실사 (성형 얼굴·과장된 미소 금지)",
-  "이미지 안에 글자·간판 문구·워터마크를 넣지 않는다 (textless) — 단, 대표 썸네일 1번(타이포형)만 예외이고 2번 실사는 글자 없이 상단 1/3만 비운다",
-  "대표 썸네일 2번의 한글 문구는 AI가 그리지 않는다 — 상단 1/3을 빈 자리로 받아 지연님이 스마트에디터·미리캔버스에서 직접 얹는다",
+  "이미지 안에 간판 문구·워터마크를 넣지 않는다 — 대표 썸네일 1·2번은 그 글의 한글 두 줄을 넣고(1번 타이포·2번 실사 위 상단), 목차별 본문은 비교·수치 목차만 한국어 라벨 3D 차트, 나머지는 textless",
+  "대표 썸네일 1·2번의 한글 문구는 둘 다 AI가 그린다 — 2번은 full-frame 사진 위 상단 영역에 두 줄을 그려 넣어 사진과 글자가 함께 나온다",
   "본문 사진은 상단에 빈 공백을 두지 않는다 — 피사체와 배경이 프레임 전체를 자연스럽게 꽉 채우는 구도(full-bleed)",
-  "상단 1/3 여백은 글자를 얹는 대표 썸네일에서만 쓴다 (본문 사진에는 절대 쓰지 않는다)",
-  "대표 썸네일 1·2번의 한글 글자(1번은 AI가 그리고, 2번은 지연님이 얹는다)는 좌우 정확히 정중앙에 둔다 — 왼쪽 정렬·한쪽 치우침 금지(centered horizontally, never left-aligned)",
+  "빈 여백을 남기지 않는다 — 대표 썸네일 2번도 사진이 화면을 꽉 채우고, 본문 사진에도 상단 빈 공란을 두지 않는다",
+  "대표 썸네일 1·2번의 한글 글자(둘 다 AI가 그린다)는 좌우 정확히 정중앙에 둔다 — 왼쪽 정렬·한쪽 치우침 금지(centered horizontally, never left-aligned)",
   "배경은 실제 한국의 장소·집·시장·주방·병원처럼 구체적으로 고증",
   "자연광, 스마트폰으로 찍은 듯한 자연스러운 구도. CF 같은 연출 금지",
   "AI 느낌(플라스틱 피부, 과도한 보정, 손가락 왜곡) 금지"

@@ -2379,6 +2379,102 @@
   function isImagePromptSection(label) {
     return /^이미지\s*프롬프트/.test(String(label || "").replace(/\s+/g, " "));
   }
+  /* ---------- 🖼️ 이미지 프롬프트 세트 — 항목별 카드 + [📋 프롬프트 복사] (v2.2.6) ----------
+     지연님 "[#29929] 전에는 이부분도 명확히 구분해서 복사탭 있어서 그거만 눌러서 복사하게 했었어".
+     출력 예시가 [그룹] → '- 항목' → '  "영문 프롬프트"' 순서라 그대로 파싱해 카드로 그린다.
+     '- 기준선 고정:'·'- 본문 고정:' 같은 내부 규칙 설명 줄은 카드로 만들지 않고 버린다. */
+  function parseImagePromptCards(lines) {
+    var out = [], group = "", cur = null;
+    var META = /^[-*•]\s*(?:기준선|본문\s*고정|배너\s*고정|고정|참고|규칙)\s*[:：]/;
+    (lines || []).forEach(function (raw) {
+      var t = String(raw || "").trim();
+      if (!t) return;
+      if (/^\[.*\]$/.test(t)) { group = t.replace(/^\[|\]$/g, ""); cur = null; return; }
+      if (/^[-*•]\s+/.test(t)) {
+        if (META.test(t)) { cur = null; return; }
+        var title = t.replace(/^[-*•]\s+/, "").trim();
+        var parts = title.split(/\s+—\s+/);
+        cur = { group: group, name: parts[0], hint: parts.slice(1).join(" — "), prompt: [], title: title };
+        out.push(cur);
+        return;
+      }
+      if (cur) cur.prompt.push(t);
+    });
+    out.forEach(function (c) {
+      var txt = c.prompt.join(" ").replace(/\s+/g, " ").trim();
+      if (!txt) {
+        /* 제목 줄 안에 영문 프롬프트를 같이 낸 경우 */
+        var q1 = c.title.indexOf('"'), q2 = c.title.lastIndexOf('"');
+        if (q1 >= 0 && q2 > q1) {
+          var inner = c.title.slice(q1 + 1, q2);
+          if (/[A-Za-z]{3,}/.test(inner) && inner.replace(/[^A-Za-z]/g, "").length > 20) txt = inner;
+        }
+      }
+      var a = txt.indexOf('"'), b = txt.lastIndexOf('"');
+      c.promptText = (a >= 0 && b > a) ? txt.slice(a + 1, b).replace(/\s+/g, " ").trim() : txt;
+      delete c.prompt;
+    });
+    return out.filter(function (c) { return c.promptText; });
+  }
+
+  /* 그룹 머리말에 붙은 모델용 지시문(" — 목차 1번부터 FAQ 직전 …")은 화면에서 뺀다 */
+  function groupTitle(g) {
+    return String(g || "").split(/\s+—\s+/)[0].trim();
+  }
+  /* 카드에 보여 줄 안내는 '삽입 한글 문구'뿐 — 나머지 템플릿 지시문은 화면에서 숨긴다 */
+  function showHint(h) {
+    return !!h && /삽입\s*한글\s*문구/.test(h);
+  }
+
+  function imagePromptCardsHtml(bodyLines) {
+    var cards = parseImagePromptCards(bodyLines);
+    if (!cards.length) {
+      return '<div class="memo-box"><strong>🖼️ 이미지 프롬프트 세트 · 화면 확인용(복사본에는 빠집니다)</strong>' +
+        '<pre style="white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font:inherit;line-height:1.7">' +
+        esc((bodyLines || []).join("\n").trim()) + "</pre></div>";
+    }
+    var html = ['<div class="memo-box imgset-box">',
+      '<strong>🖼️ 이미지 프롬프트 세트 · 화면 확인용(복사본에는 빠집니다)</strong>',
+      '<div class="imgset-note">항목마다 [📋 프롬프트 복사]를 누르면 따옴표 안 영문 프롬프트만 복사됩니다 — 제미나이 새 대화에 그대로 붙여넣으세요.</div>'];
+    var lastGroup = null;
+    cards.forEach(function (c, i) {
+      if (c.group && c.group !== lastGroup) {
+        html.push('<div class="imgset-group">' + esc(groupTitle(c.group)) + "</div>");
+        lastGroup = c.group;
+      }
+      html.push('<div class="imgset-card" data-i="' + i + '">' +
+        '<div class="imgset-card-head"><strong>' + esc(c.name) + "</strong></div>" +
+        (showHint(c.hint) ? '<div class="imgset-hint">' + esc(c.hint) + "</div>" : "") +
+        '<div class="imgset-prompt">' + esc(c.promptText) + "</div>" +
+        '<div class="imgset-foot"><button type="button" class="btn small primary" data-imgset-copy="' + i + '">📋 프롬프트 복사</button></div>' +
+        "</div>");
+    });
+    html.push("</div>");
+    return html.join("");
+  }
+
+  /* 카드 복사 버튼 — 따옴표 안 영문 프롬프트만 복사하고 버튼에 ✅ 복사됨을 보여 준다 */
+  function bindImagePromptCopies(box) {
+    if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-imgset-copy]"), function (btn) {
+      btn.addEventListener("click", function () {
+        var card = btn.closest(".imgset-card");
+        var el = card ? card.querySelector(".imgset-prompt") : null;
+        var txt = el ? el.textContent.trim() : "";
+        if (!txt) { toast("복사할 프롬프트를 찾지 못했습니다"); return; }
+        copyPlain(txt).then(function (ok) {
+          if (!ok) { toast("복사가 막혔습니다 — 프롬프트를 직접 선택해 복사해 주세요"); return; }
+          var old = btn.getAttribute("data-label") || btn.textContent;
+          btn.setAttribute("data-label", old);
+          btn.textContent = "✅ 복사됨";
+          btn.classList.add("copied");
+          toast("프롬프트를 복사했습니다 — 제미나이에 붙여넣으세요");
+          setTimeout(function () { btn.textContent = old; btn.classList.remove("copied"); }, 1600);
+        });
+      });
+    });
+  }
+
   /* 이 화면에서만 보여 주고 복사본에서는 빠지는 계획용 머리말 */
   function isPlanSection(label) {
     return /^제목\s*후보/.test(label) || /^최종\s*추천\s*제목/.test(label) || /^추천\s*제목/.test(label);
@@ -2482,9 +2578,7 @@
         return;
       }
       if (isImagePromptSection(label)) {
-        html.push('<div class="memo-box"><strong>🖼️ 이미지 프롬프트 세트 · 화면 확인용(복사본에는 빠집니다)</strong>' +
-          '<pre style="white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font:inherit;line-height:1.7">' +
-          esc(sec.body.join("\n").trim()) + "</pre></div>");
+        html.push(imagePromptCardsHtml(sec.body));
         return;
       }
       if (/^FAQ/.test(label)) {
@@ -2519,6 +2613,7 @@
       html.push(affiliateHtml(false));
     }
     $("#articlePreview").innerHTML = applyAffiliateLink(html.join("\n"));
+    bindImagePromptCopies($("#articlePreview"));   // v2.2.6 — 카드별 [📋 프롬프트 복사]
 
     // 글자수 (형광펜 기호 ==·@@는 본문 글자로 세지 않는다)
     var plain = stripEmphasisMarks(stripMetaSections(r.md));
@@ -6902,6 +6997,8 @@
   BS.modelChain = modelChain;   // v2.2.3 — 자동 전환 사슬에 같은 모델이 두 번 들어가지 않는지 검증용
   BS.webSearchAllowed = webSearchAllowed;   // v2.2.3 — 기본 모델(Flash Lite)이 검색 미지원으로 바로 일반 작성으로 내려가는지 검증용
   BS.renderArticle = renderArticle;   // v2.2.3 — 결과 화면의 이미지 프롬프트 박스 렌더 검증용
+  BS.parseImagePromptCards = parseImagePromptCards;   // v2.2.6 — 이미지 프롬프트 세트 카드 파싱 검증용
+  BS.imagePromptCardsHtml = imagePromptCardsHtml;     // v2.2.6 — 카드 HTML·복사 버튼 검증용
   BS.auditDefect = auditDefect;
   BS.parseGrounding = parseGrounding;
   /* v2.0.0 검증용 — 중복 경고·길잡이·블로거·멀티유즈를 콘솔에서 직접 확인 */
