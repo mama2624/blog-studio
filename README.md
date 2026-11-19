@@ -37,7 +37,9 @@ BS_PIN=… python3 work/bs223-live/live_v223.py                                 
 BS_BASE=https://mama2624.github.io/blog-studio/ BS_PIN=… python3 work/bs223-live/live_v223.py   # 실서버
 ```
 
-결과 — 단위 **139항목 통과** · 로컬 Chromium·실서버 결과는 아래에 이어 적습니다.
+결과 — 단위 **142항목 통과** · 로컬 Chromium **49항목 통과** · 실서버(https://mama2624.github.io/blog-studio/) **49항목 통과** · v2.2.2 실서버 회귀는 판본·바뀐 규칙 문장 9항목만 실패(의도한 값)이고 연출표·라이선스·잠금·안전장치·모바일은 전부 통과.
+
+실서버 확인 스크린샷 — `browser/v223_migrated.png`(저장값 1회 전환) · `browser/v223_result.png` · `browser/v223_promptset.png`(결과 화면 이미지 프롬프트 박스) · `browser/v223_mobile.png`(390px).
 
 ## 🎬 쇼츠 절차형 4단계 연출표 · 🔊 상업 무료 라이선스 · 📅 기억 의존 금지 (v2.2.2 · 2026-11-19)
 
