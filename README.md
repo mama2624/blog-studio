@@ -45,7 +45,7 @@
 ```
 python3 work/bs232-test/test_v232.py                          # 단위 — 119 PASS
 python3 work/bs232-live/live_v232.py                          # 로컬 Playwright — 44 PASS
-BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs232-live/live_v232.py   # 실서버 — 배포본 확인
+BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs232-live/live_v232.py   # 실서버 — 44 PASS (2026-11-19 배포본)
 ```
 
 - 신규 채널 선택 테스트 — 칩 3종·기본값·저장/복원(옛 저장본·빈 배열·모르는 id), 이름표 7조합, 그리고 복사 문구를 스레드만/인스타만/클립만/인스타+클립/3개 모두 **5가지**로 만들어 고른 채널의 원고만 담기는지 확인합니다.
