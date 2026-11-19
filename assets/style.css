@@ -1157,6 +1157,19 @@ html.locked body > :not(#lockScreen){display:none !important}
 .fin-upload{display:flex;flex-direction:column;gap:4px}
 .fin-upload-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:9px}
 .fin-upload-lab{font-size:11.5px;font-weight:700;color:var(--ink-2);min-width:56px}
+/* v2.3.2 — 올리기 채널 개별 선택 칩(🧵 스레드 / 📸 인스타(릴스) / 🎬 네이버 클립) */
+#finishUploadChannels .sux-chip.ch{flex-direction:row;align-items:center;gap:6px;border-radius:999px;padding:6px 11px}
+#finishUploadChannels .sux-chip.ch .sux-h{font-size:12px;white-space:nowrap}
+#finishUploadChannels .sux-chip.ch .sux-s{font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+#finishUploadChannels .sux-chip.ch:not(.active){opacity:.6;border-style:dashed}
+#finishUploadChannels .sux-chip.ch:not(.active) .sux-h{color:#5d6a7c}
+@media (max-width:620px){
+  /* 좁은 화면은 이름만 — 켜짐/꺼짐은 색·점선으로 보인다 */
+  #finishUploadChannels{gap:5px}
+  #finishUploadChannels .sux-chip.ch{flex:0 1 auto;padding:6px 9px;gap:4px}
+  #finishUploadChannels .sux-chip.ch .sux-h{font-size:11.5px}
+  #finishUploadChannels .sux-chip.ch .sux-s{display:none}
+}
 #finishUploadBy{flex:0 0 auto}
 #finishUploadWhenInput{max-width:100%}
 #finishUploadCard .fin-run{margin-top:12px}

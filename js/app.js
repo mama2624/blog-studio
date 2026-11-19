@@ -6454,6 +6454,7 @@
     images: null,
     run: false,
     uploadAccounts: [],
+    uploadChannels: [],   // v2.3.2 — 올릴 채널(threads·insta·clip) 중 켜 둔 것
     uploadWhen: "",
     uploadWhenCustom: "",
     draftTimer: null,
@@ -7243,10 +7244,10 @@
     });
   }
 
-  function finVideoText(v) {
+  function finVideoText(v, heading) {
     if (!v) return "";
     var f = v.format || BS.videoFormat("short");
-    var L = ["[릴스·클립 숏폼 대본]"];
+    var L = [heading || "[릴스·클립 숏폼 대본]"];
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
     if (v.pick) { L.push(""); L.push("[상품 선정]"); L.push(v.pick); }
     if (v.thumbs.length) { L.push(""); L.push("[추천 썸네일 문구]"); v.thumbs.forEach(function (t, i) { L.push((i + 1) + ") " + t); }); }
@@ -7405,6 +7406,29 @@
     });
   }
 
+  function finMultiTextFor(m, sel) {
+    /* v2.3.2 — 고른 채널의 부분만 담는다(스레드 훅/첫 댓글, 릴스·클립 20초 연출표) */
+    if (!m) return "";
+    sel = sel || finUploadSel();
+    var wantThread = !!sel.threads;
+    var wantClip = !!(sel.insta || sel.clip);
+    if (!wantThread && !wantClip) return "";
+    var L = [];
+    if (m.productPick) L.push("상품 선정: " + m.productPick);
+    if (wantThread) {
+      L.push("【스레드】");
+      L.push(m.hook || "");
+      if ((m.firstComment || []).length) { L.push(""); L.push("[첫 댓글]"); m.firstComment.forEach(function (c) { L.push(c); }); }
+    }
+    if (wantClip) {
+      if (wantThread) L.push("");
+      L.push(sel.clip && !sel.insta ? "【네이버 클립 20초 연출표】" : (sel.insta && !sel.clip ? "【릴스 20초 연출표】" : "【클립 20초 연출표】"));
+      (m.clip || []).forEach(function (c) { L.push((c.time ? c.time + " " : "") + c.text); });
+    }
+    if (m.hashtags) { L.push(""); L.push(m.hashtags); }
+    return L.join("\n");
+  }
+
   function finMultiText(m) {
     if (!m) return "";
     var L = [];
@@ -7454,12 +7478,55 @@
   function finUploadAccountsAll() {
     return ((BS.THREAD_UPLOAD || {}).accounts || []);
   }
+  /* v2.3.2 — 올릴 채널(🧵 스레드 / 📸 인스타(릴스) / 🎬 네이버 클립) */
+  function finUploadChannelsAll() {
+    return ((BS.THREAD_UPLOAD || {}).channels || []);
+  }
+  function finUploadChannelIds() {
+    var all = finUploadChannelsAll().map(function (c) { return c.id; });
+    var list = (FIN.uploadChannels || []).filter(function (id) { return all.indexOf(id) >= 0; });
+    if (!list.length) list = (((BS.THREAD_UPLOAD || {}).defaultChannels) || all).filter(function (id) { return all.indexOf(id) >= 0; });
+    if (!list.length) list = all.slice();
+    /* 설정 순서(스레드 → 인스타 → 클립)로 돌려준다 — 버튼·요청·저장본 문구가 늘 같게 */
+    return all.filter(function (id) { return list.indexOf(id) >= 0; });
+  }
+  function finUploadSel() {
+    var ids = finUploadChannelIds();
+    var sel = {};
+    finUploadChannelsAll().forEach(function (c) { sel[c.id] = ids.indexOf(c.id) >= 0; });
+    return sel;
+  }
+  function finUploadChannelLabel(sel) {
+    sel = sel || finUploadSel();
+    var all = finUploadChannelsAll();
+    var on = all.filter(function (c) { return sel[c.id]; });
+    if (all.length && on.length === all.length) return (BS.THREAD_UPLOAD || {}).allChannelsLabel || on.map(function (c) { return c.short; }).join("·");
+    return on.map(function (c) { return c.short; }).join("·");
+  }
+  function finUploadChannelFull(sel) {
+    sel = sel || finUploadSel();
+    return finUploadChannelsAll().filter(function (c) { return sel[c.id]; })
+      .map(function (c) { return c.full || c.short; }).join(" / ");
+  }
+  function finUploadNeeds() {
+    /* 고른 채널 중 아직 원고가 없는 것 — 안내 문구에 쓴다 */
+    var sel = finUploadSel();
+    var miss = [];
+    if (sel.threads && !FIN.threads) miss.push("스레드 타래");
+    if ((sel.insta || sel.clip) && !FIN.video) miss.push("릴스·클립 대본");
+    return miss;
+  }
   function finLoadUploadPref() {
     var j = null;
     try { j = JSON.parse(localStorage.getItem(FINCFG.storageUpload || "bs.finish.upload") || "null"); } catch (e) { j = null; }
     if (j && Array.isArray(j.accounts)) FIN.uploadAccounts = j.accounts.filter(function (id) { return BS.threadAccountById(id); });
+    if (j && Array.isArray(j.channels)) {
+      var chIds = finUploadChannelsAll().map(function (c) { return c.id; });
+      FIN.uploadChannels = j.channels.filter(function (id) { return chIds.indexOf(id) >= 0; });
+    }
     if (j && j.when) FIN.uploadWhen = j.when;
     if (j && j.whenCustom) FIN.uploadWhenCustom = j.whenCustom;
+    FIN.uploadChannels = finUploadChannelIds();
     if (!FIN.uploadAccounts.length) {
       var def = BS.threadAccountFor(FIN.blogId) || finUploadAccountsAll()[0];
       if (def) FIN.uploadAccounts = [def.id];
@@ -7469,7 +7536,7 @@
   function finSaveUploadPref() {
     try {
       localStorage.setItem(FINCFG.storageUpload || "bs.finish.upload", JSON.stringify({
-        accounts: FIN.uploadAccounts, when: FIN.uploadWhen, whenCustom: FIN.uploadWhenCustom
+        accounts: FIN.uploadAccounts, channels: finUploadChannelIds(), when: FIN.uploadWhen, whenCustom: FIN.uploadWhenCustom
       }));
     } catch (e) {}
   }
@@ -7528,13 +7595,26 @@
       inp.placeholder = (BS.THREAD_UPLOAD || {}).inputHint || "직접 입력 — 예: 내일 오전 9시 30분";
       if (document.activeElement !== inp && inp.value !== String(FIN.uploadWhenCustom || "")) inp.value = String(FIN.uploadWhenCustom || "");
     }
+    var chBox = $("#finishUploadChannels");
+    if (chBox) {
+      var sel = finUploadSel();
+      chBox.innerHTML = finUploadChannelsAll().map(function (c) {
+        var on = !!sel[c.id];
+        return '<button type="button" class="sux-chip ch' + (on ? " active" : "") + '" data-fin-channel="' + esc(c.id) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+          '<span class="sux-emoji">' + esc(c.emoji || "") + "</span>" +
+          '<span class="sux-h">' + esc(c.label.replace(/^\S+\s*/, "")) + "</span>" +
+          '<span class="sux-s">' + (on ? "올림" : "안 올림") + "</span></button>";
+      }).join("");
+    }
     var hint = $("#finishUploadHint");
     if (hint) {
       var names = finSelectedAccounts().map(function (a) { return a.handle; }).join(", ") || "계정을 골라 주세요";
-      var hasContent = !!(FIN.threads || FIN.video);
-      hint.textContent = "계정 " + names + " / 시간 " + finWhenText() +
-        (hasContent ? "" : " · " + (finUploadCfg().noContent || ""));
+      var miss = finUploadNeeds();
+      hint.textContent = "계정 " + names + " / 시간 " + finWhenText() + " / 채널 " + finUploadChannelLabel() +
+        (miss.length ? " · " + miss.join("·") + " 아직 없음 — " + (finUploadCfg().noContent || "") : "");
     }
+    var copyBtn = $("#btnFinishCopyUpload");
+    if (copyBtn) copyBtn.textContent = "📋 피클에게 " + finUploadChannelLabel() + " 업로드 요청 한 번에 복사";
     var urlInp = $("#finishArticleUrl");
     if (urlInp && !urlInp.value && finStoredArticleUrl()) urlInp.value = finStoredArticleUrl();
   }
@@ -7542,20 +7622,35 @@
     try { return localStorage.getItem("bs.finish.articleUrl") || ""; } catch (e) { return ""; }
   }
 
+  function finUploadAskLine(sel, names) {
+    /* v2.3.2 — 고른 채널만 말한다(스레드 / 인스타 릴스 / 네이버 클립) */
+    var where = [];
+    if (sel.threads) where.push("스레드 타래는 스레드(" + names + ")에");
+    if (sel.insta && sel.clip) where.push("릴스·클립 대본은 인스타그램 릴스와 네이버 클립(" + names + ")에");
+    else if (sel.insta) where.push("릴스 대본은 인스타그램 릴스(" + names + ")에");
+    else if (sel.clip) where.push("클립 대본은 네이버 클립(" + names + ")에");
+    if (!where.length) return "올릴 채널을 하나 이상 골라 주세요.";
+    var s = "위 " + where.join(", ") + " " + finWhenText() + " 올려줘.";
+    if (sel.threads || sel.insta) s += " 첫 댓글 링크는 원글 링크로 넣어 줘.";
+    return s;
+  }
+
   function finUploadRequestText() {
+    var sel = finUploadSel();
     var title = finTitleValue() || "(제목 없음)";
     var blog = finBlog();
     var url = $("#finishArticleUrl") ? String($("#finishArticleUrl").value || "").trim() : "";
     var accts = finSelectedAccounts();
     var L = [];
-    L.push("[스레드·릴스·클립 업로드 요청 — 지연님 블로그 작업실 v" + (BS.VERSION || "") + "]");
+    L.push("[" + finUploadChannelLabel(sel) + " 업로드 요청 — 지연님 블로그 작업실 v" + (BS.VERSION || "") + "]");
     L.push("원글 제목: " + title);
     L.push("블로그: " + (blog.name || "") + " (" + (blog.url || "") + ")");
     L.push("원글 링크: " + (url || "(발행 후 링크를 넣어 주세요 — 첫 댓글 링크로 씁니다)"));
     L.push("계정: " + (accts.length ? accts.map(function (a) { return a.handle + " (" + a.label + " · " + a.sub + ")"; }).join(" / ") : "(계정 미선택)"));
     L.push("희망 시간: " + finWhenText());
+    L.push("올릴 채널: " + finUploadChannelFull(sel) + (finUploadChannelIds().length === finUploadChannelsAll().length ? " (3개 모두)" : ""));
     L.push("");
-    if (FIN.threads) {
+    if (sel.threads && FIN.threads) {
       L.push("[스레드 타래]");
       (FIN.threads.threads || []).forEach(function (it, i) {
         L.push("[타래 " + (it.no || i + 1) + " · " + (it.role || "") + "]");
@@ -7566,14 +7661,14 @@
       L.push("해시태그: " + (oneLine(FIN.threads.hashtags) || "(없음)"));
       L.push("");
     }
-    if (FIN.video) {
-      L.push(finVideoText(FIN.video));
+    if ((sel.insta || sel.clip) && FIN.video) {
+      var vhead = (sel.insta && sel.clip) ? "[릴스·클립 숏폼 대본]" : (sel.insta ? "[인스타 릴스 대본]" : "[네이버 클립 대본]");
+      L.push(finVideoText(FIN.video, vhead));
       L.push("");
     }
     if (FIN.multi) {
-      L.push("[원소스 멀티유즈]");
-      L.push(finMultiText(FIN.multi));
-      L.push("");
+      var mt = finMultiTextFor(FIN.multi, sel);
+      if (mt) { L.push("[원소스 멀티유즈 — 고른 채널에 해당하는 부분만]"); L.push(mt); L.push(""); }
     }
     if (FIN.images && FIN.images.cards.length) {
       L.push("[이미지 프롬프트 세트 — 제미나이로 만들 이미지]");
@@ -7582,7 +7677,7 @@
     }
     var names = accts.map(function (a) { return a.handle; }).join(", ") || "@mama062624";
     L.push("[요청]");
-    L.push("위 스레드 타래는 스레드(" + names + ")에, 릴스·클립 대본은 인스타그램 릴스와 네이버 클립(" + names + ")에 " + finWhenText() + " 올려줘. 첫 댓글 링크는 원글 링크로 넣어 줘.");
+    L.push(finUploadAskLine(sel, names));
     return L.join("\n").trim();
   }
 
@@ -7882,6 +7977,26 @@
         finPaintUpload();
       });
     }
+    if ($("#finishUploadChannels")) {
+      $("#finishUploadChannels").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-fin-channel]") : null;
+        if (!b) return;
+        var id = b.getAttribute("data-fin-channel");
+        if (!id) return;
+        var list = finUploadChannelIds().slice();
+        var at = list.indexOf(id);
+        if (at >= 0) {
+          if (list.length === 1) { toast((BS.THREAD_UPLOAD || {}).channelMin || "채널은 하나 이상 골라 두세요"); return; }
+          list.splice(at, 1);
+        } else {
+          list.push(id);
+        }
+        /* 설정 순서(스레드 → 인스타 → 클립)로 정리해 두면 버튼·요청 문구가 늘 같다 */
+        FIN.uploadChannels = finUploadChannelsAll().map(function (c) { return c.id; }).filter(function (cid) { return list.indexOf(cid) >= 0; });
+        finSaveUploadPref();
+        finPaintUpload();
+      });
+    }
     if ($("#finishUploadWhens")) {
       $("#finishUploadWhens").addEventListener("click", function (e) {
         var b = e.target && e.target.closest ? e.target.closest("[data-fin-when]") : null;
@@ -7908,7 +8023,8 @@
     if ($("#btnFinishCopyUpload")) {
       $("#btnFinishCopyUpload").addEventListener("click", function () {
         if (!finBodyValue().trim()) { toast("내 글을 먼저 붙여넣어 주세요"); return; }
-        if (!FIN.threads && !FIN.video) toast(finUploadCfg().noContent || "스레드·클립을 먼저 만들면 요청에 함께 담깁니다", 4200);
+        var miss = finUploadNeeds();
+        if (miss.length) toast(miss.join("·") + " 아직 없음 — " + (finUploadCfg().noContent || "스레드·클립을 먼저 만들면 요청에 함께 담깁니다"), 4600);
         copyPlain(finUploadRequestText()).then(function (ok) {
           toast(ok ? "업로드 요청을 복사했습니다 — 카톡 '나와의 채팅'에 붙여 피클에게 보내세요" : "복사가 막혔습니다 — 요청을 직접 선택해 복사해 주세요", 4200);
         });
@@ -7920,7 +8036,7 @@
   /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
      예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
   BS.finish = {
-    version: (FINCFG.version || "v2.3.1"),
+    version: (FINCFG.version || "v2.3.2"),
     state: function () {
       return {
         blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
@@ -7929,7 +8045,9 @@
         threads: FIN.threads ? FIN.threads.threads.length : 0,
         scenes: FIN.video ? (FIN.video.scenes || []).length : 0,
         imageCards: FIN.images ? FIN.images.cards.length : 0,
-        uploadAccounts: FIN.uploadAccounts.slice(), uploadWhen: FIN.uploadWhen, running: FIN.run
+        uploadAccounts: FIN.uploadAccounts.slice(), uploadWhen: FIN.uploadWhen, running: FIN.run,
+        uploadChannels: finUploadChannelIds().slice(), uploadChannelLabel: finUploadChannelLabel(),
+        uploadChannelFull: finUploadChannelFull()
       };
     },
     items: function (blogId) { return finItems(blogId || FIN.blogId); },
@@ -7939,6 +8057,21 @@
     plainText: finPlainText,
     request: finUploadRequestText,
     whenText: finWhenText,
+    channels: function () { return finUploadChannelIds().slice(); },
+    channelLabel: finUploadChannelLabel,
+    channelFull: finUploadChannelFull,
+    setChannels: function (ids) {
+      var all = finUploadChannelsAll().map(function (c) { return c.id; });
+      var list = (ids || []).filter(function (id) { return all.indexOf(id) >= 0; });
+      FIN.uploadChannels = list.length ? list : all.slice();
+      finSaveUploadPref();
+      finPaintUpload();
+      return finUploadChannelIds().slice();
+    },
+    /* v2.3.2 검증용 — 올리기 요청에 담길 원고를 콘솔에서 직접 넣어 본다 */
+    setThreads: function (t) { FIN.threads = t || null; if (t) finRenderThreads(); finPaintUpload(); return true; },
+    setVideo: function (v) { FIN.video = v || null; if (v) finRenderVideo(); finPaintUpload(); return true; },
+    setMulti: function (m) { FIN.multi = m || null; if (m) finRenderMulti(); finPaintUpload(); return true; },
     tasks: finCheckedTasks
   };
 
