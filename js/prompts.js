@@ -2324,6 +2324,12 @@ BS.prompts = (function () {
     lines.push("[스레드 원칙 — 전부 지킨다]");
     (T.rules || []).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
     lines.push("");
+    lines.push("[🚫 댓글 유도 금지 — 마무리는 질문으로 (v2.3.4)]");
+    lines.push(T.commentBaitRule || "본문 마지막에 '아래 댓글에서 확인해' 같은 댓글 유도 문구를 쓰지 않는다. 읽는 사람의 상황을 묻는 질문으로 끝낸다.");
+    lines.push("");
+    lines.push("[🏷️ 주제 태그 — 1개, 한 단어 (v2.3.4)]");
+    lines.push(T.hashtagRule || "주제 태그는 1개, 띄어쓰기 없는 짧은 단어 하나만.");
+    lines.push("");
     lines.push("[🧵 타래 깊이 — 상투적 요약·뻔한 정보 나열 금지 (v1.9.5)]");
     (T.depthRules || []).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
     lines.push("");
@@ -2357,6 +2363,7 @@ BS.prompts = (function () {
     if (o.extraKeywords) parts.push("- 함께 넣을 키워드: " + o.extraKeywords);
     if (o.notes) parts.push("- 지연님 요청사항: " + o.notes);
     parts.push("- 타래 수: 4개 또는 5개(내용이 짧으면 4개). 5개면 1 후킹 / 2·3·4 핵심 / 5 마무리, 4개면 1 후킹 / 2·3 핵심 / 4 마무리.");
+    parts.push("- 마지막 타래: " + (T.commentBaitRule || "댓글 유도 문구 없이 질문으로 끝낸다."));
     parts.push("");
     parts.push("[타래 1(후킹) 틀 — 세 가지 중 이 글에 가장 맞는 1가지만]");
     parts.push(T.hookRule || "");
@@ -2399,7 +2406,8 @@ BS.prompts = (function () {
     }
     parts.push("");
     parts.push("## 해시태그");
-    parts.push("(" + (T.hashtagRule || "3~5개") + ")");
+    parts.push("(태그 칸에 넣을 말 하나만 — '#' 없이, 띄어쓰기 없이, 한 단어. 예: 화재안심보험)");
+    parts.push("(" + (T.hashtagRule || "주제 태그 1개") + ")");
     parts.push("");
     parts.push("## 작업 메모");
     parts.push("- 타래 수: (4 또는 5)");
@@ -2408,7 +2416,7 @@ BS.prompts = (function () {
     parts.push("");
     parts.push("[출력 — 지금 바로]");
     parts.push("위 형식만 출력한다. 인사말·설명·'이렇게 썼습니다'·코드블록(```)·번호 매기기(1/5)는 넣지 않는다.");
-    parts.push("타래 본문 안에 해시태그·링크·멘션을 넣지 않는다.");
+    parts.push("타래 본문 글자 안에 해시태그·링크·멘션을 넣지 않는다(태그는 발행할 때 태그 칸에만 1개).");
     return { system: threadsSystemPrompt(blog, p), user: parts.join("\n") };
   }
 

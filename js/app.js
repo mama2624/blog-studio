@@ -4008,7 +4008,8 @@
       } else if (/^첫\s*댓글/.test(name)) {
         comment = cleanBlock(body);
       } else if (/^해시태그/.test(name)) {
-        tags = cleanBlock(body).replace(/^\s*[-*·]\s*/gm, "").trim();
+        /* v2.3.4 — 모델이 여러 개를 붙여도 첫 단어 1개만 남긴다(45자 뭉치 태그 방지) */
+        tags = (BS.threadTagOne ? BS.threadTagOne(cleanBlock(body).replace(/^\s*[-*·]\s*/gm, "")) : cleanBlock(body).replace(/^\s*[-*·]\s*/gm, "").trim());
       } else if (/^작업\s*메모/.test(name)) {
         memo = body;
       }
@@ -4199,8 +4200,25 @@
     L.push("첫 댓글: " + (oneLine(t.comment) || "(없음 — 링크는 첫 댓글에만 넣어 주세요)"));
     L.push("해시태그: " + (oneLine(t.hashtags) || "(없음)"));
     L.push("");
+    threadPostRulesLines(t.hashtags).forEach(function (x) { L.push(x); });
+    L.push("");
     L.push("위 내용으로 스레드 올려줘!");
     return L.join("\n").trim();
+  }
+
+  /* v2.3.4 — 업로드 요청에 붙는 발행 규칙 (태그 1개 · 첫 댓글 태그 없음 · 댓글 유도 금지)
+     작업실이 만든 원고를 다른 사람(피클)이 대신 발행할 때도 같은 규칙이 따라가야
+     태그가 45자 뭉치로 등록되거나 "아래 댓글에서 확인해"가 본문에 남지 않는다. */
+  function threadPostRulesLines(hashtags) {
+    var T = BS.THREADS || {};
+    var tag = (BS.threadTagOne ? BS.threadTagOne(hashtags) : String(hashtags || "").trim());
+    var L = [];
+    L.push("[발행 규칙 — 스레드 화면에서 이대로]");
+    L.push("- 주제 태그: " + (tag ? "'" + tag + "'" : "주제 단어") + " 딱 1개만 태그 칸에 넣어. '#' 없이 한 단어, 띄어쓰기 없이. 여러 개를 한 줄로 붙이면 그 전체가 태그 하나로 등록돼 아무도 찾지 않는 죽은 태그가 돼.");
+    L.push("- 첫 댓글에는 태그를 붙이지 마.");
+    L.push("- " + (T.commentBaitRule || "본문 마지막에 '아래 댓글에서 확인해' 같은 댓글 유도 문구를 넣지 마. 본문은 질문으로 끝낸다."));
+    L.push("- 첫 댓글 링크는 맥락 문장과 함께 하나만. 본문 글자에는 링크를 넣지 않는다.");
+    return L;
   }
 
   /* 계정·시간 칩과 안내 줄을 다시 그린다 (타래가 없으면 박스 자체를 숨김) */
@@ -4419,9 +4437,10 @@
     }
     if (t.hashtags) {
       html += '<div class="thread-card extra">' +
-        '<div class="ipc-head"><strong>해시태그</strong></div>' +
+        '<div class="ipc-head"><strong>해시태그</strong><span class="ipc-badge">주제 태그 1개 · 한 단어</span></div>' +
         '<textarea rows="2" spellcheck="false" data-k="tags"></textarea>' +
-        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy-tags"># 해시태그 복사</button></div></div>';
+        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy-tags"># 해시태그 복사</button>' +
+        '<span class="ipc-tip">태그 칸에 \'#\' 없이 이 한 단어만</span></div></div>';
     }
     if (ex && html) {
       ex.innerHTML = html;
@@ -7241,8 +7260,9 @@
     if (t.hashtags) {
       var h = document.createElement("div");
       h.className = "thread-card extra";
-      h.innerHTML = '<div class="ipc-head"><strong>해시태그</strong></div><textarea rows="2" spellcheck="false" readonly></textarea>' +
-        '<div class="ipc-foot"><button type="button" class="btn small ghost" data-act="copy"># 해시태그 복사</button></div>';
+      h.innerHTML = '<div class="ipc-head"><strong>해시태그</strong><span class="ipc-badge">주제 태그 1개 · 한 단어</span></div><textarea rows="2" spellcheck="false" readonly></textarea>' +
+        '<div class="ipc-foot"><button type="button" class="btn small ghost" data-act="copy"># 해시태그 복사</button>' +
+        '<span class="ipc-tip">태그 칸에 \'#\' 없이 이 한 단어만</span></div>';
       h.querySelector("textarea").value = t.hashtags;
       h.querySelector('[data-act="copy"]').addEventListener("click", function () {
         copyPlain(t.hashtags).then(function (ok) { toast(ok ? "해시태그를 복사했습니다" : "복사 실패"); });
@@ -7705,6 +7725,8 @@
       L.push("첫 댓글: " + (oneLine(FIN.threads.comment) || "(없음)"));
       L.push("해시태그: " + (oneLine(FIN.threads.hashtags) || "(없음)"));
       L.push("");
+      threadPostRulesLines(FIN.threads.hashtags).forEach(function (x) { L.push(x); });
+      L.push("");
     }
     if ((sel.insta || sel.clip) && FIN.video) {
       var vhead = (sel.insta && sel.clip) ? "[릴스·클립 숏폼 대본]" : (sel.insta ? "[인스타 릴스 대본]" : "[네이버 클립 대본]");
@@ -8081,7 +8103,7 @@
   /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
      예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
   BS.finish = {
-    version: (FINCFG.version || "v2.3.3"),
+    version: (FINCFG.version || "v2.3.4"),
     state: function () {
       return {
         blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
