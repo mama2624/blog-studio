@@ -34,9 +34,9 @@
 ### 검증 (v2.3.4)
 
 ```
-python3 work/bs234-test/test_v234.py                          # 단위 — 46 PASS
-python3 work/bs234-live/live_v234.py                          # 로컬 Playwright
-BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs234-live/live_v234.py   # 실서버
+python3 work/bs234-test/test_v234.py                                 # 단위 — 107 PASS
+python3 work/bs234-live/live_v234.py                                 # 로컬 Playwright — 45 PASS
+BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs234-live/live_v234.py   # 실서버 — 45 PASS (2026-11-20 23:5x 배포본)
 ```
 
 - 회귀 — `BS.IMAGE_BASELINE`·`BS.IMAGE_BASELINE_V33`·`BS.HUB_BANNER`·`BS.IMAGE_GEM` 4블록과 `imagePromptSetFormat()`이 v2.3.3 판본과 **글자 단위 동일**, 내부링크·타래 글상자 함수·CSS·`id` 그대로.
