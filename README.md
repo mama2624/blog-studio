@@ -38,10 +38,14 @@
 ### 검증 (v2.3.5)
 
 ```
-python3 work/bs235-test/test_v235.py                                 # 단위
-python3 work/bs235-live/live_v235.py                                 # 로컬 Playwright
-BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs235-live/live_v235.py   # 실서버
+python3 work/bs235-test/test_v235.py                                                    # 단위 — 128 PASS
+python3 work/bs235-live/live_v235.py                                                    # 로컬 Playwright — 42 PASS
+BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs235-live/live_v235.py    # 실서버 — 42 PASS (2026-11-21 21:5x 배포본)
 ```
+
+- 회귀 — `BS.IMAGE_BASELINE`·`BS.IMAGE_BASELINE_V33`·`BS.HUB_BANNER`·`BS.IMAGE_GEM` 4블록과 `imagePromptSetFormat()`, v2.3.4의 `hashtagRule`·`commentBaitRule`·`threadTagOne()`·건강 금지어, 내부링크·타래 글상자 함수·CSS·`id`가 **글자 단위 동일**.
+- 실브라우저 — 콘솔 오류 0 · 블로그 모드 미리보기에서 제목 → 문구 → 본문 순서 · 마크다운 복사본 둘째 줄이 문구(글 끝 아님) · `BS.ensureCommentDisclosure()`가 526자짜리 첫 댓글을 500자 이내로 줄이면서 문구는 맨 앞에 그대로 둠 · 📮 요청문에 첫 댓글 맨 앞 문구 규칙.
+- 같은 세트 실서버 확인(`link.gold-queen.com`·`saju.gold-queen.com`) — `work/bs235-live/verify_disclosure_sites.py` 18 PASS(로컬·실서버 동일).
 
 ## 🏷️ 주제 태그 1개 · 댓글 유도 금지 (v2.3.4 · 2026-11-20)
 
