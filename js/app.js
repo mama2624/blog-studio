@@ -581,7 +581,8 @@
       if (it.title) b.title = it.title;
       b.innerHTML = '<span class="kw-num">' + it.no + '</span>' +
         '<span class="kw-text">' + esc(it.keyword) + '</span>' +
-        (it.tag && it.tag.indexOf("빈집") === 0 ? '<span class="kw-vacant">빈집</span>' : "");
+        (it.tag && it.tag.indexOf("빈집") === 0 ? '<span class="kw-vacant">빈집</span>' : "") +
+        kwIntentBadge(it.keyword);
       b.addEventListener("click", function () { pickKeyword(it); });
       box.appendChild(b);
     });
@@ -617,6 +618,7 @@
     var h = [];
     h.push('<div class="kd-head"><span class="kd-no">' + it.no + '번</span>' +
       '<span class="kd-tag">' + esc(it.tag || "오늘자 80선") + '</span>' +
+      kwIntentBadge(it.keyword, true) +
       '<span class="kd-kw">' + esc(it.keyword) + '</span></div>');
     if (it.title) h.push('<div class="kd-title">' + esc(it.title) + '</div>');
     if (it.keywords && it.keywords.length > 1) {
@@ -5356,6 +5358,7 @@
   var rt = {
     data: null,
     filter: "all",
+    intent: "all",      // v2.3.7 — 의도 필터(정보글·구매·비교글·이슈·트렌드)
     active: -1,
     timer: null,
     paused: false,
@@ -5377,13 +5380,62 @@
     };
     return map[s] || s;
   }
-  function rtFiltered() {
+  /* 블로그 필터만 적용한 목록 — 의도 칩 숫자도 이 위에서 센다 */
+  function rtBlogFiltered() {
     var items = (rt.data && rt.data.keywords) || [];
     if (rt.filter === "all") return items.slice();
     return items.filter(function (it) { return (it.blogs || []).indexOf(rt.filter) >= 0; });
   }
+  function rtIntentOf(it) {
+    return (BS.kwIntent ? BS.kwIntent(it && it.k).id : "info");
+  }
+  function rtFiltered() {
+    var items = rtBlogFiltered();
+    if (rt.intent === "all") return items;
+    return items.filter(function (it) { return rtIntentOf(it) === rt.intent; });
+  }
 
-  /* 블로그 배지 + 출처 배지 */
+  /* 🏷️ v2.3.7 — 의도 배지 (정보글 / 구매·비교글 / 이슈·트렌드) */
+  function kwIntentBadge(k, full) {
+    var m = (BS.kwIntent ? BS.kwIntent(k) : null);
+    if (!m) return "";
+    return '<span class="kw-intent i-' + esc(m.id) + '" title="' +
+      esc(m.label + " · " + m.desc + " (" + m.basis + ")") + '">' +
+      esc(full ? m.label : m.short) + "</span>";
+  }
+
+  /* 🔺 v2.3.7 — 급상승 배지: 지난 수집본과 견준 실제 값만 쓴다(지어낸 배수 없음)
+     - prev 는 수집기(tools/fetch_realtime_trends.py)가 지난 실행의 순위표와 비교해 넣는다.
+     - 6시간 넘게 끊긴 비교는 '급상승'으로 보지 않는다. */
+  var RT_PREV_MAX_MIN = +(RT_CFG.prevMaxMinutes || 360);
+  function rtPrevInfo() {
+    var p = (rt.data && rt.data.prev) || null;
+    if (!p || !p.generated_at) return null;
+    var t = Date.parse(p.generated_at);
+    if (!t || isNaN(t)) return null;
+    var age = (Date.now() - t) / 60000;
+    if (age < 0 || age > RT_PREV_MAX_MIN) return null;
+    return { at: p.generated_at, age: age, count: p.count || 0 };
+  }
+  function rtAgeWord(min) {
+    return min < 90 ? Math.max(1, Math.round(min)) + "분" : Math.round(min / 60) + "시간";
+  }
+  function rtTrendBadges(it) {
+    var p = rtPrevInfo();
+    if (!p || !it) return "";
+    if (it["new"]) {
+      return '<span class="rt-badge tr-new" title="' +
+        esc(rtAgeWord(p.age) + " 전 수집에 없던 키워드 — 새로 들어왔습니다") + '">NEW</span>';
+    }
+    if ((it.delta || 0) >= 2) {
+      return '<span class="rt-badge tr-up" title="' +
+        esc(rtAgeWord(p.age) + " 전 " + (it.prev || 0) + "위 → 지금 " + (it.rank || 0) +
+          "위 · " + it.delta + "계단 상승") + '">▲' + (it.delta | 0) + "계단</span>";
+    }
+    return "";
+  }
+
+  /* 블로그 배지 + 출처(또는 여러 곳 동시 포착) 배지 */
   function rtBadgeLabel(id) {
     var map = { mama2624: "생활", jiyn74: "경제", "2sunshines": "건강", jinjin2624: "질병" };
     return map[id] || id;
@@ -5398,9 +5450,16 @@
           esc(b ? b.emoji : "•") + esc(rtBadgeLabel(id)) + "</span>";
       });
     } else {
-      h += '<span class="rt-badge b-all" title="4대 블로그 밖 이슈">이슈</span>';
+      h += '<span class="rt-badge b-all" title="4대 블로그 밖 공통 이슈">공통</span>';
     }
-    if ((it.src || []).length) h += '<span class="rt-badge src">' + esc(rtSrcName(it.src[0])) + "</span>";
+    var srcs = it.src || [];
+    if (srcs.length >= 2) {
+      h += '<span class="rt-badge tr-multi" title="' +
+        esc(srcs.map(rtSrcName).join(" · ") + " — " + srcs.length + "곳에서 동시에 포착") + '">' +
+        srcs.length + "곳 동시</span>";
+    } else if (srcs.length) {
+      h += '<span class="rt-badge src">' + esc(rtSrcName(srcs[0])) + "</span>";
+    }
     return h;
   }
 
@@ -5428,6 +5487,45 @@
       b.addEventListener("click", function () { rtSetFilter(d.id); });
       box.appendChild(b);
     });
+    rtRenderIntents();
+  }
+
+  /* 🏷️ v2.3.7 — 의도 칩(정보·구매·이슈) — 블로그 탭과 따로 겹쳐 고를 수 있다 */
+  function rtIntentMeta(id) {
+    var M = (BS.KW_INTENT && BS.KW_INTENT.meta) || {};
+    return M[id] || { label: id, short: id, desc: "" };
+  }
+  function rtRenderIntents() {
+    var box = $("#rtIntents");
+    if (!box) return;
+    var items = rtBlogFiltered();
+    if (!items.length) { box.innerHTML = ""; box.hidden = true; return; }
+    box.hidden = false;
+    var ids = (BS.KW_INTENT && BS.KW_INTENT.ids) || ["info", "buy", "issue"];
+    var defs = [{ id: "all" }].concat(ids.map(function (id) { return { id: id }; }));
+    box.innerHTML = "";
+    defs.forEach(function (d) {
+      var n = d.id === "all" ? items.length : items.filter(function (it) {
+        return rtIntentOf(it) === d.id;
+      }).length;
+      if (d.id !== "all" && !n) return;      // 지금 없는 의도는 칩을 만들지 않는다
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "rt-chip" + (rt.intent === d.id ? " active" : "") + " ci-" + d.id;
+      b.setAttribute("data-intent", d.id);
+      b.setAttribute("aria-pressed", rt.intent === d.id ? "true" : "false");
+      b.title = d.id === "all" ? "의도 전체 — 정보·구매·이슈를 모두 봅니다" : rtIntentMeta(d.id).desc;
+      b.innerHTML = esc(d.id === "all" ? "의도 전체" : rtIntentMeta(d.id).short) +
+        '<span class="rt-chip-n">' + n + "</span>";
+      b.addEventListener("click", function () { rtSetIntent(d.id); });
+      box.appendChild(b);
+    });
+  }
+  function rtSetIntent(id) {
+    rt.intent = id || "all";
+    rtRenderIntents();
+    rtRenderList();
+    rtStartRotate();
   }
 
   function rtRenderList() {
@@ -5442,13 +5540,18 @@
       if (!items.length) {
         empty.textContent = !rt.data
           ? "실시간 키워드를 아직 불러오지 못했습니다. 🔄 새로고침을 눌러 주세요."
-          : (rt.filter === "all"
-            ? "지금은 실시간 키워드가 없습니다. 🔄 새로고침을 눌러 주세요."
-            : "지금은 이 블로그에 바로 맞는 실시간 키워드가 없습니다. '전체'에서 골라 보세요.");
+          : (rt.intent !== "all"
+            ? "지금은 ‘" + rtIntentMeta(rt.intent).short + "’ 키워드가 없습니다. [의도 전체]로 보세요."
+            : (rt.filter === "all"
+              ? "지금은 실시간 키워드가 없습니다. 🔄 새로고침을 눌러 주세요."
+              : "지금은 이 블로그에 바로 맞는 실시간 키워드가 없습니다. '전체'에서 골라 보세요."));
       }
     }
     var title = $("#rtListTitle");
-    if (title) title.textContent = rt.filter === "all" ? "지금 뜨는 키워드" : "이 블로그에 맞는 키워드";
+    if (title) {
+      title.textContent = (rt.filter === "all" ? "지금 뜨는 키워드" : "이 블로그에 맞는 키워드") +
+        (rt.intent === "all" ? "" : " · " + rtIntentMeta(rt.intent).short);
+    }
 
     items.forEach(function (it, i) {
       var li = document.createElement("li");
@@ -5457,11 +5560,21 @@
       b.className = "rt-item";
       b.setAttribute("data-k", it.k);
       var src = (it.src || []).map(rtSrcName).join("·");
+      var im = (BS.kwIntent ? BS.kwIntent(it.k) : null);
+      var trendNote = "";
+      if (rtPrevInfo()) {
+        if (it["new"]) trendNote = "\n🏷 새로 진입한 키워드";
+        else if ((it.delta || 0) >= 2) trendNote = "\n📈 " + rtAgeWord(rtPrevInfo().age) + " 전 " + (it.prev || 0) + "위 → 지금 " + (it.rank || 0) + "위";
+      }
       b.title = it.k + (src ? " · " + src : "") +
+        (im ? "\n" + im.label + " · " + im.basis : "") + trendNote +
         (it.news && it.news[0] ? "\n" + it.news[0].t : "") + "\n(누르면 주제칸에 들어갑니다)";
-      b.innerHTML = '<span class="rt-n">' + (i + 1) + "</span>" +
+      b.innerHTML = '<span class="rt-main">' +
+        '<span class="rt-n">' + (i + 1) + "</span>" +
         '<span class="rt-k">' + esc(it.k) + "</span>" +
-        '<span class="rt-badges">' + rtBadges(it) + "</span>";
+        '<span class="rt-trend">' + rtTrendBadges(it) + "</span>" +
+        "</span>" +
+        '<span class="rt-sub">' + kwIntentBadge(it.k) + rtBadges(it) + "</span>";
       b.addEventListener("click", function () { rtPick(it.k); });
       li.appendChild(b);
       box.appendChild(li);
@@ -5600,6 +5713,7 @@
         ((err && err.message) || "네트워크 오류") + ". 🔄 새로고침을 눌러 다시 시도해 주세요.";
     }
     rtRenderList();
+    rtRenderIntents();
   }
 
   function rtLoad(manual) {
@@ -9000,6 +9114,16 @@
     lockNow: lockNow,
     unlock: lockSubmit
   };
+
+  /* v2.3.7 검증용 — 🏷️ 의도 태그·급상승 배지를 콘솔에서 직접 확인
+     예: BS.kwIntent('가습기 추천')  ·  BS.rt  (내부 상태 — 테스트에서 rt.data 를 넣고 부른다) */
+  BS.kwIntentBadge = kwIntentBadge;
+  BS.rtTrendBadges = rtTrendBadges;
+  BS.rtBadges = rtBadges;
+  BS.rtRenderList = rtRenderList;
+  BS.rtRenderIntents = rtRenderIntents;
+  BS.rtSetIntent = rtSetIntent;
+  BS.rt = rt;
 
   /* v2.2.0 검증용 — 🎭 페르소나를 콘솔에서 직접 확인·전환
      예: BS.personas.current()  ·  BS.personas.set('money_policy')  ·  BS.personas.forBlog('jinjin2624') */

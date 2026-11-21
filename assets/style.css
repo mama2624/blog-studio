@@ -450,9 +450,13 @@ textarea{resize:vertical;line-height:1.6}
 
 .rt-list-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin:11px 0 4px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
 .rt-list-hint{font-size:10.5px;font-weight:400;color:var(--ink-3)}
-.rt-list{list-style:none;margin:0;padding:0;max-height:262px;overflow-y:auto;border-top:1px solid var(--line);scrollbar-width:thin}
+.rt-list{list-style:none;margin:0;padding:0;max-height:300px;overflow-y:auto;border-top:1px solid var(--line);scrollbar-width:thin}
 .rt-list li{margin:0}
-.rt-item{display:flex;align-items:center;gap:7px;width:100%;text-align:left;font:inherit;font-size:12.5px;line-height:1.35;color:var(--ink);background:none;border:0;border-bottom:1px solid #f3efe9;padding:8px 3px;cursor:pointer;transition:background .15s}
+.rt-item{display:block;width:100%;text-align:left;font:inherit;font-size:12.5px;line-height:1.35;color:var(--ink);background:none;border:0;border-bottom:1px solid #f3efe9;padding:7px 3px;cursor:pointer;transition:background .15s}
+.rt-main{display:flex;align-items:center;gap:7px;min-width:0}
+.rt-trend{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.rt-sub{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin:3px 0 0 24px}
+.rt-sub:empty{display:none}
 .rt-item:hover{background:#fffaf6}
 .rt-item.active{background:var(--accent-soft)}
 .rt-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
@@ -503,17 +507,38 @@ textarea{resize:vertical;line-height:1.6}
   .rt.collapsed .rt-body{display:block}
   .rt-fold{display:none}
   .rt.collapsed .rt-peek{display:none}
-  .rt-list{max-height:320px}
+  .rt-list{max-height:380px}
   .rt-tab{font-size:11px;padding:4px 8px}
 }
 @media (max-width:1079px){
-  .rt-list{max-height:236px}
+  .rt-list{max-height:280px}
 }
 @media (max-width:620px){
   .side.rt{padding:12px 12px 10px}
   .rt-tabs .rt-tab{flex:1 1 auto;text-align:center}
 }
 .rt-badge.src{background:#f7f5f2;color:#8d857c;font-weight:600}
+
+/* 🏷️ v2.3.7 — 의도 배지(정보·구매·이슈) · 급상승 배지 · 의도 칩 */
+.kw-intent{flex:0 0 auto;font-size:9.5px;line-height:1.55;font-weight:800;border-radius:5px;padding:0 4px;white-space:nowrap;letter-spacing:-.01em}
+.kw-intent.i-info{background:#eaf1fb;color:#2c4f8f}
+.kw-intent.i-buy{background:#fdefe3;color:#a55416}
+.kw-intent.i-issue{background:#fdeaf1;color:#a52a52}
+.kd-head .kw-intent{font-size:10.5px;padding:1px 6px}
+.rt-badge.tr-new{background:#fde7e0;color:#b23c1b}
+.rt-badge.tr-up{background:#e4f4ea;color:#12694a}
+.rt-badge.tr-multi{background:#eef0fa;color:#3c4a8f}
+.rt-intents{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.rt-intents[hidden]{display:none}
+.rt-chip{font:inherit;font-size:11px;line-height:1.25;color:var(--ink-2);background:#faf7f3;border:1px solid var(--line);border-radius:7px;padding:3px 7px;cursor:pointer;transition:.12s;white-space:nowrap}
+.rt-chip:hover{background:#fff;border-color:#d6cec3}
+.rt-chip .rt-chip-n{font-size:9.5px;color:var(--ink-3);margin-left:3px}
+.rt-chip.active{font-weight:700;border-color:currentColor}
+.rt-chip.active .rt-chip-n{color:inherit}
+.rt-chip.ci-all.active{background:#f1ece5;color:#5d564e}
+.rt-chip.ci-info.active{background:#eaf1fb;color:#2c4f8f}
+.rt-chip.ci-buy.active{background:#fdefe3;color:#a55416}
+.rt-chip.ci-issue.active{background:#fdeaf1;color:#a52a52}
 
 /* ============================================================
    v1.8.0 — 글 용도 3모드 (블로그 · 카페 · 상품/여행 리뷰)

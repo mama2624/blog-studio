@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""실시간 키워드 수집기 (v1.7.0)
+"""실시간 키워드 수집기 (v1.9.0)
 
 무료 공개 소스만으로 지연님 4대 블로그에 바로 쓸 수 있는 실시간 키워드를 모아
 data/realtime-trends.json 을 만든다. GitHub Actions(.github/workflows/realtime-trends.yml)가
@@ -37,6 +37,10 @@ from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join(ROOT, "data", "realtime-trends.json")
+
+# v2.3.7 (2026-11-22) — 키워드 '급상승·신규' 판정용. 이번 실행이 덮어쓸 파일(=지난 실행의 결과)을
+#   읽어 순위표를 잡아 둔다. 워크플로가 매시 이 JSON 을 커밋하므로 1시간 전과 비교된다.
+PREV_FILE = DEFAULT_OUT
 
 KST = timezone(timedelta(hours=9))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -373,6 +377,58 @@ def parse_traffic(v: str) -> int:
     return int(n * mult)
 
 
+def load_prev_ranks(path: str):
+    """지난 실행이 커밋해 둔 keywords 의 순위표 {정규화키워드: 순위} + 생성 시각.
+
+    파일이 없거나(첫 실행) 읽을 수 없으면 ({}, "") 를 돌려주고, 그러면 이번 실행은
+    신규/급상승 배지를 붙이지 않는다(없는 사실을 만들지 않는다).
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            j = json.load(f)
+    except Exception:  # noqa: BLE001
+        return {}, ""
+    ranks = {}
+    for it in j.get("keywords") or []:
+        k = norm_key(it.get("k") or "")
+        try:
+            r = int(it.get("rank") or 0)
+        except (TypeError, ValueError):
+            r = 0
+        if k and r:
+            ranks[k] = r
+    return ranks, str(j.get("generated_at") or "")
+
+
+def mark_prev(picked, prev_ranks) -> list:
+    """뽑힌 키워드에 지난 수집 대비 prev(순위)·delta(계단)·new(신규) 를 붙인다 (v2.3.7).
+
+    · prev  = 지난 수집에서의 순위(없으면 0)
+    · delta = 오른 계단 수(지난 순위 - 지금 순위). 화면은 2계단 이상만 보여 준다.
+    · new   = 지난 수집에 없던 키워드. 지난 파일이 없으면(첫 실행) 아무 데도 붙이지 않는다.
+    """
+    for it in picked:
+        p = prev_ranks.get(norm_key(it["k"]))
+        it["prev"] = int(p or 0)
+        it["delta"] = (it["prev"] - it["rank"]) if (p and it["rank"]) else 0
+        it["new"] = bool(prev_ranks) and p is None
+    return picked
+
+
+def prev_report(prev_at: str) -> dict:
+    """비교 기준 시각·경과 분 — 화면은 6시간이 넘은 비교를 '급상승'으로 쓰지 않는다."""
+    if not prev_at:
+        return {"generated_at": "", "count": 0, "age_minutes": 0}
+    try:
+        t = datetime.fromisoformat(prev_at)
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=KST)
+        age = int(max(0, (datetime.now(KST) - t).total_seconds()) // 60)
+    except Exception:  # noqa: BLE001
+        age = 0
+    return {"generated_at": prev_at, "age_minutes": age}
+
+
 def build() -> dict:
     now = datetime.now(KST)
     keywords: dict[str, dict] = {}
@@ -563,6 +619,14 @@ def build() -> dict:
     for i, it in enumerate(picked):
         it["rank"] = i + 1
 
+    # v2.3.7 (2026-11-22) — 🏷️ 급상승·신규 배지: 지난 수집본(보통 1시간 전)의 순위와 견준다.
+    #   · prev  = 지난 수집에서의 순위(없으면 0)
+    #   · delta = 오른 계단 수(지난 순위 - 지금 순위). 내려간 것은 음수지만 화면은 상승만 보여 준다.
+    #   · new   = 지난 수집에 없던 키워드
+    #   지난 파일이 없으면(첫 실행) 셋 다 0/False 로 두어 배지를 붙이지 않는다.
+    prev_ranks, prev_at = load_prev_ranks(PREV_FILE)
+    mark_prev(picked, prev_ranks)
+
     # 헤드라인: 네이버·네이트 상위 + 구글 트렌드 관련 기사 — 같은 언론사가 독점하지 않게
     order = {"네이버": 0, "구글 트렌드": 1, "연예·생활": 2, "건강": 2, "네이트": 3}
     news.sort(key=lambda n: (order.get(n["src"], 4), n["rank"] or 999))
@@ -611,9 +675,13 @@ def build() -> dict:
     #   이 JSON 안에 hotItems 필드로 실어 보낸다. 작업실은 더 새로운 쪽을 골라 읽는다.
     hot = current_hot_items([k["k"] for k in picked])
 
+    prev_info = prev_report(prev_at)
+    prev_info["count"] = len(prev_ranks)
+
     out = {
-        "version": "1.2",
-        "studio": "2.1.0",
+        "version": "1.3",
+        "studio": "2.3.7",
+        "prev": prev_info,
         "generated_at": now.isoformat(timespec="seconds"),
         "generated_label": "%d월 %d일 %s 기준" % (now.month, now.day, now.strftime("%H:%M")),
         "auto_note": "매시 10분 GitHub Actions 자동 갱신",
@@ -789,6 +857,9 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
+    global PREV_FILE
+    PREV_FILE = args.out          # v2.3.7 — 덮어쓰기 전 파일을 급상승 비교 기준으로 읽는다
+
     data = build()
     text = json.dumps(data, ensure_ascii=False, indent=1)
 
@@ -800,6 +871,15 @@ def main() -> int:
           % (data["stats"]["keywords"], data["stats"]["matched"],
              data["stats"]["general"], data["stats"]["headlines"]))
     print("  블로그별: " + " · ".join("%s %d" % (b["name"], b["count"]) for b in data["blogs"]))
+    pv = data.get("prev") or {}
+    if pv.get("generated_at"):
+        news = len([k for k in data["keywords"] if k.get("new")])
+        ups = len([k for k in data["keywords"] if (k.get("delta") or 0) >= 2])
+        multi = len([k for k in data["keywords"] if len(k.get("src") or []) >= 2])
+        print("  급상승 비교: 지난 수집 %s (%d분 전) · 신규 %d개 · 2계단↑ %d개 · 2곳+ 동시 %d개"
+              % (pv["generated_at"], pv.get("age_minutes", 0), news, ups, multi))
+    else:
+        print("  급상승 비교: 지난 수집본 없음 — 이번 실행은 NEW·▲계단 배지를 붙이지 않습니다")
     hf = data.get("homefeed") or {}
     if hf.get("stats"):
         print("  홈판 관찰: %s · %d건 · 판 %s" % (hf.get("observedAt"), hf["stats"].get("total", 0),
