@@ -1752,7 +1752,8 @@
     } else {
       var md = String(r.md || "");
       if (/쿠팡\s*파트너스\s*활동의\s*일환/.test(md)) pid = "coupang";
-      else if (/쇼핑\s*커넥트\s*활동의\s*일환/.test(md)) pid = /이에\s*따른\s*일정액의\s*수수료/.test(md) ? "creatorshop" : "brandconnect";
+      else if (/브랜드\s*커넥트\s*활동의\s*일환/.test(md)) pid = "brandconnect";
+      else if (/쇼핑\s*커넥트\s*활동의\s*일환/.test(md)) pid = "creatorshop";
       else if (/여행\s*커넥트\s*활동의\s*일환/.test(md)) pid = "travel";
       else if (/여기서\s*잠깐/.test(md)) pid = r.affiliatePlatform || state.affiliatePlatform || "coupang";
     }
@@ -1781,14 +1782,47 @@
     return line + (t ? "\n\n" + t : "");
   }
 
-  /* 첫 댓글에 대가성 문구가 들어가 있으면 지운다 — 첫 댓글은 상품명·링크·요약만 */
-  function ensureNoDisclosure(text, line) {
+  /* 첫 댓글(파트너스 링크가 들어가는 게시글)에도 대가성 문구를 **맨 앞**에 둔다.
+     v2.3.5 — v2.0.0~v2.3.4는 `ensureNoDisclosure`로 첫 댓글의 문구를 지웠다.
+     그 결과 문구(본문)와 링크(첫 댓글)가 서로 다른 게시글로 나뉘었고, 쿠팡파트너스 공식
+     안내(2025-11-26)가 금지하는 배치였다. 지금은 지우지 않고 맨 앞으로 옮긴다.
+     스레드 게시글 글자 한도(500자)를 넘으면 본문 꼬리를 줄이고, 문구는 절대 자르지 않는다. */
+  function commentCharLimit() {
+    var L = (BS.SNS_DISCLOSURE || {}).maxChars;
+    return (L && L > 0) ? L : 500;
+  }
+  /* 500자 한도 안으로 본문을 줄인다 — 줄 경계부터, 한 줄도 안 들어가면 문장 끝에서 */
+  function cutThreadBody(body, room) {
+    var b = String(body == null ? "" : body).trim();
+    if (room <= 0) return "";
+    if (b.length <= room) return b;
+    var lines = b.split("\n"), acc = [];
+    for (var i = 0; i < lines.length; i++) {
+      if (acc.concat([lines[i]]).join("\n").length > room) break;
+      acc.push(lines[i]);
+    }
+    var out = acc.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    if (out) return out;
+    var cut = b.slice(0, Math.max(1, room - 1));
+    var end = Math.max(cut.lastIndexOf("다."), cut.lastIndexOf("요."), cut.lastIndexOf("."),
+      cut.lastIndexOf("?"), cut.lastIndexOf("!"), cut.lastIndexOf("~"));
+    if (end >= Math.floor(room * 0.5)) return cut.slice(0, end + 1).trim() + " …";
+    return cut.trim() + "…";
+  }
+  function ensureCommentDisclosure(text, line, limit) {
     var t = String(text == null ? "" : text).trim();
     if (!line) return t;
+    var L = limit || commentCharLimit();
     var flatLine = line.replace(/\s+/g, " ");
-    return t.split("\n").filter(function (l) {
+    /* 1) 어디에 있든 같은 문구 줄을 빼고(중복·중간 배치 제거) */
+    var body = t.split("\n").filter(function (l) {
       return l.replace(/\s+/g, " ").indexOf(flatLine) < 0;
     }).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    /* 2) 문구를 맨 앞에 둔다 */
+    if (line.length >= L) return line.slice(0, L);
+    if (!body) return line;
+    var room = L - line.length - 2;   // 문구 + 빈 줄 하나
+    return line + "\n\n" + cutThreadBody(body, room);
   }
 
   function multiAllText(m) {
@@ -1818,7 +1852,7 @@
     if (desc) desc.textContent = (BS.MULTIUSE || {}).desc || "";
     var html = [];
     if (m.disclosure) {
-      html.push('<div class="mu-disc">🧾 대가성 문구가 <b>훅 첫 줄(본문 맨 앞)</b>에 들어갔습니다 — 첫 댓글로 옮기지 않았습니다 · ' + esc((BS.SNS_DISCLOSURE || {}).law || "") + '</div>');
+      html.push('<div class="mu-disc">🧾 대가성 문구가 <b>훅 첫 줄(본문 맨 앞)</b>과 <b>링크가 있는 첫 댓글 맨 앞</b>에 들어갔습니다 · 첫 댓글 ' + commentCharLimit() + '자 이내 · ' + esc((BS.SNS_DISCLOSURE || {}).law || "") + '</div>');
     }
     if (m.productPick) {
       html.push('<div class="mu-block"><h4>🛒 상품 선정</h4><p>' + esc(m.productPick) + '</p></div>');
@@ -1877,15 +1911,13 @@
         if (disc.needed) {
           m.disclosure = disc.text;
           m.hook = ensureDisclosure(m.hook, disc.text);
-          m.firstComment = (m.firstComment || []).filter(function (c) {
-            return String(c).replace(/\s+/g, " ").indexOf(disc.text.replace(/\s+/g, " ")) < 0;
-          });
+          m.firstComment = [ensureCommentDisclosure((m.firstComment || []).join("\n"), disc.text)];
         }
         state.multiuse = m;
         renderMultiUse();
         var disc = articleDisclosure(r);
         setStatus($("#multiuseStatus"), "✅ 스레드 훅·첫 댓글·클립 20초 연출표 준비됨 — 각각 복사해 쓰세요" +
-          (disc.needed ? " (대가성 문구는 훅 첫 줄에 넣었습니다)" : ""), "ok");
+          (disc.needed ? " (대가성 문구는 훅 첫 줄과 링크가 있는 첫 댓글 맨 앞에 넣었습니다 · 첫 댓글 " + commentCharLimit() + "자 이내)" : ""), "ok");
         return true;
       },
       retry: runMultiUse
@@ -2632,6 +2664,8 @@
     var cafeNoteDone = false;
     html.push('<div class="art-title">' + stripStrayMarks(esc(r.title || "(제목 미선택)")) + "</div>");
     if (isProductResult(r) && !hasProductDisclosure(r.md)) html.push(disclosureHtml(false, r, true));
+    /* 🧾 v2.3.5 — 블로그 모드도 대가성 문구를 제목 바로 아래(본문 최상단)에 한 번 */
+    if (blogDisclosureWanted(r)) html.push(blogDisclosureHtml(false));
 
     secs.forEach(function (sec) {
       var label = sectionLabel(sec.h);
@@ -2756,7 +2790,7 @@
   }
   function disclosureTextFor(r) { return productPlatformFor(r).disclosure || ""; }
   function hasProductDisclosure(md) {
-    return /쿠팡\s*파트너스\s*활동의\s*일환|쇼핑\s*커넥트|여행·쇼핑\s*커넥트|수수료를\s*제공받|수수료를 받습니다/.test(String(md || ""));
+    return /쿠팡\s*파트너스\s*활동의\s*일환|브랜드\s*커넥트|쇼핑\s*커넥트|여행·쇼핑\s*커넥트|수수료를\s*제공받|수수료를 받습니다/.test(String(md || ""));
   }
   /* 공정위 대가성 문구 — 네이버 커넥트 가이드대로 본문 최상단에 둔다.
      네이버는 안내된 문구를 다른 표현·누락·본문 중간/끝에 두면 페널티 대상이라고 안내한다. */
@@ -2783,7 +2817,31 @@
   function hasTip(md) { return /여기서\s*잠깐/.test(String(md || "")); }
   /* 원고 본문에 어느 플랫폼이든 공정위 문구가 이미 있는지 (v2.2.1 — 네이버 커넥트까지) */
   function bodyHasDisclosure(md) {
-    return /쿠팡\s*파트너스\s*활동의\s*일환|쇼핑\s*커넥트\s*활동의\s*일환|여행\s*커넥트\s*활동의\s*일환/.test(String(md || ""));
+    return /쿠팡\s*파트너스\s*활동의\s*일환|브랜드\s*커넥트\s*활동의\s*일환|쇼핑\s*커넥트\s*활동의\s*일환|여행\s*커넥트\s*활동의\s*일환/.test(String(md || ""));
+  }
+  /* 🧾 블로그 모드 대가성 문구 — 제목 바로 아래(본문 최상단)에 딱 한 번 (v2.3.5)
+     v2.3.4까지는 프롬프트가 문구를 '💡 여기서 잠깐' 팁 안(본문 중간)에 넣으라고 했고,
+     원고에 없으면 앱이 글 끝에 붙였다. 둘 다 2024-12-01 개정 지침의 부적절 예시다.
+     지금은 상품·여행 리뷰 모드와 같은 자리(최상단)에 넣는다. */
+  function blogDisclosureWanted(r) {
+    r = r || state.result;
+    if (!r) return false;
+    if (resultMode(r) !== "blog") return false;      // 카페·상품 리뷰는 따로 처리
+    if (!$("#optDisclosure") || !$("#optDisclosure").checked) return false;
+    if (affiliateSkipped(r.md)) return false;        // 주제 무관으로 생략한 글
+    if (!affiliateInfo().disclosure) return false;   // 제휴 글이 아님
+    return !bodyHasDisclosure(r.md);
+  }
+  function blogDisclosureText() {
+    return affiliateInfo().disclosure || BS.DISCLOSURE || "";
+  }
+  function blogDisclosureHtml(inline) {
+    var t = blogDisclosureText();
+    if (!t) return "";
+    if (inline) {
+      return '<p style="margin:0;padding:10px 12px;background:#f7f7f4;border-left:3px solid #b9b2a6;font-size:13px;line-height:1.7;color:#5d574e">' + esc(t) + "</p>";
+    }
+    return '<div class="disc disc-top">' + esc(t) + "</div>";
   }
   /* 원고가 '주제 무관으로 생략'했다고 밝혔는지 (2026-11-17 제휴 연관성 규칙)
      생략한 글에는 앱이 상품 박스도 공정위 문구도 다시 붙이지 않는다. */
@@ -2823,11 +2881,8 @@
         out.push('<div class="coupon">' + tipAnchorHtml().replace(">👉 추천 상품 링크<", ">" + label + "<") + "</div>");
       }
     }
-    if (disc && !bodyHasDisclosure(r.md)) {
-      var discTxt = affiliateInfo().disclosure || BS.DISCLOSURE;
-      if (inline) out.push('<p style="margin:14px 0 0;padding-top:10px;border-top:1px dashed #e0d8cc;font-size:13px;color:#8d857c">' + esc(discTxt) + "</p>");
-      else out.push('<div class="disc">' + esc(discTxt) + "</div>");
-    }
+    /* v2.3.5 — 대가성 문구는 여기(글 끝)가 아니라 renderArticle()·buildRichHtml()이
+       제목 바로 아래에 넣는다. 이 함수는 제휴 링크 카드만 맡는다. */
     return out.join("\n");
   }
 
@@ -2955,6 +3010,8 @@
       add(affiliateHtml(true), 2);
     }
     if (prodMode && !hasProductDisclosure(r.md)) parts.unshift({ html: disclosureHtml(true, r, true), gaps: 1 });
+    /* 🧾 v2.3.5 — 블로그 모드 대가성 문구도 복사본 맨 앞(제목 바로 아래 자리)에 */
+    if (!cafeMode && !prodMode && blogDisclosureWanted(r)) parts.unshift({ html: blogDisclosureHtml(true), gaps: 1 });
 
     var html = "";
     parts.forEach(function (p, idx) {
@@ -2991,12 +3048,15 @@
     var aff = $("#optAffiliate").checked;
     var disc = $("#optDisclosure").checked;
     if (affiliateSkipped(r.md)) return md;
+    /* 🧾 v2.3.5 — 대가성 문구는 글 끝이 아니라 제목 바로 아래(본문 최상단)에 */
+    var mout = "# " + (r.title || "") + "\n\n" +
+      (disc && blogDisclosureWanted(r) ? blogDisclosureText() + "\n\n" : "") +
+      stripEmphasisMarks(stripMetaSections(r.md));
     if (aff) {
       var link = ($("#coupangLink").value || "").trim();
-      md += "\n\n> 👉 [추천 상품 보러가기](" + (link || ("https://www.coupang.com/np/search?q=" + encodeURIComponent(r.topic || ""))) + ")";
+      mout += "\n\n> 👉 [추천 상품 보러가기](" + (link || ("https://www.coupang.com/np/search?q=" + encodeURIComponent(r.topic || ""))) + ")";
     }
-    if (disc) md += "\n\n" + BS.DISCLOSURE;
-    return md;
+    return mout;
   }
 
   /* ---------------- 🔍 구글 실시간 검색 (v1.9.3 · 2026-11-17) ----------------
@@ -4172,6 +4232,15 @@
     return "지금 바로";
   }
 
+  /* 첫 댓글은 줄을 살려서 요청에 넣는다 (v2.3.5 — 대가성 문구가 맨 앞 줄로 남는다) */
+  function commentRequestLines(s) {
+    var lines = String(s == null ? "" : s).split(/\r?\n/)
+      .map(function (x) { return x.trim(); })
+      .filter(function (x) { return x; });
+    if (!lines.length) return ["  (없음 — 링크는 첫 댓글에만 넣어 주세요)"];
+    return lines.map(function (x) { return "  " + x; });
+  }
+
   /* 첫 댓글·해시태그는 한 줄로 펴서 요청에 넣는다 (줄바꿈은 공백) */
   function oneLine(s) {
     return String(s == null ? "" : s).split(/\r?\n/)
@@ -4197,10 +4266,11 @@
       L.push(it.text);
       L.push("");
     });
-    L.push("첫 댓글: " + (oneLine(t.comment) || "(없음 — 링크는 첫 댓글에만 넣어 주세요)"));
+    L.push("첫 댓글:");
+    commentRequestLines(t.comment).forEach(function (x) { L.push(x); });
     L.push("해시태그: " + (oneLine(t.hashtags) || "(없음)"));
     L.push("");
-    threadPostRulesLines(t.hashtags).forEach(function (x) { L.push(x); });
+    threadPostRulesLines(t.hashtags, t.disclosure).forEach(function (x) { L.push(x); });
     L.push("");
     L.push("위 내용으로 스레드 올려줘!");
     return L.join("\n").trim();
@@ -4209,11 +4279,14 @@
   /* v2.3.4 — 업로드 요청에 붙는 발행 규칙 (태그 1개 · 첫 댓글 태그 없음 · 댓글 유도 금지)
      작업실이 만든 원고를 다른 사람(피클)이 대신 발행할 때도 같은 규칙이 따라가야
      태그가 45자 뭉치로 등록되거나 "아래 댓글에서 확인해"가 본문에 남지 않는다. */
-  function threadPostRulesLines(hashtags) {
+  function threadPostRulesLines(hashtags, disc) {
     var T = BS.THREADS || {};
     var tag = (BS.threadTagOne ? BS.threadTagOne(hashtags) : String(hashtags || "").trim());
     var L = [];
     L.push("[발행 규칙 — 스레드 화면에서 이대로]");
+    if (disc) {
+      L.push("- 첫 댓글 **맨 앞 줄**에 이 대가성 문구를 한 글자도 바꾸지 말고 그대로 넣어: \"" + disc + "\" — 링크는 그 아래 줄, 첫 댓글 전체 " + commentCharLimit() + "자 이내. 문구와 링크를 서로 다른 게시글로 나누지 마.");
+    }
     L.push("- 주제 태그: " + (tag ? "'" + tag + "'" : "주제 단어") + " 딱 1개만 태그 칸에 넣어. '#' 없이 한 단어, 띄어쓰기 없이. 여러 개를 한 줄로 붙이면 그 전체가 태그 하나로 등록돼 아무도 찾지 않는 죽은 태그가 돼.");
     L.push("- 첫 댓글에는 태그를 붙이지 마.");
     L.push("- " + (T.commentBaitRule || "본문 마지막에 '아래 댓글에서 확인해' 같은 댓글 유도 문구를 넣지 마. 본문은 질문으로 끝낸다."));
@@ -4430,10 +4503,11 @@
     var html = "";
     if (t.comment) {
       html += '<div class="thread-card extra">' +
-        '<div class="ipc-head"><strong>첫 댓글</strong><span class="ipc-badge">링크는 여기에만</span></div>' +
+        '<div class="ipc-head"><strong>첫 댓글</strong><span class="ipc-badge">링크 + 대가성 문구 맨 앞</span>' +
+        '<span class="tc-len" data-k="clen"></span></div>' +
         '<textarea rows="2" spellcheck="false" data-k="comment"></textarea>' +
         '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy-comment">📋 첫 댓글 복사</button>' +
-        '<span class="ipc-tip">본문에는 링크를 넣지 않았습니다</span></div></div>';
+        '<span class="ipc-tip">본문에는 링크를 넣지 않았습니다 · 대가성 문구는 이 댓글 맨 앞, 500자 이내</span></div></div>';
     }
     if (t.hashtags) {
       html += '<div class="thread-card extra">' +
@@ -4447,8 +4521,16 @@
       show(ex, true);
       var cta = ex.querySelector('[data-k="comment"]');
       if (cta) {
+        var clen = ex.querySelector('[data-k="clen"]');
+        var CL = commentCharLimit();
+        var paintClen = function () {
+          if (!clen) return;
+          clen.textContent = cta.value.length + "자 / " + CL + "자";
+          clen.style.color = cta.value.length > CL ? "#b8452a" : "";
+        };
         cta.value = t.comment;
-        cta.addEventListener("input", function (e) { state.threads.comment = e.target.value; });
+        paintClen();
+        cta.addEventListener("input", function (e) { state.threads.comment = e.target.value; paintClen(); });
         autoGrow(cta);
       }
       var tta = ex.querySelector('[data-k="tags"]');
@@ -4606,11 +4688,11 @@
         if (disc.needed) {
           parsed.disclosure = disc.text;
           if (parsed.threads.length) parsed.threads[0].text = ensureDisclosure(parsed.threads[0].text, disc.text);
-          parsed.comment = ensureNoDisclosure(parsed.comment, disc.text);
+          parsed.comment = ensureCommentDisclosure(parsed.comment, disc.text);
         }
         state.threads = parsed;
         renderThreads();
-        setStatus($("#threadStatus"), "✅ 타래 " + parsed.threads.length + "개 준비됨 — 타래마다 복사해 스레드에 차례로 붙여넣으세요 (첫 댓글에 링크)", "ok");
+        setStatus($("#threadStatus"), "✅ 타래 " + parsed.threads.length + "개 준비됨 — 타래마다 복사해 스레드에 차례로 붙여넣으세요 (링크는 첫 댓글, 대가성 문구는 그 댓글 맨 앞)", "ok");
         var panel = $("#threadPanel");
         if (panel && panel.scrollIntoView) { try { panel.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
         return true;
@@ -7185,7 +7267,7 @@
       if (disc.needed) {
         parsed.disclosure = disc.text;
         if (parsed.threads.length) parsed.threads[0].text = ensureDisclosure(parsed.threads[0].text, disc.text);
-        parsed.comment = ensureNoDisclosure(parsed.comment, disc.text);
+        parsed.comment = ensureCommentDisclosure(parsed.comment, disc.text);
       }
       FIN.threads = parsed;
       finRenderThreads();
@@ -7245,12 +7327,22 @@
     if (t.comment) {
       var c = document.createElement("div");
       c.className = "thread-card extra";
-      c.innerHTML = '<div class="ipc-head"><strong>첫 댓글</strong><span class="ipc-badge">링크는 여기에만</span></div>' +
+      c.innerHTML = '<div class="ipc-head"><strong>첫 댓글</strong><span class="ipc-badge">링크 + 대가성 문구 맨 앞</span>' +
+        '<span class="tc-len"></span></div>' +
         '<textarea rows="2" spellcheck="false"></textarea>' +
-        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy">📋 첫 댓글 복사</button></div>';
+        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy">📋 첫 댓글 복사</button>' +
+        '<span class="ipc-tip">대가성 문구는 맨 앞 · 500자 이내</span></div>';
       var cta = c.querySelector("textarea");
+      var clen = c.querySelector(".tc-len");
+      var CL2 = commentCharLimit();
+      var paintC = function () {
+        if (!clen) return;
+        clen.textContent = cta.value.length + "자 / " + CL2 + "자";
+        clen.style.color = cta.value.length > CL2 ? "#b8452a" : "";
+      };
       cta.value = t.comment;
-      cta.addEventListener("input", function (e) { FIN.threads.comment = e.target.value; autoGrow(e.target); });
+      paintC();
+      cta.addEventListener("input", function (e) { FIN.threads.comment = e.target.value; paintC(); autoGrow(e.target); });
       c.querySelector('[data-act="copy"]').addEventListener("click", function () {
         copyPlain(FIN.threads.comment).then(function (ok) { toast(ok ? "첫 댓글을 복사했습니다" : "복사 실패"); });
       });
@@ -7457,9 +7549,7 @@
       if (disc.needed) {
         m.disclosure = disc.text;
         m.hook = ensureDisclosure(m.hook, disc.text);
-        m.firstComment = (m.firstComment || []).filter(function (c) {
-          return String(c).replace(/\s+/g, " ").indexOf(disc.text.replace(/\s+/g, " ")) < 0;
-        });
+        m.firstComment = [ensureCommentDisclosure((m.firstComment || []).join("\n"), disc.text)];
       }
       FIN.multi = m;
       finRenderMulti();
@@ -7514,7 +7604,7 @@
     if (!m || !block || !box) return;
     block.hidden = false;
     var html = [];
-    if (m.disclosure) html.push('<div class="mu-disc">🧾 대가성 문구가 훅 첫 줄에 들어갔습니다 · ' + esc((BS.SNS_DISCLOSURE || {}).law || "") + "</div>");
+    if (m.disclosure) html.push('<div class="mu-disc">🧾 대가성 문구가 훅 첫 줄과 링크가 있는 첫 댓글 맨 앞에 들어갔습니다 · 첫 댓글 ' + commentCharLimit() + '자 이내 · ' + esc((BS.SNS_DISCLOSURE || {}).law || "") + "</div>");
     if (m.productPick) html.push('<div class="mu-block"><h4>🛒 상품 선정</h4><p>' + esc(m.productPick) + "</p></div>");
     html.push('<div class="mu-block"><h4>🧵 스레드 본문 훅</h4><p>' + esc(m.hook || "(없음)") + '</p><div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc(m.hook || "") + '">훅 복사</button></div></div>');
     html.push('<div class="mu-block"><h4>💬 첫 댓글</h4><p>' + esc((m.firstComment || []).join("\n") || "(없음)") + '</p><div class="mu-copy"><button type="button" class="btn small ghost" data-fin-copy="' + esc((m.firstComment || []).join("\n")) + '">첫 댓글 복사</button></div></div>');
@@ -7722,10 +7812,11 @@
         L.push(it.text);
         L.push("");
       });
-      L.push("첫 댓글: " + (oneLine(FIN.threads.comment) || "(없음)"));
+      L.push("첫 댓글:");
+      commentRequestLines(FIN.threads.comment).forEach(function (x) { L.push(x); });
       L.push("해시태그: " + (oneLine(FIN.threads.hashtags) || "(없음)"));
       L.push("");
-      threadPostRulesLines(FIN.threads.hashtags).forEach(function (x) { L.push(x); });
+      threadPostRulesLines(FIN.threads.hashtags, FIN.threads.disclosure).forEach(function (x) { L.push(x); });
       L.push("");
     }
     if ((sel.insta || sel.clip) && FIN.video) {
@@ -8103,7 +8194,7 @@
   /* 검증용(화면 동작에는 영향 없음) — 붙여넣은 글 없이도 매칭·삽입을 콘솔에서 확인
      예: BS.finish.match("창문 단열", "본문…", "mama2624")  ·  BS.finish.insert(md, links, "inline") */
   BS.finish = {
-    version: (FINCFG.version || "v2.3.4"),
+    version: (FINCFG.version || "v2.3.5"),
     state: function () {
       return {
         blogId: FIN.blogId, picked: finPickedList(), recos: FIN.recos,
@@ -8891,7 +8982,9 @@
   BS.multiAllText = multiAllText;
   BS.articleDisclosure = articleDisclosure;
   BS.ensureDisclosure = ensureDisclosure;
-  BS.ensureNoDisclosure = ensureNoDisclosure;
+  BS.ensureCommentDisclosure = ensureCommentDisclosure;   // v2.3.5 — 첫 댓글 맨 앞 문구 + 500자
+  BS.cutThreadBody = cutThreadBody;
+  BS.commentCharLimit = commentCharLimit;
   BS.state = state;
   BS.stageLabels = function () { return { draft: stageLabel("draft"), audit: stageLabel("audit") }; };
   /* v2.1.1 검증용 — 잠금 해시·해제 여부·해제/재잠금을 콘솔에서 직접 확인
