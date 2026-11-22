@@ -680,7 +680,7 @@ def build() -> dict:
 
     out = {
         "version": "1.3",
-        "studio": "2.3.7",
+        "studio": "2.3.8",
         "prev": prev_info,
         "generated_at": now.isoformat(timespec="seconds"),
         "generated_label": "%d월 %d일 %s 기준" % (now.month, now.day, now.strftime("%H:%M")),

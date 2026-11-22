@@ -1529,6 +1529,49 @@ BS.prompts = (function () {
     ];
   }
 
+  /* ---------- 🃏 인스타·스레드 카드뉴스 2장 세트 (3:4 · 1080×1440, v2.3.8) ----------
+     대표 썸네일(main 1:1)과 별개다. 인스타 캐러셀·스레드 카드용 3:4 두 장을
+     제미나이에 그대로 붙여넣을 한글 지시문으로 만든다. API 호출 없이 바로 나온다.
+     규칙은 BS.CARDNEWS(js/config.js) 하나만 고치면 두 장이 같이 따라간다. */
+  function cardNewsPrompts(o) {
+    o = o || {};
+    var C = BS.CARDNEWS || {};
+    var title = (o.title || "").trim();
+    var kw = (o.topic || "").trim();
+    var gist = String(o.summary || "").replace(/\s+/g, " ").trim().slice(0, 700);
+    var head = [
+      "참고 글 제목(이 제목을 그대로 넣지 마 — 카드 문구는 아래 규칙으로 새로 뽑는다): " + (title || kw),
+      "주제 키워드: " + kw
+    ];
+    if (gist) head.push("글 요지(2장의 이유·해결은 이 글 안에 있는 내용만 고른다): " + gist);
+    head.push("먼저 두 장에 들어갈 한글 문구를 정해 줘. 화면에 그 글자가 실제로 그려지므로 짧고 또렷하게, 오탈자 없이.");
+    var common = (C.common || []).map(function (l) { return "- " + l; });
+    var c1 = C.card1 || {};
+    var c2 = C.card2 || {};
+    var p1 = [c1.head || "3:4 세로(1080×1440) 카드뉴스 1장을 만들어 줘."]
+      .concat([""], head, [""],
+        ["[1장 조건 — 궁금증·놀람]"],
+        (c1.lines || []).map(function (l, i) { return (i + 1) + ". " + l; }), [""],
+        ["[두 장 공통]"], common, [""],
+        ["[만들기 전 자체 검사]"],
+        ["- 질문이 2~3줄로 아주 크게 보이는가. 정답·이유·해결법이 1장에 새어 나오지 않았는가."],
+        ["- 강조(코랄 단어·노랑 밑줄)가 두 곳을 넘지 않는가. 사진이 화면 절반 이상을 차지하는가."],
+        ["- ‘다음 장에서 이유와 해결법 →’가 맨 아래에 읽히게 있는가. ‘1/2’ 표기가 있는가."]);
+    var p2 = [c2.head || "같은 주제로 3:4 세로(1080×1440) 카드뉴스 2장을 만들어 줘."]
+      .concat([""], head, [""],
+        ["[2장 조건 — 이유 + 해결]"],
+        (c2.lines || []).map(function (l, i) { return (i + 1) + ". " + l; }), [""],
+        ["[두 장 공통]"], common, [""],
+        ["[만들기 전 자체 검사]"],
+        ["- 1장의 질문에 첫 줄부터 바로 답하는가. ‘그럴 수 있어요’ 같은 미루는 말이 없는가."],
+        ["- 이유 2~3줄 · 바로 할 행동 2가지 · 요약 1줄이 다 있는가. 행동이 ‘조심하세요’로 끝나지 않는가."],
+        ["- 출처(기관명·문서명)가 읽히게 있고, ‘2/2’와 ‘AI 연출 이미지’ 표기가 있는가. 1장과 색·글꼴·조명이 이어지는가."]);
+    return [
+      { role: (c1.role || "1장 · 궁금증·놀람"), prompt: p1.join("\n") },
+      { role: (c2.role || "2장 · 이유+해결"), prompt: p2.join("\n") }
+    ];
+  }
+
   /* ---------- 글 하단 3:1 허브 배너 (지연님 확정 디자인 고정) ---------- */
   function bannerInstruction() {
     var b = BS.HUB_BANNER;
@@ -2483,6 +2526,14 @@ BS.prompts = (function () {
     lines.push("1. " + ((V.retention || {}).transitionRule || ""));
     lines.push("2. " + ((V.retention || {}).hookRule || ""));
     lines.push("");
+    /* 🎧 v2.3.8 — 마무리·편집 실전 팁. 대본을 이 기준으로 쓴다(문장 길이·목록 처리·정지 화면). */
+    var tipsVideo = (V.productionTips || {});
+    if (tipsVideo.rules && tipsVideo.rules.length) {
+      lines.push("[🎧 마무리·편집 기준 — 대본을 이 기준으로 쓴다 (v2.3.8)]");
+      tipsVideo.rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+      lines.push("→ 그래서 나레이션은 1.3배속으로 읽어도 30~45초(롱폼 3~5분) 안에 들어오게 쓰고, 목록은 대표 2~3개만 읽는다. 장면이 정지 카드·사진이면 화면 지시문에 '2.5% 천천히 줌인'을 넣는다.");
+      lines.push("");
+    }
     var sdVideo = shortsDirectBlock(f);
     if (sdVideo) { lines.push(sdVideo); lines.push(""); }
     var licVideo = licenseBlock();
@@ -2551,7 +2602,7 @@ BS.prompts = (function () {
     if (f.id === "long") {
       parts.push("## 연출표 (장면별)");
       parts.push("(장면마다 한 줄 — 화면 / 카메라 / 자막 / 효과음 / BGM. 화면·자막 내용은 아래 장면 블록과 같게)");
-      parts.push("- 1장면: 화면 (…) · 카메라 (" + (SD.camera || []).join("·") + " 중 1) · 자막 (…) · 효과음 (…) · BGM (" + (SD.bgm || []).join("·") + " 중 1)");
+      parts.push("- 1장면: 화면 (…) · 카메라 (" + (SD.camera || []).join("·") + " 중 1 — 정지 카드·사진이면 ‘2.5% 천천히 줌인’) · 자막 (…) · 효과음 (…) · BGM (" + (SD.bgm || []).join("·") + " 중 1)");
       parts.push("- 2장면: (같은 형식 — 앞 장면과 다른 카메라)");
       parts.push("");
     } else {
@@ -2569,7 +2620,7 @@ BS.prompts = (function () {
       sdBlocks.forEach(function (b) {
         parts.push("[" + b.time + " · " + b.name + "]");
         parts.push("- 화면: (이 구간에 보이는 것 하나 — 카드·손·제품·도구)");
-        parts.push("- 카메라: (" + (SD.camera || []).join("·") + " 중 1개 — 앞 구간과 다르게)");
+        parts.push("- 카메라: (" + (SD.camera || []).join("·") + " 중 1개 — 앞 구간과 다르게. 화면이 정지 카드·사진이면 ‘2.5% 천천히 줌인’)");
         parts.push("- 자막: \"(12자 내외)\"");
         parts.push("- 효과음: (이 동작에서 실제로 나는 소리 1개, 없으면 '없음')");
         parts.push("- BGM: (" + (SD.bgm || []).join("·") + " 중 1개)");
@@ -2643,6 +2694,7 @@ BS.prompts = (function () {
     imagePromptRequest: imagePromptRequest,
     composeImageInstruction: composeImageInstruction,
     thumbnailInstructions: thumbnailInstructions,
+    cardNewsPrompts: cardNewsPrompts,          // 🃏 v2.3.8 — 인스타·스레드 3:4 2장 세트
     bannerInstruction: bannerInstruction,
     hubSignature: function (blogName) { return blogName + " · " + BS.GOLD_QUEEN_HUB; },
     systemPrompt: systemPrompt,

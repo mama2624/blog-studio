@@ -39,6 +39,7 @@
     autoSwitch: null, // {from, to} — 무료 한도로 모델이 자동 전환된 사실 (결과 배너)
     imgPrompts: [],   // {role, prompt}
     thumbs: [],       // 대표 썸네일 2종 {role, prompt}
+    cardNews: [],     // 🃏 인스타·스레드 카드뉴스 3:4 2장 (v2.3.8) {role, prompt}
     images: [],       // {dataUrl, mime, prompt}
     threads: null,    // 🧵 스레드 타래 (v1.9.0) {threads, comment, hashtags, memo}
     video: null,      // 🎬 영상 대본 (v1.9.0) {thumbs, hook, narration, captions, scenes, memo}
@@ -3594,6 +3595,9 @@
     $("#apiImgBox").open = false;
     state.thumbs = [];
     if ($("#thumbList")) $("#thumbList").innerHTML = "";
+    state.cardNews = [];                                      // 🃏 v2.3.8
+    if ($("#cardNewsList")) $("#cardNewsList").innerHTML = "";
+    setStatus($("#cardNewsStatus"), "");
     // 새 원고가 나오면 스레드·영상 대본 패널은 접는다 (v1.9.0)
     state.threads = null;
     state.video = null;
@@ -4402,6 +4406,13 @@
     });
     L.push("");
     if (v.license) { L.push(""); L.push("[라이선스 확인]"); L.push(v.license); }
+    /* 🎧 v2.3.8 — 만들 때 지킬 마무리 3가지(1.3배속·무음 제거 / 대표만 읽기 / 2.5% 줌인) */
+    var tipsReq = ((BS.VIDEO || {}).productionTips || {}).rules || [];
+    if (tipsReq.length) {
+      L.push("");
+      L.push("[🎧 마무리 편집 — 이대로]");
+      tipsReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    }
     L.push("");
     L.push("[요청]");
     L.push("이걸로 영상 만들어줘. 비율 " + f.ratioShort + ", 인물은 한국인 실사, 화면 글자는 한글, 음성은 AI티 없는 구어체로. TTS·BGM은 상업 무료 라이선스만 쓰고, 비상업 모델(XTTS-v2)은 쓰지 마.");
@@ -5053,6 +5064,85 @@
       box.appendChild(card);
       autoGrow(ta);
     });
+  }
+
+  /* ---------------- 🃏 인스타·스레드 카드뉴스 2장 (v2.3.8) --------------
+     3:4 · 1080×1440 두 장. 대표 썸네일(1:1)과 별개로 두고, API 없이 현재 주제로
+     바로 지시문을 만든다 — 복사해서 제미나이에 붙여넣으면 그 그림이 나온다. */
+  function cardNewsTopic() {
+    if (state.result && state.result.topic) return state.result.topic;
+    var t = $("#topic");
+    return t ? String(t.value || "").trim() : "";
+  }
+
+  function makeCardNews() {
+    var topic = cardNewsTopic();
+    if (!topic) { toast("주제를 먼저 넣어 주세요 — 주제 칸의 말로 카드뉴스 두 장을 만듭니다"); return; }
+    state.cardNews = BS.prompts.cardNewsPrompts({
+      blog: state.blog,
+      title: state.result ? state.result.title : "",
+      topic: topic,
+      summary: state.result ? state.result.md : ""
+    });
+    renderCardNews();
+    setStatus($("#cardNewsStatus"), "✅ 3:4 두 장 준비됨 — 1장을 먼저 붙여넣고, 이어서 2장을 붙여넣으세요", "ok");
+    toast("카드뉴스 2장 프롬프트를 만들었습니다 — 3:4 · 1080×1440");
+  }
+
+  function renderCardNews() {
+    var box = $("#cardNewsList");
+    if (!box) return;
+    box.innerHTML = "";
+    (state.cardNews || []).forEach(function (c, i) {
+      var card = document.createElement("div");
+      card.className = "img-prompt-card cardnews-card";
+      card.innerHTML =
+        '<div class="ipc-head"><strong>' + esc(c.role || ("카드 " + (i + 1))) + '</strong>' +
+        '<span class="ipc-badge">3:4 · 1080×1440</span></div>' +
+        '<textarea rows="8" spellcheck="false"></textarea>' +
+        '<div class="ipc-foot">' +
+        '<button type="button" class="btn small primary" data-act="copy">📋 ' + (i + 1) + '장 프롬프트 복사</button>' +
+        '<a class="btn small ghost" href="' + GEMINI_URL + '" target="_blank" rel="noopener">제미나이 열기 ↗</a>' +
+        '<span class="ipc-tip">' + (i === 0 ? "1장 → 2장 순서로 붙여넣기 · 1장에서는 답을 안 씁니다" : "같은 대화에 이어 붙이면 두 장이 한 세트로 나옵니다") + '</span>' +
+        "</div>";
+      var ta = card.querySelector("textarea");
+      ta.value = c.prompt;
+      ta.addEventListener("input", function (e) {
+        state.cardNews[i].prompt = e.target.value;
+        autoGrow(e.target);
+      });
+      card.querySelector('[data-act="copy"]').addEventListener("click", function () {
+        copyPlain(state.cardNews[i].prompt).then(function (ok) {
+          toast(ok ? (i + 1) + "장 프롬프트를 복사했습니다 — 제미나이에 붙여넣으세요" : "복사가 막혔습니다 — 지시문을 직접 선택해 복사해 주세요");
+        });
+      });
+      box.appendChild(card);
+      autoGrow(ta);
+    });
+  }
+
+  /* 🎧 v2.3.8 — 영상 패널 맨 위 마무리 체크 가이드. 문구는 BS.VIDEO.productionTips 한 곳. */
+  function videoTipsText() {
+    var T = (BS.VIDEO && BS.VIDEO.productionTips) || {};
+    var L = ["[" + (T.title || "마무리 3가지") + " — " + (T.version || "v2.3.8") + "]"];
+    (T.items || []).forEach(function (it) {
+      L.push((it.no || "") + ") " + (it.head || ""));
+      if (it.body) L.push("   " + it.body);
+    });
+    return L.join("\n");
+  }
+
+  function paintVideoTips() {
+    var T = (BS.VIDEO && BS.VIDEO.productionTips) || {};
+    var box = $("#videoTipsList");
+    if (!box) return;
+    box.innerHTML = (T.items || []).map(function (it) {
+      return '<li><b>' + esc(it.head || "") + '</b><span>' + esc(it.body || "") + '</span></li>';
+    }).join("");
+    var ttl = $("#videoTipsTitle");
+    if (ttl) ttl.textContent = T.title || "🎧 마무리 3가지 — 대본 다 쓴 뒤 이대로";
+    var src = $("#videoTipsSrc");
+    if (src) src.textContent = (T.version || "v2.3.8") + " · 실전 팁";
   }
 
   /* 보조: 결제 연결된 API 키로 바로 생성 */
@@ -8970,6 +9060,16 @@
 
     $("#btnMakeImgPrompts").addEventListener("click", makeImagePrompts);
     if ($("#btnMakeThumbs")) $("#btnMakeThumbs").addEventListener("click", makeThumbs);
+    /* 🃏 v2.3.8 — 인스타·스레드 3:4 카드뉴스 2장 */
+    if ($("#btnMakeCardNews")) $("#btnMakeCardNews").addEventListener("click", makeCardNews);
+    if ($("#btnCopyVideoTips")) {
+      $("#btnCopyVideoTips").addEventListener("click", function () {
+        copyPlain(videoTipsText()).then(function (ok) {
+          toast(ok ? "마무리 팁을 복사했습니다 — 편집할 때 옆에 두세요" : "복사 실패");
+        });
+      });
+    }
+    paintVideoTips();
     if ($("#btnCopyBanner")) {
       $("#btnCopyBanner").addEventListener("click", function () {
         copyPlain(BS.prompts.bannerInstruction()).then(function (ok) {
