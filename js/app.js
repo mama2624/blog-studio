@@ -4376,11 +4376,17 @@
   function videoRequestText() {
     var v = state.video;
     if (!v) return "";
-    var f = BS.videoFormat(state.videoFormat);
+    return buildVideoRequestText(v, BS.videoFormat(state.videoFormat),
+      state.result ? (state.result.topic || "") : "");
+  }
+
+  /* v2.3.8 — 순수 함수로 분리(화면 상태 없이 검증·재사용). v = state.video, f = 형식, topic */
+  function buildVideoRequestText(v, f, topic) {
+    if (!v) return "";
     var L = [];
     L.push("[영상 제작 요청 — 지연님 블로그 작업실 v" + (BS.VERSION || "") + "]");
     L.push("");
-    L.push("주제: " + (state.result ? (state.result.topic || "") : ""));
+    L.push("주제: " + (topic || ""));
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
     L.push("톤: " + ((BS.VIDEO && BS.VIDEO.persona) || "") + " · AI티 없는 구어체 나레이션");
     if (v.pick) { L.push(""); L.push("[상품 선정 — 대본보다 먼저]"); L.push(v.pick); }
@@ -9162,6 +9168,7 @@
   BS.webSearchAllowed = webSearchAllowed;   // v2.2.3 — 기본 모델(Flash Lite)이 검색 미지원으로 바로 일반 작성으로 내려가는지 검증용
   BS.renderArticle = renderArticle;   // v2.2.3 — 결과 화면의 이미지 프롬프트 박스 렌더 검증용
   BS.parseImagePromptCards = parseImagePromptCards;   // v2.2.6 — 이미지 프롬프트 세트 카드 파싱 검증용
+  BS.buildVideoRequestText = buildVideoRequestText;   // v2.3.8 — 영상 요청에 마무리 3가지가 실리는지 검증용
   BS.imagePromptCardsHtml = imagePromptCardsHtml;     // v2.2.6 — 카드 HTML·복사 버튼 검증용
   /* v2.3.1 검증용 — 내 다른 블로그 내부링크 매칭을 콘솔에서 직접 확인
      예: BS.ilLinks.mixed('mama2624', '겨울 창문 단열')  ·  BS.finMatch.items('mama2624', true).length */
