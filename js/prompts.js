@@ -2534,6 +2534,23 @@ BS.prompts = (function () {
       lines.push("→ 그래서 나레이션은 1.3배속으로 읽어도 30~45초(롱폼 3~5분) 안에 들어오게 쓰고, 목록은 대표 2~3개만 읽는다. 장면이 정지 카드·사진이면 화면 지시문에 '2.5% 천천히 줌인'을 넣는다.");
       lines.push("");
     }
+    /* 🎯 v2.3.9 — 냐미 칼럼 3편 실전 공식 4가지. 숏폼(클립·릴스·쇼츠)에만 넣는다. */
+    var cfVideo = V.clipFormula || {};
+    if (f.id !== "long" && cfVideo.pain) {
+      lines.push("[🎯 클립·릴스 공식 4가지 — 냐미 칼럼 3편 (v2.3.9)]");
+      var cfNo = 0;
+      [
+        ["① " + (cfVideo.pain.label || "불편한 순간 5 → 2"), cfVideo.pain.rules || []],
+        ["② " + ((cfVideo.cn || {}).label || "중국어 검색어 15개"), (cfVideo.cn || {}).rules || []],
+        ["③ " + ((cfVideo.cta || {}).label || "플랫폼별 CTA 3종"), (cfVideo.cta || {}).rules || []],
+        ["④ " + ((cfVideo.remake || {}).label || "전환 패턴 재활용"), (cfVideo.remake || {}).rules || []]
+      ].forEach(function (g) {
+        lines.push("[" + g[0] + "]");
+        g[1].forEach(function (r) { cfNo += 1; lines.push(cfNo + ". " + r); });
+      });
+      lines.push("→ 이 네 가지는 아래 출력 항목(‘불편한 순간 5 → 2’·‘중국어 검색어 15개’·‘플랫폼별 CTA 3종’·‘전환 패턴 재활용’)에 그대로 남긴다.");
+      lines.push("");
+    }
     var sdVideo = shortsDirectBlock(f);
     if (sdVideo) { lines.push(sdVideo); lines.push(""); }
     var licVideo = licenseBlock();
@@ -2560,6 +2577,7 @@ BS.prompts = (function () {
     var V = BS.VIDEO || {};
     var f = o.fmt || BS.videoFormat(o.formatId);
     var parts = [];
+    var isShort = f.id !== "long";    // 🎯 v2.3.9 — 클립·릴스 공식 4가지는 숏폼에만
     parts.push("[원고 — 이 내용만 가지고 쓴다]");
     parts.push(String(o.source || "").trim());
     parts.push("[원고 끝]");
@@ -2580,6 +2598,28 @@ BS.prompts = (function () {
     if (BS.PICK_FIRST && BS.PICK_FIRST.memo) {
       parts.push(BS.PICK_FIRST.memo.head);
       (BS.PICK_FIRST.memo.lines || []).forEach(function (x) { parts.push(x); });
+      parts.push("");
+    }
+    /* 🎯 v2.3.9 ① 불편한 순간 5 → 2 · ② 중국어 검색어 15개 — 숏폼만 */
+    if (isShort) {
+      parts.push("## 불편한 순간 5 → 2 (첫 3초 재료)");
+      parts.push("(제품·기능 설명보다 먼저. 4060 시청자가 실제로 겪는 불편을 5개 적고, 그중 가장 아픈 2개만 대본·자막에 쓴다 — 나머지 3개는 이 칸에만 남긴다)");
+      parts.push("1) (불편한 순간 — 언제·어디서 무엇이 안 되는지 장면이 보이게, 20자 안팎)");
+      parts.push("2) (…)");
+      parts.push("3) (…)");
+      parts.push("4) (…)");
+      parts.push("5) (…)");
+      parts.push("→ 남길 2가지: ① (…) ② (…)");
+      parts.push("→ 그래서 나한테 편해지는 것: (기능이 아니라 베네핏 한 줄 — ‘~할 필요가 없어져요’ 식)");
+      parts.push("");
+      parts.push("## 샤오홍슈·도우인 중국어 검색어 15개");
+      parts.push("(대본과 함께 뽑는다. 시연 컷을 찾을 검색어 — 한 줄에 ‘중국어 — 한국어 뜻’, 가장 먼저 볼 3개 앞에 ★)");
+      parts.push("1) ★ (중국어 — 뜻)");
+      parts.push("2) ★ (…)");
+      parts.push("3) ★ (…)");
+      parts.push("4) (…)");
+      parts.push("…");
+      parts.push("15) (…)");
       parts.push("");
     }
     parts.push("## 추천 썸네일 문구");
@@ -2628,6 +2668,15 @@ BS.prompts = (function () {
       });
       parts.push("");
     }
+    /* 🎯 v2.3.9 ③ 플랫폼별 CTA 3종 — 숏폼만 */
+    if (isShort) {
+      parts.push("## 플랫폼별 CTA 3종");
+      parts.push("(같은 영상, 마지막 한 줄만 플랫폼에 맞게. 각 20자 안팎 · 한 플랫폼에 하나만 요구)");
+      parts.push("- 네이버 클립: (상품 스티커·링크 클릭 유도 — 예: ‘자세한 사용법은 영상 속 상품 링크에서 확인하세요’)");
+      parts.push("- 인스타 릴스: (저장·프로필 또는 DM 유도 — 예: ‘나중에 또 보려면 저장, 더 궁금하면 프로필로’)");
+      parts.push("- 유튜브 쇼츠: (고정댓글 확인·구독 유도 — 예: ‘자세한 기준은 고정댓글에 정리해 뒀어요’)");
+      parts.push("");
+    }
     parts.push("## 장면 1");
     parts.push("- 구간: 0~6초");
     parts.push("- 화면: (무엇이 보이는지 한 줄)");
@@ -2650,16 +2699,27 @@ BS.prompts = (function () {
     parts.push("- 이미지·폰트: (출처 · 라이선스명)");
     parts.push("- 쓰지 않은 것: (비상업 모델 XTTS-v2 등 — 대본에 그 모델을 쓰지 않았다는 한 줄)");
     parts.push("");
+    /* 🎯 v2.3.9 ④ 전환 패턴 재활용 — 숏폼만 */
+    if (isShort) {
+      parts.push("## 전환 패턴 재활용 (다시 올릴 때)");
+      parts.push("- 남길 것: (조회수가 낮아도 클릭·구매가 나온 이유 — 이 소재에서 바꾸면 안 되는 부분)");
+      parts.push("- 바꿀 것: (첫 3초 멘트 / 첫 장면 ‘사용 후 변화’ 중 어느 쪽을 어떻게 바꿀지)");
+      parts.push("- 2차·3차 각도: (2차는 첫 장면을 사용 후 변화로, 3차는 첫 3초 멘트를 다른 불편으로)");
+      parts.push("- 확인: (재업로드 전에 겹치는 문장·장면 — 없으면 ‘없음’)");
+      parts.push("");
+    }
     parts.push("[출력 — 지금 바로]");
     if (BS.PICK_FIRST && BS.PICK_FIRST.memo) {
       parts.push("1. 맨 위 '" + BS.PICK_FIRST.memo.head + "' 칸을 먼저 쓴다 — 대본을 쓰기 전에 상품이 ①·②·③을 넘는지 적는다. 원고에 없는 값(수수료율·반복 노출)은 지어내지 말고 '확인 필요'로 적는다.");
       parts.push("2. 위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("3. 나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
       parts.push("4. 연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
+      if (isShort) parts.push("5. 불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄을 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
     } else {
       parts.push("위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
       parts.push("연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
+      if (isShort) parts.push("불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄을 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
     }
     return { system: videoSystemPrompt(blog, f, o.persona6), user: parts.join("\n") };
   }

@@ -4116,11 +4116,21 @@
     return info;
   }
 
+  /* v2.3.9 — 번호를 살린 채 앞뒤 빈 줄·구분선만 지운다.
+     '불편한 순간 5개'(1~5)·'중국어 검색어 15개'는 번호가 뜻을 가지므로 cleanBlock(첫 줄 번호 제거)을 쓰지 않는다. */
+  function cleanKeepNo(s) {
+    var lines = String(s == null ? "" : s).replace(/\r/g, "").split("\n")
+      .filter(function (l) { return !/^\s*[-—–=]{3,}\s*$/.test(l); });
+    while (lines.length && !lines[0].trim()) lines.shift();
+    while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+    return lines.join("\n").trim();
+  }
+
   /* 영상 응답 → { thumbs, hook, narration, captions, scenes, memo } */
   function parseVideoScript(text) {
     var heads = splitHeads(text);
     var out = { thumbs: [], hook: "", pick: "", narration: "", captions: [], scenes: [], memo: "",
-      direct: "", license: "", raw: String(text || "") };
+      direct: "", license: "", pain: "", cnkw: "", cta: "", remake: "", raw: String(text || "") };
     var seq = 0;
     heads.forEach(function (h) {
       var name = h.head;
@@ -4148,6 +4158,14 @@
         out.direct = cleanBlock(body);            // 🎬 v2.2.2 — 시간축 연출표
       } else if (/^라이선스/.test(name)) {
         out.license = cleanBlock(body);           // 🔊 v2.2.2 — TTS·BGM 라이선스 확인
+      } else if (/^불편한\s*순간/.test(name)) {
+        out.pain = cleanKeepNo(body);             // 🎯 v2.3.9 — 불편한 순간 5 → 2
+      } else if (/^샤오홍슈|^중국어\s*검색어/.test(name)) {
+        out.cnkw = cleanKeepNo(body);             // 🎯 v2.3.9 — 샤오홍슈·도우인 중국어 검색어 15개
+      } else if (/^플랫폼별\s*CTA/i.test(name)) {
+        out.cta = cleanKeepNo(body);              // 🎯 v2.3.9 — 플랫폼별 CTA 3종
+      } else if (/^전환\s*패턴|^리메이크/.test(name)) {
+        out.remake = cleanKeepNo(body);           // 🎯 v2.3.9 — 전환 패턴 재활용
       }
     });
     out.scenes.sort(function (a, b) { return a.no - b.no; });
@@ -4390,6 +4408,8 @@
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
     L.push("톤: " + ((BS.VIDEO && BS.VIDEO.persona) || "") + " · AI티 없는 구어체 나레이션");
     if (v.pick) { L.push(""); L.push("[상품 선정 — 대본보다 먼저]"); L.push(v.pick); }
+    /* 🎯 v2.3.9 — 불편한 순간 5 → 2 (첫 3초 재료) */
+    if (v.pain) { L.push(""); L.push("[🎯 불편한 순간 5 → 2 — 첫 3초 재료]"); L.push(v.pain); }
     L.push("");
     L.push("[추천 썸네일 문구]");
     v.thumbs.forEach(function (t, i) { L.push((i + 1) + ") " + t); });
@@ -4404,6 +4424,8 @@
     v.captions.forEach(function (c, i) { L.push((i + 1) + ") " + c); });
     L.push("");
     if (v.direct) { L.push(""); L.push("[연출표]"); L.push(v.direct); }
+    /* 🎯 v2.3.9 — 플랫폼별 CTA 3종(클립·릴스·쇼츠) */
+    if (v.cta) { L.push(""); L.push("[📱 플랫폼별 CTA 3종]"); L.push(v.cta); }
     L.push("");
     L.push("[장면별 Flow 프롬프트]");
     v.scenes.forEach(function (s) {
@@ -4419,9 +4441,19 @@
       L.push("[🎧 마무리 편집 — 이대로]");
       tipsReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
     }
+    /* 🎯 v2.3.9 — 중국어 검색어 15개·전환 패턴 재활용(대본 뒤에 붙는 소재·리메이크 메모) */
+    if (v.cnkw) { L.push(""); L.push("[🇨🇳 샤오홍슈·도우인 중국어 검색어 15개]"); L.push(v.cnkw); }
+    if (v.remake) { L.push(""); L.push("[♻️ 전환 패턴 재활용]"); L.push(v.remake); }
+    var cfReq = ((BS.VIDEO || {}).clipFormula || {}).requestRules || [];
+    if (cfReq.length) {
+      L.push("");
+      L.push("[🎯 클립 공식 — 이대로]");
+      cfReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    }
     L.push("");
     L.push("[요청]");
-    L.push("이걸로 영상 만들어줘. 비율 " + f.ratioShort + ", 인물은 한국인 실사, 화면 글자는 한글, 음성은 AI티 없는 구어체로. TTS·BGM은 상업 무료 라이선스만 쓰고, 비상업 모델(XTTS-v2)은 쓰지 마.");
+    L.push("이걸로 영상 만들어줘. 비율 " + f.ratioShort + ", 인물은 한국인 실사, 화면 글자는 한글, 음성은 AI티 없는 구어체로. TTS·BGM은 상업 무료 라이선스만 쓰고, 비상업 모델(XTTS-v2)은 쓰지 마." +
+      (v.cta ? " 마지막 CTA는 플랫폼별(네이버 클립·인스타 릴스·유튜브 쇼츠) 문장을 각각 넣어줘." : ""));
     return L.join("\n");
   }
 
@@ -4604,6 +4636,11 @@
       card("🛒 상품 선정 — 대본보다 먼저", "역순 전략", v.pick, "📋 상품 선정 복사", "copy-pick", 6, function (val) { v.pick = val; });
     }
 
+    /* 🎯 v2.3.9 — 불편한 순간 5 → 2 (제품 소개 대신 첫 3초 재료) */
+    if (v.pain) {
+      card("🎯 불편한 순간 5 → 2", "첫 3초 재료", v.pain, "📋 불편한 순간 복사", "copy-pain", 9, function (val) { v.pain = val; });
+    }
+
     v.thumbs.forEach(function (t, i) {
       var c = document.createElement("div");
       c.className = "img-prompt-card thumb-card";
@@ -4633,6 +4670,11 @@
         v.direct, "📋 연출표 복사", "copy-direct", 18, function (val) { v.direct = val; });
     }
 
+    /* 🎯 v2.3.9 — 플랫폼별 CTA 3종(같은 영상, 마지막 한 줄만 다르게) */
+    if (v.cta) {
+      card("📱 플랫폼별 CTA 3종", "클립 · 릴스 · 쇼츠", v.cta, "📋 CTA 복사", "copy-cta", 5, function (val) { v.cta = val; });
+    }
+
     v.scenes.forEach(function (s, i) {
       if (!s.final) s.final = videoScenePrompt(s, f);
       var c = document.createElement("div");
@@ -4660,6 +4702,14 @@
 
     if (v.license) {
       card("🔊 라이선스 확인", "상업 무료만", v.license, "📋 라이선스 복사", "copy-license", 6, function (val) { v.license = val; });
+    }
+
+    /* 🎯 v2.3.9 — 시연 컷 찾기(중국어 검색어) + 전환 패턴 재활용(리메이크) */
+    if (v.cnkw) {
+      card("🇨🇳 중국어 검색어 15개", "샤오홍슈 · 도우인", v.cnkw, "📋 검색어 복사", "copy-cnkw", 17, function (val) { v.cnkw = val; });
+    }
+    if (v.remake) {
+      card("♻️ 전환 패턴 재활용", "다시 올릴 때", v.remake, "📋 재활용 팁 복사", "copy-remake", 7, function (val) { v.remake = val; });
     }
   }
 
@@ -5136,6 +5186,30 @@
       if (it.body) L.push("   " + it.body);
     });
     return L.join("\n");
+  }
+
+  /* 🎯 v2.3.9 — 영상 패널 안내 ‘클립 공식 4가지’. 문구는 BS.VIDEO.clipFormula 한 곳. */
+  function videoFormulaText() {
+    var C = (BS.VIDEO && BS.VIDEO.clipFormula) || {};
+    var L = ["[" + (C.title || "클립 공식 4가지") + " · " + (C.version || "v2.3.9") + " · " + (C.source || "") + "]"];
+    (C.items || []).forEach(function (it) {
+      L.push((it.no || "") + ") " + (it.head || ""));
+      if (it.body) L.push("   " + it.body);
+    });
+    return L.join("\n");
+  }
+
+  function paintVideoFormula() {
+    var C = (BS.VIDEO && BS.VIDEO.clipFormula) || {};
+    var box = $("#videoFormulaList");
+    if (!box) return;
+    box.innerHTML = (C.items || []).map(function (it) {
+      return '<li><b>' + esc(it.head || "") + '</b><span>' + esc(it.body || "") + '</span></li>';
+    }).join("");
+    var ttl = $("#videoFormulaTitle");
+    if (ttl) ttl.textContent = C.title || "🎯 클립 공식 4가지 — 대본 쓰기 전에";
+    var src = $("#videoFormulaSrc");
+    if (src) src.textContent = C.badge || "v2.3.9 · 냐미 칼럼";
   }
 
   function paintVideoTips() {
@@ -7617,16 +7691,20 @@
     var L = [heading || "[릴스·클립 숏폼 대본]"];
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
     if (v.pick) { L.push(""); L.push("[상품 선정]"); L.push(v.pick); }
+    if (v.pain) { L.push(""); L.push("[🎯 불편한 순간 5 → 2]"); L.push(v.pain); }
     if (v.thumbs.length) { L.push(""); L.push("[추천 썸네일 문구]"); v.thumbs.forEach(function (t, i) { L.push((i + 1) + ") " + t); }); }
     L.push(""); L.push("[3초 후크]"); L.push(v.hook || "");
     L.push(""); L.push("[나레이션]"); L.push(v.narration || "");
     if (v.captions.length) { L.push(""); L.push("[자막]"); v.captions.forEach(function (c, i) { L.push((i + 1) + ") " + c); }); }
     if (v.direct) { L.push(""); L.push("[연출표]"); L.push(v.direct); }
+    if (v.cta) { L.push(""); L.push("[📱 플랫폼별 CTA 3종]"); L.push(v.cta); }
     if (v.scenes.length) {
       L.push(""); L.push("[장면별 Flow 프롬프트]");
       v.scenes.forEach(function (s) { L.push(""); L.push(videoScenePrompt(s, f)); });
     }
     if (v.license) { L.push(""); L.push("[라이선스 확인]"); L.push(v.license); }
+    if (v.cnkw) { L.push(""); L.push("[🇨🇳 중국어 검색어 15개]"); L.push(v.cnkw); }
+    if (v.remake) { L.push(""); L.push("[♻️ 전환 패턴 재활용]"); L.push(v.remake); }
     return L.join("\n");
   }
 
@@ -7646,11 +7724,13 @@
         "</div>";
     }
     if (v.pick) html.push(vbox("🛒 상품 선정 (대본보다 먼저)", v.pick));
+    if (v.pain) html.push(vbox("🎯 불편한 순간 5 → 2 (첫 3초 재료)", v.pain, "불편한 순간 복사", v.pain));
     if (v.thumbs && v.thumbs.length) html.push(vbox("🖼️ 추천 썸네일 문구", v.thumbs.map(function (t, i) { return (i + 1) + ") " + t; }).join("\n"), "문구 복사", v.thumbs.join("\n")));
     html.push(vbox("⚡ 3초 후크", v.hook, "후크 복사", v.hook));
     html.push(vbox("🎙️ 나레이션", v.narration, "나레이션 복사", v.narration));
     if (v.captions && v.captions.length) html.push(vbox("💬 자막", v.captions.map(function (c, i) { return (i + 1) + ") " + c; }).join("\n"), "자막 복사", v.captions.join("\n")));
     if (v.direct) html.push(vbox("🎬 연출표", v.direct, "연출표 복사", v.direct));
+    if (v.cta) html.push(vbox("📱 플랫폼별 CTA 3종", v.cta, "CTA 복사", v.cta));
     (v.scenes || []).forEach(function (s) {
       var pr = videoScenePrompt(s, f);
       html.push('<div class="fin-vbox"><div class="fvb-line"><span class="fvb-n">장면 ' + s.no + "</span> " + esc(s.view || "") + "</div>" +
@@ -7660,6 +7740,8 @@
         '<div class="fvb-foot"><button type="button" class="btn small ghost" data-fin-copy="' + esc(pr) + '">📋 장면 프롬프트 복사</button></div></div>');
     });
     if (v.license) html.push(vbox("🔊 라이선스 확인", v.license));
+    if (v.cnkw) html.push(vbox("🇨🇳 중국어 검색어 15개", v.cnkw, "검색어 복사", v.cnkw));
+    if (v.remake) html.push(vbox("♻️ 전환 패턴 재활용", v.remake, "재활용 팁 복사", v.remake));
     box.innerHTML = html.join("");
     bindFinCopyButtons(box);
     finPaintUpload();
@@ -9076,6 +9158,15 @@
       });
     }
     paintVideoTips();
+    /* 🎯 v2.3.9 — 클립·릴스 공식 4가지 안내 카드 */
+    if ($("#btnCopyVideoFormula")) {
+      $("#btnCopyVideoFormula").addEventListener("click", function () {
+        copyPlain(videoFormulaText()).then(function (ok) {
+          toast(ok ? "클립 공식을 복사했습니다 — 대본 쓸 때 옆에 두세요" : "복사 실패");
+        });
+      });
+    }
+    paintVideoFormula();
     if ($("#btnCopyBanner")) {
       $("#btnCopyBanner").addEventListener("click", function () {
         copyPlain(BS.prompts.bannerInstruction()).then(function (ok) {
@@ -9200,6 +9291,18 @@
   BS.parseMultiUse = parseMultiUse;
   BS.parseVideoScript = parseVideoScript;   // v2.2.2 — 연출표·라이선스 칸까지 읽는지 검증용
   BS.renderVideoScript = renderVideoScript; // v2.2.2 — 결과 화면 카드 렌더 검증용
+  /* v2.3.9 검증용 — 클립 공식 4가지 칸을 화면에 직접 그려 본다(API 키 없이).
+     예: BS.videoTest({narration:'…', captions:[], scenes:[], thumbs:[], hook:'', pain:'1) …', cnkw:'1) ★ …', cta:'- 네이버 클립: …', remake:'- 남길 것: …'}) */
+  BS.videoTest = function (v) {
+    state.video = v || null;
+    state.videoFormat = "short";
+    renderVideoScript();
+    var p = $("#videoPanel");
+    if (p) p.hidden = false;
+    var s = $("#stepResult");
+    if (s) s.hidden = false;
+    return true;
+  };
   BS.multiAllText = multiAllText;
   BS.articleDisclosure = articleDisclosure;
   BS.ensureDisclosure = ensureDisclosure;
