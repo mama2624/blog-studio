@@ -2727,9 +2727,124 @@ BS.prompts = (function () {
     return { system: videoSystemPrompt(blog, f, o.persona6), user: parts.join("\n") };
   }
 
+  /* ============================================================
+     🔎 키워드 묶음 → 발행 계획 (v2.4.2 · 2026-11-24 · 지연님 승인)
+     출처: 스레드 `_gcgTKLhR`(알파남 「블로그 왕초보 팁 31탄」) — reports/스레드__gcgTKLhR_확인_2026-11-24.md §5
+     원고를 쓰지 않고 '몇 편으로 나눌지'만 정한다. 그래서 원고 10대 규격·이미지 프롬프트·
+     목차·FAQ·출처를 요구하지 않고, 제목 규칙(금지어·필터·모양)만 가져와 추천 제목 1개를 뽑는다.
+     앱(js/app.js parseClusterPlan)이 아래 [출력 형식]의 '- 항목: 값' 줄을 그대로 읽어 카드로 그린다.
+     ============================================================ */
+  function clusterIntentBlock() {
+    var C = BS.CLUSTER || {};
+    var L = [];
+    L.push("[" + (C.emoji || "🔎") + " 묶는 기준 — 검색 목적 5갈래]");
+    (C.intents || []).forEach(function (it, i) {
+      L.push((i + 1) + ". " + it.emoji + " " + it.label + " — " + it.rule);
+    });
+    return L.join("\n");
+  }
+
+  function clusterRulesBlock() {
+    var C = BS.CLUSTER || {};
+    var L = [];
+    (C.rules || []).forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    return L.join("\n");
+  }
+
+  /* [출력 형식] — 앱 파서와 한 몸이다. 항목 이름을 바꾸면 parseClusterPlan 도 같이 고친다. */
+  function clusterFormatBlock() {
+    var C = BS.CLUSTER || {};
+    return [
+      C.head || "[🔎 키워드 묶음 → 발행 계획]",
+      "- 받은 키워드: (숫자)개 / 묶음: (숫자)편",
+      "",
+      "## 1. (묶음 이름 — 검색어가 아니라 주제 이름, 12자 안팎)",
+      "- 키워드: (이 묶음에 넣은 키워드, 쉼표로 — 받은 키워드만)",
+      "- 대표 검색어: (제목 맨 앞에 살릴 검색어 1개)",
+      "- 궁금한 것: (검색하는 사람이 궁금한 것 1문장)",
+      "- 추천 제목: (제목 1개 · 37~44자 · 끝에 [필터: ①②③ = 3개 통과])",
+      "- 소제목 뼈대: 1) … | 2) … | 3) … | 4) …  (4~5개, 독자 질문형)",
+      "- 예상 분량: (예: 1,900자 · 소제목 4개)",
+      "",
+      "## 2. (두 번째 묶음 — 위와 같은 6줄)",
+      "… (묶음 수만큼 같은 형식으로 반복. 별도 설명이 필요 없는 키워드는 억지로 나누지 않는다)",
+      "",
+      C.orderHead || "## 발행 순서",
+      "1. (몇 번 묶음부터 쓸지 — 대표 검색어가 가장 넓은 묶음부터 / 왜 그 순서인지 한 줄)",
+      "2. …",
+      "",
+      C.nextHead || "## 다음에 쓸 글",
+      "- 오늘: (묶음 번호와 이름)",
+      "- 다음 편: (묶음 번호와 이름)",
+      "- 합친 키워드: (얇아서 다시 합친 것이 있으면 / 없으면 '없음')",
+      "- 뺀 키워드: (받았지만 어느 묶음에도 못 넣은 키워드와 이유 / 없으면 '없음')"
+    ].join("\n");
+  }
+
+  function clusterSystemPrompt(blog) {
+    blog = blog || {};
+    var C = BS.CLUSTER || {};
+    return [
+      readerCenterBlock("article"),
+      "",
+      "너는 네이버 블로그 '" + (blog.name || "") + "'(" + (blog.account || "") + ")의 기획 편집자다. 규칙 판본은 '슈퍼 젬 v3.3 키워드 묶음판(" + (C.version || "v2.4.2") + ")'이다.",
+      "오늘 하는 일은 원고 집필이 아니라 기획이다 — 찾아둔 키워드를 검색 목적별로 묶어 '몇 편으로 나눌지' 발행 계획만 세운다. 본문·목차·FAQ·출처·이미지 프롬프트는 쓰지 않는다.",
+      "블로그 성격: " + (blog.desc || ""),
+      "주로 다루는 주제: " + (blog.categoryHint || ""),
+      "독자: " + (blog.audience || ""),
+      "",
+      clusterIntentBlock(),
+      "",
+      "[묶음 규칙]",
+      clusterRulesBlock(),
+      "",
+      titleRules(),
+      "",
+      "[이번 작업에서 제목 규칙에 덧붙이는 것]",
+      "- 위 제목 규칙 3·8항(후보 7종 → 그중 하나 추천)보다 이 지시가 우선한다: 묶음마다 추천 제목 1개만 낸다. 7종을 늘어놓지 않는다(최종 5~7종은 지연님이 고른 묶음에서 원고를 쓸 때 뽑는다).",
+      "- 제목 끝의 [필터: ①②③ = 3개 통과] 표기는 그대로 붙인다(제목 글자 수에는 넣지 않는다).",
+      "",
+      "[금지]",
+      "- 검색량·경쟁도·월간 검색수·노출 순위를 숫자로 지어내지 마라. 우리가 모르는 값이다.",
+      "- 받은 키워드 밖의 새 키워드를 만들지 마라. 넣을 것이 없으면 '없음'이라고 적는다.",
+      "- " + (C.thinRule || "1,800자를 못 채울 얇은 묶음은 다시 합친다") + ". 500~800자짜리 요약글을 여러 편으로 쪼개지 않는다.",
+      "- 인사말·설명문·코드블록(```)·굵은 제목 장식(**)을 붙이지 마라.",
+      "",
+      "[출력]",
+      "1. 아래 [출력 형식]의 머리말과 '- 항목: 값' 이름을 글자 하나 바꾸지 말고 그대로 쓴다. 순서도 바꾸지 마라.",
+      "2. 표(|) 대신 '- ' 목록으로 쓴다 — 앱이 이 줄들을 읽어 묶음 카드로 그린다.",
+      "3. 다 쓰고 나서 스스로 한 번 검수한다 — ① 받은 키워드가 모두 어느 묶음엔가 들어갔는가 ② 1,800자를 못 채울 얇은 묶음이 없는가 ③ 제목에 키워드를 다 넣지 않았는가 ④ 검색량·경쟁도 숫자를 지어내지 않았는가."
+    ].join("\n");
+  }
+
+  function keywordClusterPrompt(o) {
+    o = o || {};
+    var C = BS.CLUSTER || {};
+    var blog = o.blog || (BS.BLOGS && BS.BLOGS[0]) || {};
+    var keywords = (o.keywords || []).map(function (k) { return String(k || "").trim(); })
+      .filter(function (k) { return !!k; });
+    var L = [];
+    L.push("[받은 키워드 — 이 안의 키워드만 씁니다. 새로 지어내지 마세요]");
+    if (keywords.length) keywords.forEach(function (k, i) { L.push((i + 1) + ". " + k); });
+    else L.push("(없음)");
+    L.push("");
+    L.push("[묶음 수] " + keywords.length + "개 → 검색 목적이 다른 만큼만 나눈다. 묶음은 최소 1편, 보통 2~4편이다. 억지로 편 수를 늘리지 않는다.");
+    if (o.topic) L.push("[큰 주제 — 참고만] " + o.topic);
+    if (o.notes) L.push("[지연님 요청사항] " + o.notes);
+    L.push("");
+    L.push("[우리 원고 기준 — 묶음이 이걸 못 채우면 다시 합친다]");
+    L.push("- 본문(서두·본문·맺음말) 공백 제외 " + (C.minBody || 1800) + "자 이상 · 소제목 " + (C.sectionMin || 4) + "~" + (C.sectionMax || 5) + "개 · 소제목 하나당 " + (C.sectionChars || "250~350") + "자");
+    L.push("- 묶음이 이 기준을 못 채울 만큼 얇으면 다른 묶음과 합치고, 합쳤다는 사실을 [다음에 쓸 글]의 '합친 키워드'에 적는다.");
+    L.push("");
+    L.push("[출력 형식 — 이 머리말 그대로, 이 순서 그대로]");
+    L.push(clusterFormatBlock());
+    return { system: clusterSystemPrompt(blog), user: L.join("\n") };
+  }
+
   BS.prompts = {
     todayKR: todayKR,
     articlePrompt: articlePrompt,
+    keywordClusterPrompt: keywordClusterPrompt,   // 🔎 v2.4.2 — 키워드 묶음 → 발행 계획
     reviewPrompt: reviewPrompt,
     convertPrompt: convertPrompt,
     threadsPrompt: threadsPrompt,

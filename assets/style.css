@@ -1219,3 +1219,46 @@ html.locked body > :not(#lockScreen){display:none !important}
   .fin-upload-lab{min-width:0;flex:1 1 100%}
   #finishUploadWhenInput{flex:1 1 100%}
 }
+
+/* ============================================================
+   🔎 키워드 묶음 → 발행 계획 (v2.4.2 · 2026-11-24)
+   입력 상자(cluster-box) + 계획 카드(plan-card) + 발행 순서·다음 글
+   ============================================================ */
+.cluster-box{margin-top:16px;border:1.5px solid var(--line);border-radius:14px;background:#fcfbf9;padding:14px 15px 13px}
+.cluster-box .cb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cluster-box .cb-head strong{font-size:14.5px;color:var(--ink)}
+.cluster-box .cb-tag{font-size:10.5px;color:var(--ink-3);background:#f2ede6;border-radius:999px;padding:2px 8px}
+.cluster-box .cb-desc{font-size:12.5px;line-height:1.65;color:var(--ink-2);margin:7px 0 11px}
+.cluster-box textarea{width:100%;font:inherit;font-size:13.5px;line-height:1.65;border:1.5px solid var(--line);border-radius:10px;padding:10px 11px;background:#fff;color:inherit;resize:vertical}
+.cluster-box .cb-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.cluster-box .cb-count{font-size:11.5px;color:var(--ink-3)}
+.cluster-box .cb-count.warn{color:#a8402a;font-weight:600}
+.cluster-box .cb-intents{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.cluster-box .cb-intent{font-size:11.5px;color:var(--ink-2);border:1px dashed var(--line);border-radius:999px;padding:4px 10px;background:#fff}
+.cluster-box .cb-note{font-size:11.5px;line-height:1.6;color:var(--ink-3);margin:10px 0 0;padding-top:9px;border-top:1px dashed var(--line)}
+
+.plan-order,.plan-next{margin-top:14px;border:1.5px solid var(--line);border-radius:12px;background:#fcfbf9;padding:12px 14px}
+.plan-order-head,.plan-next-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.plan-order-head strong,.plan-next-head strong{font-size:13.5px}
+.plan-order-note{font-size:10.5px;color:var(--ink-3)}
+.plan-order-list,.plan-next-list{margin:0;padding-left:20px;font-size:13px;line-height:1.75;color:var(--ink-2)}
+.plan-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.plan-card{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:14px 15px 13px}
+.plan-card .pc-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.plan-card .pc-no{font-size:12px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center}
+.plan-card .pc-name{font-size:14.5px;color:var(--ink)}
+.plan-card .pc-len{margin-left:auto;font-size:11px;color:var(--ink-3)}
+.plan-card .pc-kws{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.plan-card .pc-kw{font-size:11.5px;color:var(--ink-2);background:#f2ede6;border-radius:999px;padding:3px 9px}
+.plan-card .pc-kw.main{background:#e9f0f7;color:#284a6b;font-weight:600}
+.plan-card .pc-kw em{font-style:normal;font-size:9.5px;opacity:.75;margin-left:2px}
+.plan-card .pc-q{margin:10px 0 0;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
+.plan-card .pc-lab{display:inline-block;font-size:10.5px;font-weight:700;color:var(--ink-3);letter-spacing:.02em;margin-right:4px}
+.plan-card .pc-title{margin-top:7px;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.plan-card .pc-filter{font-size:10.5px;color:var(--ink-3);margin-left:4px}
+.plan-card .pc-outline{margin:8px 0 0;padding-left:20px;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+.plan-card .pc-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+@media (max-width:620px){
+  .cluster-box .cb-actions .btn{flex:1 1 auto}
+  .plan-card .pc-acts .btn{flex:1 1 100%}
+}

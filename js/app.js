@@ -36,6 +36,7 @@
     guide: null,       // 🧭 길잡이 결과 (v2.0.0) — {main, branches, avoid, dupNote, source}
     multiuse: null,    // ⚡ 멀티유즈 결과 (v2.0.0) — {hook, firstComment, clip, hashtags}
     result: null,     // {md, sections, title, titles, blogId, topic, ts}
+    plan: null,       // 🔎 키워드 묶음 발행 계획 (v2.4.2) — {md, clusters:[…], order, next, blogId, keywords, ts}
     autoSwitch: null, // {from, to} — 무료 한도로 모델이 자동 전환된 사실 (결과 배너)
     imgPrompts: [],   // {role, prompt}
     thumbs: [],       // 대표 썸네일 2종 {role, prompt}
@@ -159,6 +160,9 @@
     } else if (docMode() === "product") {
       el.hidden = false;
       el.innerHTML = "🛒 상품·여행 리뷰는 <b>기준·장단점·추천/패스</b>로 쓰고, <b>제휴 링크 카드</b>와 <b>공정위 대가성 문구</b>가 자동으로 들어갑니다.";
+    } else if (docMode() === "keywords") {
+      el.hidden = false;
+      el.innerHTML = "🔎 키워드 묶음 모드는 <b>원고를 쓰지 않고</b> 검색 목적별 묶음·추천 제목·소제목 뼈대·발행 순서만 냅니다. 마음에 드는 묶음에서 <b>📝 이 묶음으로 원고 쓰기</b>를 누르면 블로그 원고 작성으로 넘어갑니다.";
     } else {
       el.hidden = true;
       el.innerHTML = "";
@@ -320,16 +324,39 @@
     renderModes();
     var isCafe = id === "cafe";
     var isProduct = id === "product";
+    /* 🔎 v2.4.2 — 키워드 묶음 모드는 원고를 쓰지 않는다. 주제칸 대신 키워드 여러 개 칸을 쓴다. */
+    var isCluster = id === "keywords";
+    var articleMode = !isCafe && !isProduct && !isCluster;
     show($("#productBox"), isProduct);
+    show($("#clusterBox"), isCluster);
+    show($("#topicField"), !isCluster);
     show($("#kwPanel"), !isProduct);
     show($("#kwFallbackBox"), !isProduct);
-    show($("#affiliateSwitchRow"), !isCafe && !isProduct);
-    show($("#ctaReviewRow"), !isCafe && !isProduct);
-    show($("#coupangField"), !isCafe && !isProduct);
-    show($("#affiliatePlatformRow"), !isCafe && !isProduct);   // 🛍️ v2.2.1
-    show($("#internalBox"), !isCafe && !isProduct);
-    show($("#thumbBlock"), !isCafe);
+    show($("#affiliateSwitchRow"), articleMode);
+    show($("#ctaReviewRow"), articleMode);
+    show($("#coupangField"), articleMode);
+    show($("#affiliatePlatformRow"), articleMode);   // 🛍️ v2.2.1
+    show($("#internalBox"), articleMode);
+    show($("#thumbBlock"), !isCafe && !isCluster);
+    /* 🔎 v2.4.2 — 계획 모드에서는 원고용 도구(길잡이·참고기사·실시간 검색 토글)를 접는다 */
+    show($("#guideBox"), !isCluster);
+    show($("#refBox"), !isCluster);
+    show($("#webSearchBox"), !isCluster);
+    var kwDesc = $("#kwPanelDesc");
+    if (kwDesc) {
+      kwDesc.textContent = isCluster
+        ? "번호를 누르면 그 키워드가 위 '키워드 여러 개' 칸에 차례로 쌓입니다(3개 이상 고르세요)."
+        : "번호를 누르면 그 키워드가 주제칸에 들어가고, 아래에 추천 제목이 펼쳐집니다. 1번은 블로그를 고를 때 자동으로 채워집니다.";
+    }
+    var twoStage = $("#genTwoStageHint");
+    if (twoStage) {
+      twoStage.textContent = isCluster
+        ? ((CLS.hint || "계획은 원고가 아닙니다") + " — 검색량·경쟁도는 AI가 모르는 값이라 숫자를 지어내지 않습니다.")
+        : "1단계 초안 → 2단계 지침 처음~끝 검수·수정을 거쳐 최종본이 나옵니다. 검수 때문에 시간이 조금 더 걸리고, 무료 한도는 원고 1편에 API 2회를 씁니다. 한도가 끝나면 무료 500편 모델로 자동 전환해 이어서 씁니다.";
+    }
     paintModeNote();
+    var genBtn = $("#btnGenerate");
+    if (genBtn) genBtn.textContent = isCluster ? "🔎 발행 계획 세우기" : "원고 생성하기";
     var t = $("#topic");
     if (t) {
       if (isProduct) t.placeholder = "예: 무선 청소기 / 오사카 난바 호텔";
@@ -593,6 +620,15 @@
   function pickKeyword(it) {
     if (!it) return;
     state.kwSel = it.no;
+    /* 🔎 v2.4.2 — 키워드 묶음 모드에서는 주제칸이 아니라 '키워드 여러 개' 칸에 쌓는다 */
+    if (docMode() === "keywords") {
+      var added = appendClusterKeyword(it.keyword);
+      renderKeywordList();
+      renderTopicHint(null);
+      toast(added ? (BS.CLUSTER.screen.addedTo || "묶음에 넣었습니다") + " (" + clusterKeywords().length + "개)"
+                  : "이미 들어 있는 키워드입니다", 2600);
+      return;
+    }
     var t = $("#topic");
     t.value = it.keyword;
     state.autoTopic = it.keyword;
@@ -3476,6 +3512,392 @@
     });
   }
 
+  /* ============================================================
+     🔎 키워드 묶음 → 발행 계획 (v2.4.2 · 2026-11-24 · 지연님 승인)
+     스레드 `_gcgTKLhR`(알파남 「블로그 왕초보 팁 31탄」)의 발상 — "찾아둔 연관검색어를
+     검색 목적별로 묶어 글 몇 편으로 나눌지 정한다" — 을 우리 규격으로 받아 넣었다.
+     · 입력: [오늘자 80선]에서 고른 키워드 + 직접 붙여넣은 키워드(3개 이상)
+     · 출력: 원고가 아니라 발행 계획(묶음 카드 · 발행 순서 · 다음에 쓸 글)
+     · 이어짐: 카드의 [📝 이 묶음으로 원고 쓰기] → 주제·함께 넣을 키워드·소제목 뼈대를
+       채우고 기존 blogArticlePrompt 원고 작성(2단계 검수)으로 넘긴다.
+     검색량·경쟁도는 AI가 모르는 값이라 프롬프트에서 숫자를 지어내지 못하게 막았다.
+     ============================================================ */
+  var CL = BS.CLUSTER || {};
+  var CLS = CL.screen || {};
+
+  /* 입력 문자열 → 키워드 배열 (줄바꿈·쉼표·가운뎃점 구분, 번호·불릿 제거, 중복 제거) */
+  function splitClusterKeywords(raw) {
+    var out = [], seen = {};
+    String(raw == null ? "" : raw).split(/[\n,、;；·]+/).forEach(function (part) {
+      var w = String(part || "").replace(/\u00a0/g, " ").trim();
+      if (!w) return;
+      w = w.replace(/^\d{1,2}[.)]\s*/, "").replace(/^[-•*▶\s]+/, "").trim();   // "1) 캠핑" · "- 캠핑"
+      w = w.replace(/\s{2,}/g, " ").replace(/^["'“”]+|["'“”]+$/g, "").trim();
+      if (!w) return;
+      var k = w.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      out.push(w);
+    });
+    return out;
+  }
+
+  function clusterKeywords() {
+    var box = $("#clusterKeywords");
+    return splitClusterKeywords(box ? box.value : "");
+  }
+
+  function setClusterKeywords(list) {
+    var box = $("#clusterKeywords");
+    if (box) box.value = (list || []).join(", ");
+    paintClusterCount();
+  }
+
+  function appendClusterKeyword(kw) {
+    var k = String(kw || "").trim();
+    if (!k) return false;
+    var list = clusterKeywords();
+    var lower = k.toLowerCase();
+    for (var i = 0; i < list.length; i++) if (list[i].toLowerCase() === lower) return false;
+    list.push(k);
+    setClusterKeywords(list);
+    return true;
+  }
+
+  function paintClusterCount() {
+    var el = $("#clusterCount");
+    if (!el) return;
+    var n = clusterKeywords().length;
+    var min = CL.minKeywords || 3;
+    el.textContent = n ? ("키워드 " + n + "개" + (n < min ? " · " + min + "개 이상이어야 묶습니다" : "")) : "";
+    el.className = "cb-count" + (n && n < min ? " warn" : "");
+  }
+
+  function renderClusterIntents() {
+    var box = $("#clusterIntents");
+    if (!box) return;
+    box.innerHTML = (CL.intents || []).map(function (it) {
+      return '<span class="cb-intent" title="' + esc(it.rule || "") + '">' + (it.emoji || "") + " " + esc(it.label || "") + "</span>";
+    }).join("");
+  }
+
+  /* 오늘자 이 블로그 20개를 묶음 칸에 넣는다 (이미 있는 것은 건너뛴다) */
+  function fillClusterToday() {
+    var items = currentDayItems();
+    if (!items.length) { toast("오늘자 키워드를 아직 불러오지 못했습니다 — 직접 붙여넣어 주세요"); return; }
+    var list = clusterKeywords(), added = 0;
+    items.forEach(function (it) {
+      var k = String(it.keyword || "").trim();
+      if (!k) return;
+      var lower = k.toLowerCase();
+      for (var i = 0; i < list.length; i++) if (list[i].toLowerCase() === lower) return;
+      list.push(k);
+      added += 1;
+    });
+    setClusterKeywords(list);
+    toast(added ? (CLS.todayDone || "오늘자 키워드를 묶음 칸에 넣었습니다") + " (" + added + "개)" : "이미 오늘자 키워드가 다 들어 있습니다", 3200);
+  }
+
+  /* 주제칸·함께 넣을 키워드에 적어 둔 것을 묶음 칸으로 가져온다 */
+  function fillClusterFromTopic() {
+    var t = $("#topic") ? String($("#topic").value || "").trim() : "";
+    var ex = $("#extraKw") ? String($("#extraKw").value || "").trim() : "";
+    var add = splitClusterKeywords([t, ex].filter(function (x) { return !!x; }).join(", "));
+    var list = clusterKeywords(), n = 0;
+    add.forEach(function (k) {
+      var lower = k.toLowerCase();
+      for (var i = 0; i < list.length; i++) if (list[i].toLowerCase() === lower) return;
+      list.push(k);
+      n += 1;
+    });
+    setClusterKeywords(list);
+    toast(n ? t + " · 키워드 " + n + "개를 묶음 칸에 더했습니다" : "더할 키워드가 없습니다 — 주제칸이나 [함께 넣을 키워드]를 먼저 채워 주세요", 3200);
+  }
+
+  /* 계획 생성 중 경과 초 표시 (원고와 달리 1회 호출이다) */
+  function planWatcher(statusEl) {
+    var mark = Date.now(), id = null;
+    function paint() {
+      var sec = Math.round((Date.now() - mark) / 1000);
+      setStatus(statusEl, '<span class="spin"></span>' + esc(CLS.running || "키워드를 검색 목적별로 묶어 발행 계획을 세우고 있습니다") +
+        "… " + sec + "초" + (sec > 40 ? " (조금 걸립니다)" : ""), "");
+    }
+    return {
+      start: function () { mark = Date.now(); paint(); clearInterval(id); id = setInterval(paint, 1000); },
+      stop: function () { clearInterval(id); id = null; }
+    };
+  }
+
+  /* 묶음 결과 읽기 — 프롬프트의 [출력 형식]과 한 몸이다.
+     '## 1. 이름' 아래 '- 항목: 값' 여섯 줄, '## 발행 순서', '## 다음에 쓸 글'을 읽는다. */
+  function parseClusterPlan(text) {
+    var md = String(text == null ? "" : text).replace(/\r/g, "").trim();
+    if (!md) return null;
+    function clean(v) {
+      return String(v == null ? "" : v).replace(/\*\*/g, "").replace(/`/g, "").trim();
+    }
+    function splitOutline(v) {
+      var parts = String(v || "").split(/\s*[|｜]\s*/);
+      if (parts.filter(function (x) { return !!x.trim(); }).length < 2) {
+        parts = String(v || "").split(/(?=\d{1,2}[).]\s)/);
+      }
+      return parts.map(function (p) {
+        return clean(p).replace(/^\d{1,2}[).]\s*/, "").replace(/^[-•*]\s*/, "").trim();
+      }).filter(function (p) { return !!p; });
+    }
+    var out = { md: md, summary: "", clusters: [], order: [], next: [] };
+    var sect = "top", cur = null;
+    md.split("\n").forEach(function (raw) {
+      var line = String(raw || "").trim();
+      if (!line) return;
+      var h = line.match(/^#{1,6}\s*(.+)$/);
+      if (h) {
+        var title = clean(h[1]).replace(/^\[|\]$/g, "");
+        if (/^발행\s*순서/.test(title)) { sect = "order"; cur = null; return; }
+        if (/^다음에\s*쓸\s*글/.test(title)) { sect = "next"; cur = null; return; }
+        var m = title.match(/^(\d{1,2})\s*[.)]\s*(.*)$/);
+        if (m) {
+          cur = { no: parseInt(m[1], 10), name: clean(m[2]), keywords: [], rep: "", question: "", title: "", filters: "", outline: [], length: "" };
+          out.clusters.push(cur);
+          sect = "cluster";
+          return;
+        }
+        cur = null; sect = "other"; return;
+      }
+      var f = line.replace(/^[-•*]\s*/, "").trim();
+      var kv = f.match(/^(받은 키워드|키워드|대표 검색어|궁금한 것|추천 제목|소제목 뼈대|예상 분량)\s*[:：]\s*(.*)$/);
+      if (sect === "order") {
+        var o = f.replace(/^\d{1,2}[).]\s*/, "").trim();
+        if (o) out.order.push(clean(o));
+        return;
+      }
+      if (sect === "next") {
+        if (f) out.next.push(f);
+        return;
+      }
+      if (sect === "top") {
+        if (kv && kv[1] === "받은 키워드") out.summary = clean(kv[2]);
+        return;
+      }
+      if (sect !== "cluster" || !cur || !kv) return;
+      var key = kv[1], val = clean(kv[2]);
+      if (key === "키워드") cur.keywords = splitClusterKeywords(val);
+      else if (key === "대표 검색어") cur.rep = val;
+      else if (key === "궁금한 것") cur.question = val;
+      else if (key === "추천 제목") {
+        var ft = val.match(/\[필터\s*[:：]?\s*([^\]]*)\]/);
+        if (ft) { cur.filters = ft[1].trim(); val = val.replace(ft[0], "").trim(); }
+        cur.title = val;
+      } else if (key === "소제목 뼈대") cur.outline = splitOutline(val);
+      else if (key === "예상 분량") cur.length = val;
+    });
+    /* 첫 줄의 제목 줄은 '## ' 가 없으므로 [🔎 …] 를 찾아 요약으로만 남긴다 */
+    if (!out.clusters.length) return null;
+    out.clusters.forEach(function (c) {
+      if (!c.rep) c.rep = c.keywords[0] || "";
+      if (!c.name) c.name = c.rep || ("묶음 " + c.no);
+    });
+    return out;
+  }
+
+  function clusterCardHtml(c, i) {
+    var h = [];
+    h.push('<article class="plan-card" data-i="' + i + '">');
+    h.push('<div class="pc-head"><span class="pc-no">' + (c.no || (i + 1)) + '</span>' +
+      '<strong class="pc-name">' + esc(c.name || "묶음") + '</strong>' +
+      (c.length ? '<span class="pc-len">' + esc(c.length) + '</span>' : "") + '</div>');
+    if (c.keywords.length) {
+      h.push('<div class="pc-kws">' + c.keywords.map(function (k) {
+        var main = c.rep && k === c.rep;
+        return '<span class="pc-kw' + (main ? " main" : "") + '">' + esc(k) + (main ? " <em>대표</em>" : "") + "</span>";
+      }).join("") + "</div>");
+    }
+    if (c.question) h.push('<p class="pc-q"><span class="pc-lab">궁금한 것</span> ' + esc(c.question) + "</p>");
+    if (c.title) {
+      h.push('<div class="pc-title"><span class="pc-lab">추천 제목</span> <b>' + esc(c.title) + "</b>" +
+        (c.filters ? ' <span class="pc-filter">[필터: ' + esc(c.filters) + "]</span>" : "") + "</div>");
+    }
+    if (c.outline.length) {
+      h.push('<ol class="pc-outline">' + c.outline.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ol>");
+    }
+    h.push('<div class="pc-acts">' +
+      '<button type="button" class="btn small primary" data-act="use">📝 이 묶음으로 원고 쓰기</button>' +
+      '<button type="button" class="btn small ghost" data-act="fill">주제칸에만 넣기</button>' +
+      '<button type="button" class="btn small ghost" data-act="copy">📋 묶음 복사</button>' +
+      "</div>");
+    h.push("</article>");
+    return h.join("");
+  }
+
+  function clusterText(c) {
+    if (!c) return "";
+    var L = [];
+    L.push("## " + (c.no || 1) + ". " + (c.name || ""));
+    if (c.keywords.length) L.push("- 키워드: " + c.keywords.join(", "));
+    if (c.rep) L.push("- 대표 검색어: " + c.rep);
+    if (c.question) L.push("- 궁금한 것: " + c.question);
+    if (c.title) L.push("- 추천 제목: " + c.title + (c.filters ? " [필터: " + c.filters + "]" : ""));
+    if (c.outline.length) L.push("- 소제목 뼈대: " + c.outline.map(function (o, i) { return (i + 1) + ") " + o; }).join(" | "));
+    if (c.length) L.push("- 예상 분량: " + c.length);
+    return L.join("\n");
+  }
+
+  function renderClusterPlan(scroll) {
+    var p = state.plan;
+    var sec = $("#stepPlan");
+    if (!p || !p.clusters.length) {
+      if (sec) sec.hidden = true;
+      return;
+    }
+    var status = $("#planStatus");
+    var kws = (p.keywords || []).length;
+    setStatus(status, "✅ 묶음 " + p.clusters.length + "편" + (kws ? " · 넣은 키워드 " + kws + "개" : "") +
+      " — 마음에 드는 묶음의 <b>📝 이 묶음으로 원고 쓰기</b>를 누르면 그 묶음으로 원고가 시작됩니다", "ok");
+    var cnt = $("#planCount");
+    if (cnt) cnt.textContent = p.clusters.length + "편";
+    var ord = $("#planOrder");
+    if (ord) {
+      if ((p.order || []).length) {
+        ord.hidden = false;
+        ord.innerHTML = '<div class="plan-order-head"><strong>🗓 발행 순서</strong>' +
+          '<span class="plan-order-note">대표 검색어가 가장 넓은 묶음부터 — 검색량은 도구로 확인한 값만</span></div>' +
+          '<ol class="plan-order-list">' + p.order.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ol>";
+      } else {
+        ord.hidden = true;
+        ord.innerHTML = "";
+      }
+    }
+    var body = $("#planBody");
+    if (body) body.innerHTML = p.clusters.map(clusterCardHtml).join("");
+    var nx = $("#planNext");
+    if (nx) {
+      if ((p.next || []).length) {
+        nx.hidden = false;
+        nx.innerHTML = '<div class="plan-next-head"><strong>👉 다음에 쓸 글</strong></div>' +
+          '<ul class="plan-next-list">' + p.next.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ul>";
+      } else {
+        nx.hidden = true;
+        nx.innerHTML = "";
+      }
+    }
+    var raw = $("#planRaw");
+    if (raw) raw.value = p.md || "";
+    if (sec) {
+      sec.hidden = false;
+      if (scroll) {
+        try { sec.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { window.scrollTo(0, sec.offsetTop); }
+      }
+    }
+  }
+
+  /* 계획 세우기 — API 1회(2단계 검수 없음). 원고를 쓰지 않는다. */
+  function generateClusterPlan() {
+    if (state.busy) return;
+    if (!apiKeyOrAsk()) return;
+    var keywords = clusterKeywords();
+    if (!keywords.length) {
+      toast(CLS.empty || "키워드가 비어 있습니다");
+      if ($("#clusterKeywords")) $("#clusterKeywords").focus();
+      return;
+    }
+    if (keywords.length < (CL.minKeywords || 3)) {
+      toast(CLS.tooFew || "키워드를 3개 이상 넣어 주세요");
+      if ($("#clusterKeywords")) $("#clusterKeywords").focus();
+      return;
+    }
+    var req;
+    try {
+      req = BS.prompts.keywordClusterPrompt({
+        blog: state.blog,
+        keywords: keywords,
+        topic: $("#topic") ? String($("#topic").value || "").trim() : "",
+        notes: $("#notes") ? String($("#notes").value || "").trim() : ""
+      });
+    } catch (e) {
+      toast("계획 요청을 만들지 못했습니다 — " + (e && e.message ? e.message : e));
+      return;
+    }
+    var model = localStorage.getItem(K_TEXT) || BS.DEFAULT_TEXT_MODEL;
+    state.busy = true;
+    state.genTs = Date.now();
+    state.autoSwitch = null;
+    paintAutoNote("");
+    var btn = $("#btnGenerate");
+    if (btn) btn.disabled = true;
+    var status = $("#genStatus");
+    var watch = planWatcher(status);
+    watch.start();
+    var ctl = new AbortController();
+    var box = stageBox(ctl, noteSwitch);
+    attachBusyNote(box);
+    box.arm();
+    var planStatus = $("#planStatus");
+    if (planStatus) setStatus(planStatus, "", "");
+
+    geminiTextAuto(model, req.system, req.user, box, { webSearch: false })
+      .then(function (text) {
+        box.disarm();
+        var plan = parseClusterPlan(text);
+        if (!plan) throw new Error(CLS.parseFail || "발행 계획 형식을 읽지 못했습니다 — 다시 묶어 주세요");
+        plan.blogId = state.blog.id;
+        plan.keywords = keywords;
+        plan.ts = state.genTs;
+        state.plan = plan;
+        if (state.autoSwitch) paintAutoNote("ℹ️ " + esc(autoSwitchText(state.autoSwitch)), "warn");
+        renderClusterPlan(true);
+      })
+      .catch(function (err) {
+        box.disarm();
+        var msg = err && err.name === "AbortError"
+          ? "시간이 너무 오래 걸려 멈췄습니다(3분). 키워드 수를 줄여 다시 시도해 주세요."
+          : (err && err.message ? err.message : "알 수 없는 오류");
+        setStatus(status, "⚠️ " + esc(msg), "err");
+      })
+      .then(function () {
+        watch.stop();
+        state.busy = false;
+        if (btn) btn.disabled = false;
+      });
+  }
+
+  /* 고른 묶음 → 원고. 주제·함께 넣을 키워드·소제목 뼈대를 채우고 (run=true면) 바로 원고 작성 */
+  function useCluster(i, run) {
+    var p = state.plan;
+    if (!p || !p.clusters || !p.clusters[i]) return;
+    var c = p.clusters[i];
+    if (!p.clusters[i].name) return;
+    /* 묶음은 네이버 블로그 원고용이다 — 구글 블로거 카드로 남아 있으면 첫 블로그로 돌린다 */
+    if (state.blog && state.blog.kind === "blogger") {
+      state.blog = BS.BLOGS[0];
+      renderBlogs(); renderChips(); renderInternal();
+      if (typeof setBlogHint === "function") setBlogHint(state.blog);
+    }
+    setDocMode("blog");
+    var t = $("#topic");
+    if (t) { t.value = c.rep || c.keywords[0] || c.name; state.autoTopic = ""; }
+    var ex = $("#extraKw");
+    if (ex) {
+      var rest = (c.keywords || []).filter(function (k) { return k !== (c.rep || ""); });
+      ex.value = rest.join(", ");
+    }
+    var nt = $("#notes");
+    if (nt) {
+      var line = "이 묶음: " + c.name +
+        (c.outline.length ? " / 소제목 뼈대: " + c.outline.map(function (o, n) { return (n + 1) + ") " + o; }).join(" | ") : "") +
+        (c.title ? " / 추천 제목: " + c.title : "");
+      var cur = String(nt.value || "").trim();
+      nt.value = cur ? cur + "\n" + line : line;
+    }
+    renderTopicHint(null);
+    renderKeywordList(false);
+    renderInternal();
+    if (dupTimer) clearTimeout(dupTimer);
+    renderDupWarn();
+    paintRefHint();
+    toast(run ? (CLS.runDone || "묶음의 주제·키워드로 원고 작성을 시작합니다") : (CLS.useDone || "묶음을 원고 칸에 넣었습니다"), 3200);
+    if (run) generate();
+  }
+
   /* ---------------- 5. 생성 실행 (v1.6.0 1단계 초안 → 2단계 전수 검수 · v1.6.1 무료 한도 자동 모델 전환) ---------------- */
   var TS = BS.TWO_STAGE || {};
 
@@ -3848,6 +4270,8 @@
     if (state.busy) return;
     var key = apiKeyOrAsk();
     if (!key) return;
+    /* 🔎 v2.4.2 — 키워드 묶음 모드는 원고가 아니라 발행 계획을 세운다 */
+    if (docMode() === "keywords") { generateClusterPlan(); return; }
     var opts = currentOptions();
     var topic = opts.topic;
     if (!topic) { toast("주제나 메인 키워드를 먼저 넣어 주세요"); $("#topic").focus(); return; }
@@ -8982,6 +9406,13 @@
     }
 
     renderModes();
+    /* 🔎 v2.4.2 — 키워드 묶음 화면 문구·검색 목적 칩 (문구는 js/config.js BS.CLUSTER.screen) */
+    if ($("#clusterDesc") && CLS.desc) $("#clusterDesc").textContent = CLS.desc;
+    if ($("#clusterNote") && CLS.note) $("#clusterNote").textContent = CLS.note;
+    if ($("#clusterTag") && CL.name) $("#clusterTag").textContent = CL.name;
+    if ($("#planHint") && CLS.planHint) $("#planHint").textContent = CLS.planHint;
+    renderClusterIntents();
+    paintClusterCount();
     renderProductPlatforms();
     paintProductNote();
     renderAffiliatePlatforms();   // 🛍️ v2.2.1 — 블로그 모드 제휴 플랫폼(쿠팡·쇼핑커넥트·브커)
@@ -9113,6 +9544,44 @@
     if ($("#btnPersonaReset")) $("#btnPersonaReset").addEventListener("click", function () { resetPersona(); });
 
     $("#btnGenerate").addEventListener("click", generate);
+
+    /* 🔎 키워드 묶음 → 발행 계획 (v2.4.2) */
+    if ($("#clusterKeywords")) {
+      $("#clusterKeywords").addEventListener("input", paintClusterCount);
+      $("#clusterKeywords").addEventListener("change", paintClusterCount);
+    }
+    if ($("#btnClusterToday")) $("#btnClusterToday").addEventListener("click", fillClusterToday);
+    if ($("#btnClusterFromTopic")) $("#btnClusterFromTopic").addEventListener("click", fillClusterFromTopic);
+    if ($("#btnClusterClear")) {
+      $("#btnClusterClear").addEventListener("click", function () {
+        setClusterKeywords([]);
+        toast(CLS.clearDone || "키워드 칸을 비웠습니다");
+      });
+    }
+    if ($("#planBody")) {
+      $("#planBody").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+        if (!b) return;
+        var card = b.closest ? b.closest(".plan-card") : null;
+        var i = card ? parseInt(card.getAttribute("data-i"), 10) : -1;
+        if (i < 0) return;
+        var act = b.getAttribute("data-act");
+        if (act === "copy") {
+          var c = state.plan && state.plan.clusters ? state.plan.clusters[i] : null;
+          if (!c) return;
+          copyPlain(clusterText(c)).then(function (ok) { toast(ok ? "묶음을 복사했습니다" : "복사 실패"); });
+          return;
+        }
+        useCluster(i, act === "use");
+      });
+    }
+    if ($("#btnPlanCopy")) {
+      $("#btnPlanCopy").addEventListener("click", function () {
+        if (!state.plan) { toast("복사할 발행 계획이 없습니다"); return; }
+        copyPlain(state.plan.md).then(function (ok) { toast(ok ? (CLS.copyDone || "발행 계획을 복사했습니다") : "복사 실패"); });
+      });
+    }
+    if ($("#btnPlanRetry")) $("#btnPlanRetry").addEventListener("click", function () { generateClusterPlan(); });
     if ($("#btnToBlog")) $("#btnToBlog").addEventListener("click", function () { convertArticleMode("blog"); });
     if ($("#btnToCafe")) $("#btnToCafe").addEventListener("click", function () { convertArticleMode("cafe"); });
 
@@ -9448,6 +9917,15 @@
   BS.cutThreadBody = cutThreadBody;
   BS.commentCharLimit = commentCharLimit;
   BS.state = state;
+  /* v2.4.2 검증용 — 🔎 키워드 묶음 입력 분해·계획 파서·카드 HTML·이어짐을 콘솔에서 직접 확인
+     예: BS.splitClusterKeywords("1) 캠핑 의자 추천, 경량\n세탁 방법")  ·  BS.parseClusterPlan(원문) */
+  BS.splitClusterKeywords = splitClusterKeywords;
+  BS.parseClusterPlan = parseClusterPlan;
+  BS.clusterCardHtml = clusterCardHtml;
+  BS.clusterKeywords = clusterKeywords;
+  BS.renderClusterPlan = renderClusterPlan;
+  BS.useCluster = useCluster;
+  BS.clusterText = clusterText;
   BS.stageLabels = function () { return { draft: stageLabel("draft"), audit: stageLabel("audit") }; };
   /* v2.1.1 검증용 — 잠금 해시·해제 여부·해제/재잠금을 콘솔에서 직접 확인
      예: BS.lock.hash("입력값")  ·  BS.lock.open()  ·  BS.lock.verify(x) */
