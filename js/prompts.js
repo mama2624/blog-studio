@@ -2541,8 +2541,9 @@ BS.prompts = (function () {
      원고를 ① 3초 후크 ② 구어체 나레이션 ③ 자막 핵심 줄 ④ 장면별 Flow 프롬프트로
      뽑는다. MP4 렌더링은 하지 않고(무료 API 불가), 뽑은 대본·장면 프롬프트를
      Flow·Vids에 붙이거나 피클에게 넘겨 0원으로 영상까지 간다. */
-  function videoSystemPrompt(blog, fmt, p6) {
+  function videoSystemPrompt(blog, fmt, p6, opt) {
     var V = BS.VIDEO || {};
+    var o = opt || {};
     var f = fmt || (V.formats || [{}])[0];
     var lines = [];
     lines.push(readerCenterBlock("clip"));
@@ -2596,6 +2597,21 @@ BS.prompts = (function () {
       lines.push("→ 이 네 가지는 아래 출력 항목(‘불편한 순간 5 → 2’·‘중국어 검색어 15개’·‘플랫폼별 CTA 3종’·‘전환 패턴 재활용’)에 그대로 남긴다.");
       lines.push("");
     }
+    /* 🛒 v2.4.4 — 상품형 대본 4칸(상품명·실구매가·배송·추천 대상). 숏폼 상품형일 때만 넣는다. */
+    var piVideo = V.productInfo || {};
+    if (o.productInfo && f.id !== "long" && (piVideo.rules || []).length) {
+      lines.push("[🛒 상품형 대본 4칸 — 대본보다 먼저 (v2.4.4)]");
+      lines.push("아래 4칸을 먼저 채우고, 그 값만 나레이션·자막·CTA에서 말한다. 칸 이름과 순서를 바꾸지 않는다.");
+      (piVideo.rules || []).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+      lines.push("");
+    }
+    /* 🧾 v2.4.4 — 유튜브 대가성 표시는 설명란만으로 부족(제목 또는 영상 안에도) */
+    var ydVideo = V.youtubeDisclosure || {};
+    if ((ydVideo.rules || []).length) {
+      lines.push("[🧾 유튜브 대가성 표시 — 설명란만으로 부족 (v2.4.4)]");
+      (ydVideo.rules || []).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+      lines.push("");
+    }
     var sdVideo = shortsDirectBlock(f);
     if (sdVideo) { lines.push(sdVideo); lines.push(""); }
     var licVideo = licenseBlock();
@@ -2620,9 +2636,12 @@ BS.prompts = (function () {
   function videoScriptPrompt(o) {
     var blog = o.blog || {};
     var V = BS.VIDEO || {};
+    var PI = V.productInfo || {};
+    var YD = V.youtubeDisclosure || {};
     var f = o.fmt || BS.videoFormat(o.formatId);
     var parts = [];
     var isShort = f.id !== "long";    // 🎯 v2.3.9 — 클립·릴스 공식 4가지는 숏폼에만
+    var isProductScript = !!o.productInfo;   // 🛒 v2.4.4 — 상품형(4칸) 대본
     parts.push("[원고 — 이 내용만 가지고 쓴다]");
     parts.push(String(o.source || "").trim());
     parts.push("[원고 끝]");
@@ -2643,6 +2662,13 @@ BS.prompts = (function () {
     if (BS.PICK_FIRST && BS.PICK_FIRST.memo) {
       parts.push(BS.PICK_FIRST.memo.head);
       (BS.PICK_FIRST.memo.lines || []).forEach(function (x) { parts.push(x); });
+      parts.push("");
+    }
+    /* 🛒 v2.4.4 — 상품형 숏폼은 상품 정보 4칸이 대본보다 먼저 */
+    if (isProductScript && isShort) {
+      parts.push(PI.head || "## 상품 정보 4칸");
+      parts.push("(대본·나레이션보다 먼저 네 줄을 채운다. 확인된 값만 쓰고, 모르면 '확인 필요'로 적는다 — 그 값은 나레이션에 읽지 않는다)");
+      (PI.fields || []).forEach(function (fd) { parts.push("- " + fd.label + ": (" + fd.hint + ")"); });
       parts.push("");
     }
     /* 🎯 v2.3.9 ① 불편한 순간 5 → 2 · ② 중국어 검색어 15개 — 숏폼만 */
@@ -2722,6 +2748,17 @@ BS.prompts = (function () {
       parts.push("- 유튜브 쇼츠: (고정댓글 확인·구독 유도 — 예: ‘자세한 기준은 고정댓글에 정리해 뒀어요’)");
       parts.push("");
     }
+    /* 🧾 v2.4.4 — 유튜브는 설명란만으로 부족: 제목 또는 영상 안에도 대가성 문구 */
+    if (isProductScript) {
+      parts.push(YD.head || "## 대가성 표시 (유튜브는 제목 또는 영상 안에도)");
+      parts.push("(제휴 링크가 들어간 영상이다. 네 줄을 모두 채우고, 영상 안 자막은 '8자 이내' 원칙보다 이 문구가 우선한다 — 필요한 글자만 짧게)");
+      parts.push("- 유튜브 제목: (제목 앞에 붙일 표시 — 예: '[광고] ' 또는 '[쿠팡파트너스] ')");
+      parts.push("- 영상 안(첫 3초 자막 또는 마지막 카드): (확정 문구 — '이 영상은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.' / 카드에 넣을 때는 두 줄로 나눠도 된다)");
+      parts.push("- 설명란·고정 댓글 첫 부분: (같은 문구 + 제휴 링크. 링크는 설명란과 첫 댓글 중 한 곳에 두고, 문구는 둘 다 맨 앞에)");
+      parts.push("- 네이버 클립·인스타 릴스: (캡션 첫 줄에 같은 취지 한 줄)");
+      parts.push("- 확인 필요: (영상용 문구의 정확한 표기 — 쿠팡파트너스 채널별 가이드에서 확인, 확인 못 했으면 그대로 적는다)");
+      parts.push("");
+    }
     parts.push("## 장면 1");
     parts.push("- 구간: 0~6초");
     parts.push("- 화면: (무엇이 보이는지 한 줄)");
@@ -2760,13 +2797,15 @@ BS.prompts = (function () {
       parts.push("3. 나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
       parts.push("4. 연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
       if (isShort) parts.push("5. 불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄을 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
+      if (isProductScript) parts.push("6. 상품 정보 4칸과 대가성 표시는 칸 이름·순서를 바꾸지 않고 반드시 채운다. 확인하지 못한 가격·배송은 '확인 필요'로 적고 나레이션에 읽지 않는다.");
     } else {
       parts.push("위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
       parts.push("연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
       if (isShort) parts.push("불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄을 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
+      if (isProductScript) parts.push("상품 정보 4칸과 대가성 표시는 칸 이름·순서를 바꾸지 않고 반드시 채운다. 확인하지 못한 가격·배송은 '확인 필요'로 적고 나레이션에 읽지 않는다.");
     }
-    return { system: videoSystemPrompt(blog, f, o.persona6), user: parts.join("\n") };
+    return { system: videoSystemPrompt(blog, f, o.persona6, o), user: parts.join("\n") };
   }
 
   /* ============================================================

@@ -4555,6 +4555,8 @@
       liveSearchMode: state.webSearchMode || ""
     };
     state.reviewed = reviewed;
+    /* 🛒 v2.4.4 — 상품·여행 리뷰 원고면 영상 대본의 '상품형 4칸'을 기본으로 켜 둔다 */
+    if ($("#optVideoProduct")) $("#optVideoProduct").checked = !!state.result.reviewMode;
 
     if (outcome.notice) {
       setStatus(status, "⚠️ " + esc(outcome.notice) +
@@ -5151,7 +5153,7 @@
   /* 영상 응답 → { thumbs, hook, narration, captions, scenes, memo } */
   function parseVideoScript(text) {
     var heads = splitHeads(text);
-    var out = { thumbs: [], hook: "", pick: "", narration: "", captions: [], scenes: [], memo: "",
+    var out = { thumbs: [], hook: "", pick: "", product: "", disc: "", narration: "", captions: [], scenes: [], memo: "",
       direct: "", license: "", pain: "", cnkw: "", cta: "", remake: "", raw: String(text || "") };
     var seq = 0;
     heads.forEach(function (h) {
@@ -5161,6 +5163,10 @@
         out.thumbs = pickNumbered(body, 2);
       } else if (/^상품\s*선정/.test(name)) {
         out.pick = body;
+      } else if (/^상품\s*정보/.test(name)) {
+        out.product = cleanKeepNo(body);          // 🛒 v2.4.4 — 상품형 4칸
+      } else if (/^대가성\s*표시/.test(name)) {
+        out.disc = cleanKeepNo(body);             // 🧾 v2.4.4 — 유튜브 제목·영상 안 표시
       } else if (/^3\s*초\s*후크|^후크/.test(name)) {
         var first = pickNumbered(body, 1);
         out.hook = first.length ? first[0] : "";
@@ -5430,6 +5436,8 @@
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
     L.push("톤: " + ((BS.VIDEO && BS.VIDEO.persona) || "") + " · AI티 없는 구어체 나레이션");
     if (v.pick) { L.push(""); L.push("[상품 선정 — 대본보다 먼저]"); L.push(v.pick); }
+    /* 🛒 v2.4.4 — 상품 정보 4칸 */
+    if (v.product) { L.push(""); L.push("[🛒 상품 정보 4칸 — 대본보다 먼저]"); L.push(v.product); }
     /* 🎯 v2.3.9 — 불편한 순간 5 → 2 (첫 3초 재료) */
     if (v.pain) { L.push(""); L.push("[🎯 불편한 순간 5 → 2 — 첫 3초 재료]"); L.push(v.pain); }
     L.push("");
@@ -5448,6 +5456,8 @@
     if (v.direct) { L.push(""); L.push("[연출표]"); L.push(v.direct); }
     /* 🎯 v2.3.9 — 플랫폼별 CTA 3종(클립·릴스·쇼츠) */
     if (v.cta) { L.push(""); L.push("[📱 플랫폼별 CTA 3종]"); L.push(v.cta); }
+    /* 🧾 v2.4.4 — 유튜브 대가성 표시 위치 */
+    if (v.disc) { L.push(""); L.push("[🧾 대가성 표시 — 유튜브는 제목 또는 영상 안에도]"); L.push(v.disc); }
     L.push("");
     L.push("[장면별 Flow 프롬프트]");
     v.scenes.forEach(function (s) {
@@ -5471,6 +5481,15 @@
       L.push("");
       L.push("[🎯 클립 공식 — 이대로]");
       cfReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+    }
+    /* 🛒🧾 v2.4.4 — 상품형 4칸·유튜브 대가성 표시 */
+    var piReq = ((BS.VIDEO || {}).productInfo || {}).requestRules || [];
+    var ydReq = ((BS.VIDEO || {}).youtubeDisclosure || {}).requestRules || [];
+    if ((v.product && piReq.length) || (v.disc && ydReq.length)) {
+      L.push("");
+      L.push("[🛒🧾 상품형 4칸·대가성 표시 — 이대로]");
+      if (v.product) piReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
+      if (v.disc) ydReq.forEach(function (r, i) { L.push((i + 1) + ". " + r); });
     }
     L.push("");
     L.push("[요청]");
@@ -5658,6 +5677,11 @@
       card("🛒 상품 선정 — 대본보다 먼저", "역순 전략", v.pick, "📋 상품 선정 복사", "copy-pick", 6, function (val) { v.pick = val; });
     }
 
+    /* 🛒 v2.4.4 — 상품 정보 4칸(상품명·실구매가·배송·추천 대상) */
+    if (v.product) {
+      card("🛒 상품 정보 4칸", "상품형", v.product, "📋 4칸 복사", "copy-product", 7, function (val) { v.product = val; });
+    }
+
     /* 🎯 v2.3.9 — 불편한 순간 5 → 2 (제품 소개 대신 첫 3초 재료) */
     if (v.pain) {
       card("🎯 불편한 순간 5 → 2", "첫 3초 재료", v.pain, "📋 불편한 순간 복사", "copy-pain", 9, function (val) { v.pain = val; });
@@ -5695,6 +5719,11 @@
     /* 🎯 v2.3.9 — 플랫폼별 CTA 3종(같은 영상, 마지막 한 줄만 다르게) */
     if (v.cta) {
       card("📱 플랫폼별 CTA 3종", "클립 · 릴스 · 쇼츠", v.cta, "📋 CTA 복사", "copy-cta", 5, function (val) { v.cta = val; });
+    }
+
+    /* 🧾 v2.4.4 — 유튜브는 설명란만으로 부족: 제목 또는 영상 안에도 대가성 문구 */
+    if (v.disc) {
+      card("🧾 대가성 표시", "유튜브는 제목·영상 안에도", v.disc, "📋 표시 복사", "copy-disc", 7, function (val) { v.disc = val; });
     }
 
     v.scenes.forEach(function (s, i) {
@@ -5809,7 +5838,9 @@
         source: stripMetaSections(r.md),
         topic: r.topic,
         title: stripEmphasisMarks(r.title || ""),
-        notes: $("#notes") ? $("#notes").value.trim() : ""
+        notes: $("#notes") ? $("#notes").value.trim() : "",
+        productInfo: !!($("#optVideoProduct") && $("#optVideoProduct").checked),   // 🛒 v2.4.4 — 상품형 4칸
+        reviewMode: !!r.reviewMode
       });
     } catch (e) {
       toast("영상 대본 요청을 만들지 못했습니다 — " + (e && e.message ? e.message : e));
@@ -10121,6 +10152,14 @@
         });
       });
     }
+    /* 🛒 v2.4.4 — 상품형 4칸 켜기/끄기 (다음 대본부터 반영) */
+    if ($("#optVideoProduct")) {
+      $("#optVideoProduct").addEventListener("change", function () {
+        toast(this.checked
+          ? "상품형 4칸을 켰습니다 — ⚡ 숏폼 탭을 다시 누르면 대본 맨 위에 들어갑니다"
+          : "상품형 4칸을 껐습니다 — ⚡ 숏폼 탭을 다시 누르면 반영됩니다");
+      });
+    }
     /* 📮 피클 업로드 요청 (v1.9.1) — 계정·시간 칩은 다시 그려지므로 컨테이너에서 받는다 */
     if ($("#threadAccountChips")) {
       $("#threadAccountChips").addEventListener("click", function (e) {
@@ -10405,6 +10444,7 @@
   BS.bloggerMetaText = bloggerMetaText;
   BS.parseMultiUse = parseMultiUse;
   BS.parseVideoScript = parseVideoScript;   // v2.2.2 — 연출표·라이선스 칸까지 읽는지 검증용
+  BS.buildVideoRequestText = buildVideoRequestText;   // v2.4.4 — 상품형 4칸·대가성 표시가 피클 요청에 실리는지 검증용
   BS.renderVideoScript = renderVideoScript; // v2.2.2 — 결과 화면 카드 렌더 검증용
   /* v2.3.9 검증용 — 클립 공식 4가지 칸을 화면에 직접 그려 본다(API 키 없이).
      예: BS.videoTest({narration:'…', captions:[], scenes:[], thumbs:[], hook:'', pain:'1) …', cnkw:'1) ★ …', cta:'- 네이버 클립: …', remake:'- 남길 것: …'}) */
