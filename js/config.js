@@ -662,6 +662,7 @@ BS.PLAN = {
   maxPosts: 10,           // 후속 글 후보
   todayMax: 3,            // 오늘 쓸 편수 상한
   minBody: 1800,          // 공백 제외 — 못 채울 후보는 버리거나 합친다
+  dupJaccard: 0.6,        // 기존 글 제목과 낱말이 이 비율 이상 겹치면 '단어만 바꿀 후보'로 본다
   sectionMin: 4,
   sectionMax: 5,
   /* 7각도 중 1개를 새 글 제목 앞에 붙인다 — BS.TITLE_TREND.types 와 같은 번호 */

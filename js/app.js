@@ -4088,8 +4088,9 @@
     return out;
   }
 
-  /* 지도 규칙 1 — 단어만 바꾼 후보는 버린다(BS.DUP 점수로 재검사).
-     그 묶음의 기존 글 제목에 이미 있는 낱말은 빼고 본다 — 후속 글이 원래 같은 낱말을 쓰기 때문이다. */
+  /* 지도 규칙 1 — 단어만 바꾼 후보는 버린다.
+     기존 글과 **제목이 사실상 같거나 낱말의 60% 이상이 겹치면**(BS.PLAN.dupJaccard) '이미 쓴 글을 다시 쓰는 후보'로 본다.
+     후속 글은 원래 같은 낱말을 쓰기 때문에, 점수 몇 개 맞았다고 버리지 않는다 — 많이 겹칠 때만 버린다. */
   function mapDropDuplicates(plan) {
     var cfg = BS.DUP || {};
     var items = (BS.INTERNAL_DATA && BS.INTERNAL_DATA.items) || [];
@@ -4101,23 +4102,29 @@
       return !blogId || it.blog === blogId;
     });
     function flat(s) { return String(s || "").toLowerCase().replace(/[^0-9a-z가-힣]+/g, ""); }
+    function tokenSet(s) {
+      var o = {}, a = ilTokens(s);
+      a.forEach(function (t) { o[t] = 1; });
+      return o;
+    }
+    var jacMin = PL.dupJaccard || 0.6;
     var kept = [], dropped = 0;
     plan.groups.forEach(function (g) {
       var title = String(g.title || "").trim();
       if (!title || !pool.length) { kept.push(g); return; }
-      var own = {};
-      (g.old || []).forEach(function (o) { ilTokens(o).forEach(function (t) { own[t] = 1; }); });
-      var toks = ilTokens(title).filter(function (t) { return !own[t]; });
+      var cand = tokenSet(title), candN = Object.keys(cand).length;
       var ft = flat(title);
       var hit = false;
       pool.forEach(function (it) {
         if (hit) return;
         if (flat(it.title) === ft) { hit = true; return; }          // 제목이 사실상 같다
-        if (!toks.length) return;
-        var m = ilMatch(it, toks, "");
-        var ok = (m.hits >= (cfg.minHits || 2) && m.score >= (cfg.minScore || 12)) ||
-                 (m.hits === 1 && m.longest >= 4 && m.score >= (cfg.singleMinScore || 16));
-        if (ok) hit = true;
+        var ex = tokenSet(it.title), exN = Object.keys(ex).length;
+        if (!candN || !exN) return;
+        var inter = 0;
+        for (var k in cand) { if (ex[k]) inter += 1; }
+        if (inter < 3) return;
+        var jac = inter / (candN + exN - inter);
+        if (jac >= jacMin) hit = true;
       });
       if (hit) { dropped += 1; return; }
       kept.push(g);
