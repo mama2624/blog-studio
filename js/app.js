@@ -2274,6 +2274,29 @@
     return s.replace(/\]\(__BSURL(\d+)__\)/g, function (m, i) { return "](" + urls[+i] + ")"; });
   }
 
+  /* ---------- 💡 3초 핵심정리 불릿 정리 (v2.4.0 · 2026-11-24) ----------
+     지연님: "3초 핵심정리 아래부분 기준시점과 공식출처도 앞에 표시되는 목록열기 똑같이 표시되게".
+     모델이 [기준 시점]과 [공식 출처]를 불릿 없이 한 줄에 이어 붙여 내도
+     (`[기준 시점: …][공식 출처: …]`), 위 요약 항목과 똑같이 목록 한 줄씩으로 나눠
+     화면과 스마트에디터 복사본 모두 불릿 목록으로 보이게 한다. */
+  function keyBoxLines(body) {
+    var out = [];
+    (body || []).forEach(function (raw) {
+      var t = String(raw == null ? "" : raw).trim();
+      if (!t) return;
+      var i = t.search(/\[\s*공식\s*출처/);
+      if (i > 0 && /\[\s*기준\s*시점/.test(t.slice(0, i))) {
+        var head = t.slice(0, i).trim();
+        var tail = t.slice(i).trim();
+        if (head) out.push(head);
+        if (tail) out.push(tail);
+        return;
+      }
+      out.push(t);
+    });
+    return out;
+  }
+
   function mdInline(s, inline) {
     var h = esc(s);
     // 순서: 굵게 → 형광펜 → 링크 → 코드. 형광펜 안의 **굵게**(예: ==**추가 비용**은…)도 깨지지 않는다.
@@ -2685,8 +2708,8 @@
 
       if (/^3초 핵심정리/.test(label)) {
         html.push('<div class="key-box"><strong>3초 핵심정리</strong><ul>' +
-          sec.body.filter(function (l) { return l.trim(); })
-            .map(function (l) { return "<li>" + mdInline(l.trim().replace(/^[-*•]\s+/, "")) + "</li>"; }).join("") +
+          keyBoxLines(sec.body)
+            .map(function (l) { return "<li>" + mdInline(l.replace(/^[-*•]\s+/, "")) + "</li>"; }).join("") +
           "</ul></div>");
         return;
       }
@@ -2945,8 +2968,8 @@
         add('<div style="padding:16px 18px 8px;background:#fbf6f0;border:1px solid #f0e4d6;border-radius:10px">' +
           "<p" + boxTitleS + ">3초 핵심정리</p>" + RICH_GAP +
           '<ul style="margin:0;padding-left:20px">' +
-          sec.body.filter(function (l) { return l.trim(); }).map(function (l) {
-            return "<li" + boxLiS + ">" + mdInline(l.trim().replace(/^[-*•]\s+/, ""), true) + "</li>";
+          keyBoxLines(sec.body).map(function (l) {
+            return "<li" + boxLiS + ">" + mdInline(l.replace(/^[-*•]\s+/, ""), true) + "</li>";
           }).join("") + "</ul></div>", 2);
         return;
       }
