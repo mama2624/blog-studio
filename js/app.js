@@ -4143,7 +4143,8 @@
     var h = [];
     h.push('<tr data-i="' + i + '">');
     h.push('<td class="mt-name"><span class="mt-no">' + (g.no || (i + 1)) + '</span><strong>' + esc(g.name || "") + '</strong>' +
-      (g.rep ? '<span class="mt-kw">대표: ' + esc(g.rep) + '</span>' : "") + '</td>');
+      (g.rep ? '<span class="mt-kw">대표: ' + esc(g.rep) + '</span>' : "") +
+      '<button type="button" class="btn small primary mt-use" data-act="use">📝 원고 쓰기</button></td>');
     h.push('<td class="mt-old-cell">' + mapCellOld(g) + '</td>');
     h.push('<td class="mt-q">' + (g.question ? esc(g.question) : '<span class="mt-dim">—</span>') + '</td>');
     h.push('<td class="mt-new"><b>' + esc(g.title || "") + '</b>' +
