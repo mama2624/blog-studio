@@ -37,6 +37,7 @@
     multiuse: null,    // ⚡ 멀티유즈 결과 (v2.0.0) — {hook, firstComment, clip, hashtags}
     result: null,     // {md, sections, title, titles, blogId, topic, ts}
     plan: null,       // 🔎 키워드 묶음 발행 계획 (v2.4.2) — {md, clusters:[…], order, next, blogId, keywords, ts}
+    map: null,        // 🗺 내 글 지도 → 후속 글 (v2.4.3) — {md, groups:[…], today:[…], backlog:[…], blogId, titles, ts, dropped}
     autoSwitch: null, // {from, to} — 무료 한도로 모델이 자동 전환된 사실 (결과 배너)
     imgPrompts: [],   // {role, prompt}
     thumbs: [],       // 대표 썸네일 2종 {role, prompt}
@@ -163,6 +164,9 @@
     } else if (docMode() === "keywords") {
       el.hidden = false;
       el.innerHTML = "🔎 키워드 묶음 모드는 <b>원고를 쓰지 않고</b> 검색 목적별 묶음·추천 제목·소제목 뼈대·발행 순서만 냅니다. 마음에 드는 묶음에서 <b>📝 이 묶음으로 원고 쓰기</b>를 누르면 블로그 원고 작성으로 넘어갑니다.";
+    } else if (docMode() === "plan") {
+      el.hidden = false;
+      el.innerHTML = "🗺 내 글 지도 모드는 <b>원고를 쓰지 않고</b> 내가 쓴 글 제목을 주제 묶음으로 묶어 <b>후속 글 10개</b>(기존 글 → 다음 질문 → 새 글 제목 → 1,800자 가능 → 확인 필요)를 표로 냅니다. 고른 줄에서 <b>📝 원고 쓰기</b>를 누르면 블로그 원고 작성으로 넘어갑니다.";
     } else {
       el.hidden = true;
       el.innerHTML = "";
@@ -326,22 +330,27 @@
     var isProduct = id === "product";
     /* 🔎 v2.4.2 — 키워드 묶음 모드는 원고를 쓰지 않는다. 주제칸 대신 키워드 여러 개 칸을 쓴다. */
     var isCluster = id === "keywords";
-    var articleMode = !isCafe && !isProduct && !isCluster;
+    /* 🗺 v2.4.3 — 내 글 지도 모드도 원고를 쓰지 않는다. 주제칸 대신 내 글 제목 칸을 쓴다. */
+    var isMap = id === "plan";
+    var planMode = isCluster || isMap;
+    var articleMode = !isCafe && !isProduct && !planMode;
     show($("#productBox"), isProduct);
     show($("#clusterBox"), isCluster);
-    show($("#topicField"), !isCluster);
-    show($("#kwPanel"), !isProduct);
-    show($("#kwFallbackBox"), !isProduct);
+    show($("#mapBox"), isMap);
+    show($("#topicField"), !planMode);
+    show($("#kwPanel"), !isProduct && !isMap);
+    show($("#kwFallbackBox"), !isProduct && !isMap);
     show($("#affiliateSwitchRow"), articleMode);
     show($("#ctaReviewRow"), articleMode);
     show($("#coupangField"), articleMode);
     show($("#affiliatePlatformRow"), articleMode);   // 🛍️ v2.2.1
     show($("#internalBox"), articleMode);
-    show($("#thumbBlock"), !isCafe && !isCluster);
+    show($("#thumbBlock"), !isCafe && !planMode);
     /* 🔎 v2.4.2 — 계획 모드에서는 원고용 도구(길잡이·참고기사·실시간 검색 토글)를 접는다 */
-    show($("#guideBox"), !isCluster);
-    show($("#refBox"), !isCluster);
-    show($("#webSearchBox"), !isCluster);
+    show($("#guideBox"), !planMode);
+    show($("#refBox"), !planMode);
+    show($("#webSearchBox"), !planMode);
+    if (isMap) { renderMapSources(); paintMapCount(); }
     var kwDesc = $("#kwPanelDesc");
     if (kwDesc) {
       kwDesc.textContent = isCluster
@@ -352,11 +361,13 @@
     if (twoStage) {
       twoStage.textContent = isCluster
         ? ((CLS.hint || "계획은 원고가 아닙니다") + " — 검색량·경쟁도는 AI가 모르는 값이라 숫자를 지어내지 않습니다.")
-        : "1단계 초안 → 2단계 지침 처음~끝 검수·수정을 거쳐 최종본이 나옵니다. 검수 때문에 시간이 조금 더 걸리고, 무료 한도는 원고 1편에 API 2회를 씁니다. 한도가 끝나면 무료 500편 모델로 자동 전환해 이어서 씁니다.";
+        : isMap
+          ? ((PLS.hint || "지도는 원고가 아닙니다") + " — 검색량·경쟁도는 AI가 모르는 값이라 숫자를 지어내지 않습니다.")
+          : "1단계 초안 → 2단계 지침 처음~끝 검수·수정을 거쳐 최종본이 나옵니다. 검수 때문에 시간이 조금 더 걸리고, 무료 한도는 원고 1편에 API 2회를 씁니다. 한도가 끝나면 무료 500편 모델로 자동 전환해 이어서 씁니다.";
     }
     paintModeNote();
     var genBtn = $("#btnGenerate");
-    if (genBtn) genBtn.textContent = isCluster ? "🔎 발행 계획 세우기" : "원고 생성하기";
+    if (genBtn) genBtn.textContent = isCluster ? "🔎 발행 계획 세우기" : (isMap ? "🗺 내 글 지도 만들기" : "원고 생성하기");
     var t = $("#topic");
     if (t) {
       if (isProduct) t.placeholder = "예: 무선 청소기 / 오사카 난바 호텔";
@@ -374,6 +385,10 @@
     if (!changing) return;
     if (isCafe) toast("카페 글 모드 — 목차·FAQ·출처·배너·제휴 없이, 글 끝에 부드러운 면책 한 줄이 들어갑니다");
     else if (isProduct) toast("상품·여행 리뷰 모드 — 상품 링크와 특징을 적으면 그 기준으로 씁니다");
+    else if (isMap) {
+      if (!mapTitles().length) fillMapTitles();
+      toast("내 글 지도 모드 — 이미 쓴 글 제목을 주제별로 묶어 후속 글 10개를 냅니다(원고는 쓰지 않습니다)", 3800);
+    }
   }
 
   /* ============================================================
@@ -496,6 +511,8 @@
         applyDefaultKeyword(true);
         rtFollowBlog(b.id);   // 오른쪽 실시간 패널도 그 불로그 맞춤으로
         renderDupWarn();      // 블로그를 바꾸면 '이 블로그' 표시가 달라진다 (v2.0.0)
+        /* 🗺 v2.4.3 — 내 글 지도 모드에서는 그 블로그 기존 글 제목을 다시 불러온다 */
+        if (docMode() === "plan") { renderMapSources(); fillMapTitles(); }
         if (hadOwn) toast(b.name + " 1번 키워드로 주제칸을 채웠습니다");
       });
       g.appendChild(btn);
@@ -3898,6 +3915,439 @@
     if (run) generate();
   }
 
+  /* ============================================================
+     🗺 내 글 지도 → 후속 글 10개 (v2.4.3 · 2026-11-24 · 지연님 승인)
+     스레드 `DgGyVswI0dR`(알파남 「블로그 왕초보 팁 33탄」)의 발상 — "내가 쓴 글 제목 30개를
+     붙여넣으면 빠진 주제·후속 글 10개가 나온다" — 을 우리 데이터로 받았다.
+     · 입력: 블로그를 고르면 그 블로그 기존 글 제목(내부링크 수집분, 최대 40개)을 자동으로 불러온다.
+       직접 붙여넣기도 된다.
+     · 출력: 원고가 아니라 지도 표 — 주제 묶음 | 기존 글 | 다음 질문 | 새 글 제목 | 1,800자 | 확인 필요.
+     · 이어짐: 고른 줄의 [📝 원고 쓰기] → 주제·요청사항을 채우고 기존 원고 작성(2단계 검수)으로.
+     · 규칙 1(단어만 바꾼 후보 제외)은 lib 없이 BS.DUP 점수로 앱이 직접 재검사한다.
+     ============================================================ */
+  var PL = BS.PLAN || {};
+  var PLS = PL.screen || {};
+
+  /* 제목 입력 문자열 → 배열 (줄바꿈 구분, 번호·불릿 제거, 중복 제거, 상한 maxTitles) */
+  function splitTitleList(raw) {
+    var out = [], seen = {};
+    String(raw == null ? "" : raw).split(/\n+/).forEach(function (part) {
+      var w = String(part || "").replace(/\u00a0/g, " ").trim();
+      if (!w) return;
+      w = w.replace(/^\d{1,2}[.)]\s*/, "").replace(/^[-•*▶\s]+/, "").trim();
+      w = w.replace(/\s{2,}/g, " ").replace(/^["'“”]+|["'“”]+$/g, "").trim();
+      if (!w) return;
+      var k = w.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      out.push(w);
+    });
+    return out.slice(0, PL.maxTitles || 40);
+  }
+
+  function mapTitles() {
+    var box = $("#mapTitles");
+    return splitTitleList(box ? box.value : "");
+  }
+
+  function setMapTitles(list) {
+    var box = $("#mapTitles");
+    if (box) box.value = (list || []).join("\n");
+    paintMapCount();
+  }
+
+  function paintMapCount() {
+    var el = $("#mapCount");
+    if (!el) return;
+    var n = mapTitles().length, min = PL.minTitles || 8, max = PL.maxTitles || 40;
+    el.textContent = n ? ("제목 " + n + "개" + (n < min ? " · " + min + "개 이상이어야 지도가 됩니다" : (n >= max ? " · 상한 " + max + "개" : ""))) : "";
+    el.className = "cb-count" + (n && n < min ? " warn" : "");
+  }
+
+  /* 블로그 선택 칸 — 내부링크 수집분(BS.INTERNAL_DATA)의 블로그 목록 */
+  function renderMapSources() {
+    var sel = $("#mapSource");
+    if (!sel) return;
+    var D = BS.INTERNAL_DATA || {};
+    var blogs = (D.blogs || []).filter(function (b) { return b && b.id && (b.count > 0); });
+    var cur = sel.value || "";
+    var opts = ['<option value="">현재 블로그 (' + esc((state.blog && state.blog.name) || "") + ")</option>"];
+    if (blogs.length > 1) opts.push('<option value="__all">전체 블로그 (최대 ' + (PL.maxTitles || 40) + '개)</option>');
+    blogs.forEach(function (b) {
+      if (state.blog && b.id === state.blog.id) return;
+      opts.push('<option value="' + esc(b.id) + '">' + esc((b.emoji ? b.emoji + " " : "") + b.name) + " (" + (b.count || 0) + "편)</option>");
+    });
+    sel.innerHTML = opts.join("");
+    if (cur) sel.value = cur;
+  }
+
+  /* 고른 범위의 기존 글 제목 — 최근 글부터, 긍정사랑은 제외(BS.DUP.exclude) */
+  function mapPickTitles(scope) {
+    var D = BS.INTERNAL_DATA || {};
+    var items = (D.items || []).slice();
+    var id = scope || (state.blog && state.blog.id) || "";
+    var all = id === "__all";
+    items = items.filter(function (it) {
+      if (!it || !it.title) return false;
+      if (((BS.DUP || {}).exclude || []).indexOf(it.blog) >= 0) return false;
+      return all || it.blog === id;
+    });
+    items.sort(function (a, b) {
+      var x = String(a.date || ""), y = String(b.date || "");
+      return x === y ? 0 : (x > y ? -1 : 1);
+    });
+    return items.slice(0, PL.maxTitles || 40).map(function (it) { return String(it.title).replace(/\s+/g, " ").trim(); });
+  }
+
+  function fillMapTitles() {
+    var scope = $("#mapSource") ? ($("#mapSource").value || "") : "";
+    var list = mapPickTitles(scope);
+    if (!list.length) {
+      toast(PLS.noSource || "기존 글 제목을 아직 불러오지 못했습니다 — 직접 붙여넣어 주세요", 3600);
+      return;
+    }
+    setMapTitles(list);
+    toast((PLS.loaded || "기존 글 제목을 불러왔습니다") + " (" + list.length + "개)", 2600);
+  }
+
+  /* 지도 생성 중 경과 초 */
+  function mapWatcher(statusEl) {
+    var mark = Date.now(), id = null;
+    function paint() {
+      var sec = Math.round((Date.now() - mark) / 1000);
+      setStatus(statusEl, '<span class="spin"></span>' + esc(PLS.running || "내 글 제목을 주제별로 묶어 후속 글을 고르고 있습니다") +
+        "… " + sec + "초" + (sec > 40 ? " (조금 걸립니다)" : ""), "");
+    }
+    return {
+      start: function () { mark = Date.now(); paint(); clearInterval(id); id = setInterval(paint, 1000); },
+      stop: function () { clearInterval(id); id = null; }
+    };
+  }
+
+  /* 지도 결과 읽기 — 프롬프트의 [출력 형식]과 한 몸이다.
+     '## 1. 묶음 이름' 아래 '- 항목: 값' 일곱 줄, '## 오늘 쓸 글', '## 보관 목록'을 읽는다. */
+  function parseMapPlan(text) {
+    var md = String(text == null ? "" : text).replace(/\r/g, "").trim();
+    if (!md) return null;
+    function clean(v) { return String(v == null ? "" : v).replace(/\*\*/g, "").replace(/`/g, "").trim(); }
+    function splitOld(v) {
+      var parts = String(v || "").split(/\s*[|｜]\s*/);
+      if (parts.length < 2) parts = String(v || "").split(/\s*;\s*/);
+      return parts.map(function (p) {
+        return clean(p).replace(/^\d{1,2}[).]\s*/, "").replace(/^[-•*]\s*/, "").trim();
+      }).filter(function (p) { return !!p; });
+    }
+    var out = { md: md, summary: "", groups: [], today: [], backlog: [], dropped: 0 };
+    var sect = "top", cur = null;
+    md.split("\n").forEach(function (raw) {
+      var line = String(raw || "").trim();
+      if (!line) return;
+      var h = line.match(/^#{1,6}\s*(.+)$/);
+      if (h) {
+        var title = clean(h[1]).replace(/^\[|\]$/g, "");
+        if (/^오늘\s*쓸\s*글/.test(title)) { sect = "today"; cur = null; return; }
+        if (/^보관/.test(title)) { sect = "backlog"; cur = null; return; }
+        var m = title.match(/^(\d{1,2})\s*[.)]\s*(.*)$/);
+        if (m) {
+          cur = { no: parseInt(m[1], 10), name: clean(m[2]), old: [], question: "", title: "", angle: "", rep: "", filters: "", len: "", need: "" };
+          out.groups.push(cur);
+          sect = "group";
+          return;
+        }
+        cur = null; sect = "other"; return;
+      }
+      var f = line.replace(/^[-•*]\s*/, "").trim();
+      var kv = f.match(/^(받은 제목|기존 글|다음 질문|새 글 제목|각도|대표 검색어|1,800자|확인 필요)\s*[:：]\s*(.*)$/);
+      if (sect === "today") {
+        var t = clean(f.replace(/^\d{1,2}[).]\s*/, "").trim());
+        if (t) out.today.push(t);
+        return;
+      }
+      if (sect === "backlog") { if (f) out.backlog.push(clean(f)); return; }
+      if (sect === "top") { if (kv && kv[1] === "받은 제목") out.summary = clean(kv[2]); return; }
+      if (sect !== "group" || !cur || !kv) return;
+      var key = kv[1], val = clean(kv[2]);
+      if (key === "기존 글") cur.old = splitOld(val);
+      else if (key === "다음 질문") cur.question = val;
+      else if (key === "새 글 제목") {
+        var ft = val.match(/\[필터\s*[:：]?\s*([^\]]*)\]/);
+        if (ft) { cur.filters = ft[1].trim(); val = val.replace(ft[0], "").trim(); }
+        cur.title = val;
+      }
+      else if (key === "각도") cur.angle = val;
+      else if (key === "대표 검색어") cur.rep = val;
+      else if (key === "1,800자") cur.len = val;
+      else if (key === "확인 필요") cur.need = val;
+    });
+    out.groups = out.groups.filter(function (g) { return !!(g.title || g.question); });
+    if (!out.groups.length) return null;
+    out.groups.forEach(function (g, i) {
+      if (!g.no) g.no = i + 1;
+      if (!g.name) g.name = g.rep || (g.old[0] || ("묶음 " + g.no));
+    });
+    return out;
+  }
+
+  /* 지도 규칙 1 — 단어만 바꾼 후보는 버린다(BS.DUP 점수로 재검사).
+     그 묶음의 기존 글 제목에 이미 있는 낱말은 빼고 본다 — 후속 글이 원래 같은 낱말을 쓰기 때문이다. */
+  function mapDropDuplicates(plan) {
+    var cfg = BS.DUP || {};
+    var items = (BS.INTERNAL_DATA && BS.INTERNAL_DATA.items) || [];
+    if (!plan || !plan.groups || !plan.groups.length || !items.length) return 0;
+    var blogId = (state.blog && state.blog.id) || "";
+    var pool = items.filter(function (it) {
+      if (!it || !it.title || !it.url) return false;
+      if ((cfg.exclude || []).indexOf(it.blog) >= 0) return false;
+      return !blogId || it.blog === blogId;
+    });
+    function flat(s) { return String(s || "").toLowerCase().replace(/[^0-9a-z가-힣]+/g, ""); }
+    var kept = [], dropped = 0;
+    plan.groups.forEach(function (g) {
+      var title = String(g.title || "").trim();
+      if (!title || !pool.length) { kept.push(g); return; }
+      var own = {};
+      (g.old || []).forEach(function (o) { ilTokens(o).forEach(function (t) { own[t] = 1; }); });
+      var toks = ilTokens(title).filter(function (t) { return !own[t]; });
+      var ft = flat(title);
+      var hit = false;
+      pool.forEach(function (it) {
+        if (hit) return;
+        if (flat(it.title) === ft) { hit = true; return; }          // 제목이 사실상 같다
+        if (!toks.length) return;
+        var m = ilMatch(it, toks, "");
+        var ok = (m.hits >= (cfg.minHits || 2) && m.score >= (cfg.minScore || 12)) ||
+                 (m.hits === 1 && m.longest >= 4 && m.score >= (cfg.singleMinScore || 16));
+        if (ok) hit = true;
+      });
+      if (hit) { dropped += 1; return; }
+      kept.push(g);
+    });
+    plan.groups = kept;
+    plan.dropped = dropped;
+    return dropped;
+  }
+
+  function mapCellOld(g) {
+    if (!(g.old || []).length) return '<span class="mt-dim">—</span>';
+    return '<ul class="mt-old">' + g.old.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ul>";
+  }
+
+  function mapRowHtml(g, i) {
+    var h = [];
+    h.push('<tr data-i="' + i + '">');
+    h.push('<td class="mt-name"><span class="mt-no">' + (g.no || (i + 1)) + '</span><strong>' + esc(g.name || "") + '</strong>' +
+      (g.rep ? '<span class="mt-kw">대표: ' + esc(g.rep) + '</span>' : "") + '</td>');
+    h.push('<td class="mt-old-cell">' + mapCellOld(g) + '</td>');
+    h.push('<td class="mt-q">' + (g.question ? esc(g.question) : '<span class="mt-dim">—</span>') + '</td>');
+    h.push('<td class="mt-new"><b>' + esc(g.title || "") + '</b>' +
+      (g.filters ? '<span class="mt-filter">[필터: ' + esc(g.filters) + ']</span>' : "") +
+      (g.angle ? '<span class="mt-angle">' + esc(g.angle) + '</span>' : "") + '</td>');
+    h.push('<td class="mt-len">' + esc(g.len || "확인 필요") + '</td>');
+    h.push('<td class="mt-need">' + esc(g.need || "—") + '</td>');
+    h.push('<td class="mt-act">' +
+      '<button type="button" class="btn small primary" data-act="use">📝 원고 쓰기</button>' +
+      '<button type="button" class="btn small ghost" data-act="fill">주제칸에만</button>' +
+      '<button type="button" class="btn small ghost" data-act="copy">📋</button>' +
+      '</td>');
+    h.push('</tr>');
+    return h.join("");
+  }
+
+  function mapText(g) {
+    if (!g) return "";
+    var L = [];
+    L.push("## " + (g.no || 1) + ". " + (g.name || ""));
+    if ((g.old || []).length) L.push("- 기존 글: " + g.old.join(" | "));
+    if (g.question) L.push("- 다음 질문: " + g.question);
+    if (g.title) L.push("- 새 글 제목: " + g.title + (g.filters ? " [필터: " + g.filters + "]" : ""));
+    if (g.angle) L.push("- 각도: " + g.angle);
+    if (g.rep) L.push("- 대표 검색어: " + g.rep);
+    if (g.len) L.push("- 1,800자: " + g.len);
+    if (g.need) L.push("- 확인 필요: " + g.need);
+    return L.join("\n");
+  }
+
+  function renderMapPlan(scroll) {
+    var p = state.map;
+    var sec = $("#stepMap");
+    if (!p || !p.groups.length) {
+      if (sec) sec.hidden = true;
+      return;
+    }
+    var status = $("#mapStatus");
+    setStatus(status, "✅ 후속 글 " + p.groups.length + "개" +
+      ((p.titles || []).length ? " · 넣은 제목 " + p.titles.length + "개" : "") +
+      (p.dropped ? " · 단어만 바꾼 후보 " + p.dropped + "개는 뺐습니다" : "") +
+      " — 마음에 드는 줄의 <b>📝 원고 쓰기</b>를 누르면 그 주제로 원고가 시작됩니다", "ok");
+    var cnt = $("#mapTotal");
+    if (cnt) cnt.textContent = p.groups.length + "개";
+    var cols = PL.cols || ["주제 묶음", "기존 글", "다음 질문", "새 글 제목", "1,800자", "확인 필요"];
+    var body = $("#mapBody");
+    if (body) {
+      body.innerHTML = '<div class="map-scroll"><table class="map-table">' +
+        '<thead><tr>' + cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") +
+        '<th class="mt-act-col">쓰기</th></tr></thead><tbody>' +
+        p.groups.map(mapRowHtml).join("") + "</tbody></table></div>";
+    }
+    var td = $("#mapToday");
+    if (td) {
+      if ((p.today || []).length) {
+        td.hidden = false;
+        td.innerHTML = '<div class="plan-order-head"><strong>👉 오늘 쓸 글</strong>' +
+          '<span class="plan-order-note">' + (PL.todayMax || 3) + '편까지만 — 10편을 한꺼번에 쓰면 얇은 글·유사문서 위험이 큽니다</span></div>' +
+          '<ol class="plan-order-list">' + p.today.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ol>";
+      } else { td.hidden = true; td.innerHTML = ""; }
+    }
+    var bd = $("#mapBacklog");
+    if (bd) {
+      if ((p.backlog || []).length) {
+        bd.hidden = false;
+        bd.innerHTML = '<div class="plan-next-head"><strong>📥 보관 목록</strong>' +
+          '<span class="plan-order-note">오늘 쓰지 않는 후보 — [백로그에 저장]을 누르면 이 브라우저에 쌓입니다</span></div>' +
+          '<ul class="plan-next-list">' + p.backlog.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ul>";
+      } else { bd.hidden = true; bd.innerHTML = ""; }
+    }
+    var raw = $("#mapRaw");
+    if (raw) raw.value = p.md || "";
+    if (sec) {
+      sec.hidden = false;
+      if (scroll) {
+        try { sec.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { window.scrollTo(0, sec.offsetTop); }
+      }
+    }
+  }
+
+  /* 지도 만들기 — API 1회(2단계 검수 없음). 원고를 쓰지 않는다. */
+  function generateMapPlan() {
+    if (state.busy) return;
+    if (!apiKeyOrAsk()) return;
+    var titles = mapTitles();
+    if (!titles.length) {
+      toast(PLS.empty || "제목이 비어 있습니다");
+      if ($("#mapTitles")) $("#mapTitles").focus();
+      return;
+    }
+    if (titles.length < (PL.minTitles || 8)) {
+      toast(PLS.tooFew || "제목을 8개 이상 넣어 주세요");
+      if ($("#mapTitles")) $("#mapTitles").focus();
+      return;
+    }
+    var req;
+    try {
+      req = BS.prompts.articleMapPrompt({
+        blog: state.blog,
+        titles: titles,
+        notes: $("#notes") ? String($("#notes").value || "").trim() : ""
+      });
+    } catch (e) {
+      toast("지도 요청을 만들지 못했습니다 — " + (e && e.message ? e.message : e));
+      return;
+    }
+    var model = localStorage.getItem(K_TEXT) || BS.DEFAULT_TEXT_MODEL;
+    state.busy = true;
+    state.genTs = Date.now();
+    state.autoSwitch = null;
+    paintAutoNote("");
+    var btn = $("#btnGenerate");
+    if (btn) btn.disabled = true;
+    var status = $("#genStatus");
+    var watch = mapWatcher(status);
+    watch.start();
+    var ctl = new AbortController();
+    var box = stageBox(ctl, noteSwitch);
+    attachBusyNote(box);
+    box.arm();
+    var mapStatus = $("#mapStatus");
+    if (mapStatus) setStatus(mapStatus, "", "");
+
+    geminiTextAuto(model, req.system, req.user, box, { webSearch: false })
+      .then(function (text) {
+        box.disarm();
+        var plan = parseMapPlan(text);
+        if (!plan) throw new Error(PLS.parseFail || "내 글 지도 형식을 읽지 못했습니다 — 다시 만들어 주세요");
+        plan.blogId = state.blog.id;
+        plan.titles = titles;
+        plan.ts = state.genTs;
+        mapDropDuplicates(plan);
+        if (!plan.groups.length) throw new Error("기존 글과 겹치지 않는 후속 글이 없습니다 — 블로그를 바꾸거나 제목을 더 넣어 다시 시도해 주세요");
+        state.map = plan;
+        if (state.autoSwitch) paintAutoNote("ℹ️ " + esc(autoSwitchText(state.autoSwitch)), "warn");
+        renderMapPlan(true);
+      })
+      .catch(function (err) {
+        box.disarm();
+        var msg = err && err.name === "AbortError"
+          ? "시간이 너무 오래 걸려 멈췄습니다(3분). 제목 수를 줄여 다시 시도해 주세요."
+          : (err && err.message ? err.message : "알 수 없는 오류");
+        setStatus(status, "⚠️ " + esc(msg), "err");
+      })
+      .then(function () {
+        watch.stop();
+        state.busy = false;
+        if (btn) btn.disabled = false;
+      });
+  }
+
+  /* 고른 줄 → 원고. 주제·요청사항을 채우고 (run=true면) 바로 원고 작성 */
+  function useMap(i, run) {
+    var p = state.map;
+    if (!p || !p.groups || !p.groups[i]) return;
+    var g = p.groups[i];
+    if (state.blog && state.blog.kind === "blogger") {
+      state.blog = BS.BLOGS[0];
+      renderBlogs(); renderChips(); renderInternal();
+      if (typeof setBlogHint === "function") setBlogHint(state.blog);
+    }
+    setDocMode("blog");
+    var t = $("#topic");
+    if (t) { t.value = g.rep || g.name || ""; state.autoTopic = ""; }
+    var ex = $("#extraKw");
+    if (ex) ex.value = "";
+    var nt = $("#notes");
+    if (nt) {
+      var parts = ["이 주제: " + (g.name || "")];
+      if (g.question) parts.push("다음 질문: " + g.question);
+      if (g.title) parts.push("새 글 제목 후보: " + g.title + (g.filters ? " [필터: " + g.filters + "]" : ""));
+      if ((g.old || []).length) parts.push("이어 쓸 기존 글: " + g.old.join(" | "));
+      if (g.need && g.need !== "없음") parts.push("확인 필요: " + g.need);
+      var line = parts.join(" / ");
+      var cur = String(nt.value || "").trim();
+      nt.value = cur ? cur + "\n" + line : line;
+    }
+    renderTopicHint(null);
+    renderKeywordList(false);
+    renderInternal();
+    if (dupTimer) clearTimeout(dupTimer);
+    renderDupWarn();
+    paintRefHint();
+    toast(run ? (PLS.runDone || "이 주제로 원고 작성을 시작합니다") : (PLS.useDone || "주제를 원고 칸에 넣었습니다"), 3200);
+    if (run) generate();
+  }
+
+  /* 백로그 저장 — 서버가 없는 앱이라 이 브라우저(localStorage)에 쌓는다 */
+  function saveMapBacklog() {
+    var p = state.map;
+    if (!p) { toast(PLS.backlogEmpty || "보관할 후보가 없습니다"); return; }
+    var rows = [];
+    (p.groups || []).forEach(function (g) {
+      rows.push({ blog: p.blogId || "", title: g.title || "", name: g.name || "", question: g.question || "", ts: Date.now() });
+    });
+    if (!rows.length) { toast(PLS.backlogEmpty || "보관할 후보가 없습니다"); return; }
+    var key = PL.backlogKey || "bs.planBacklog";
+    var cur = [];
+    try { cur = JSON.parse(localStorage.getItem(key) || "[]") || []; } catch (e) { cur = []; }
+    var seen = {};
+    cur.forEach(function (r) { if (r && r.title) seen[String(r.title)] = 1; });
+    var added = 0;
+    rows.forEach(function (r) {
+      if (!r.title || seen[r.title]) return;
+      seen[r.title] = 1; cur.push(r); added += 1;
+    });
+    try { localStorage.setItem(key, JSON.stringify(cur.slice(-200))); } catch (e) {}
+    toast(added ? (PLS.backlogDone || "후보를 백로그에 저장했습니다") + " (" + added + "개 · 모두 " + cur.length + "개)"
+      : "이미 백로그에 있는 후보입니다", 3200);
+  }
+
   /* ---------------- 5. 생성 실행 (v1.6.0 1단계 초안 → 2단계 전수 검수 · v1.6.1 무료 한도 자동 모델 전환) ---------------- */
   var TS = BS.TWO_STAGE || {};
 
@@ -4272,6 +4722,8 @@
     if (!key) return;
     /* 🔎 v2.4.2 — 키워드 묶음 모드는 원고가 아니라 발행 계획을 세운다 */
     if (docMode() === "keywords") { generateClusterPlan(); return; }
+    /* 🗺 v2.4.3 — 내 글 지도 모드도 원고가 아니라 후속 글 지도를 만든다 */
+    if (docMode() === "plan") { generateMapPlan(); return; }
     var opts = currentOptions();
     var topic = opts.topic;
     if (!topic) { toast("주제나 메인 키워드를 먼저 넣어 주세요"); $("#topic").focus(); return; }
@@ -6419,6 +6871,7 @@
       BS.INTERNAL_DATA = j.internalLinks;
       renderInternal($("#internalSearch") ? $("#internalSearch").value : "");
       renderDupWarn();   // 목록이 도착하면 중복 경고도 바로 계산 (v2.0.0)
+      renderMapSources();   // 🗺 v2.4.3 — 내 글 지도 블로그 선택 칸
     }
     var upd = $("#rtUpdated");
     if (upd) upd.textContent = (j && (j.generated_label || j.generated_at)) || "갱신 시각 없음";
@@ -6647,6 +7100,7 @@
         BS.INTERNAL_DATA = j;
         renderInternal($("#internalSearch") ? $("#internalSearch").value : "");
         renderDupWarn();
+        renderMapSources();   // 🗺 v2.4.3 — 내 글 지도 블로그 선택 칸도 같이 채운다
       })
       .catch(function () { /* 목록이 없으면 자동 내부링크 블록만 빠지고 나머지는 그대로 */ });
   }
@@ -9413,6 +9867,13 @@
     if ($("#planHint") && CLS.planHint) $("#planHint").textContent = CLS.planHint;
     renderClusterIntents();
     paintClusterCount();
+    /* 🗺 v2.4.3 — 내 글 지도 화면 문구 (문구는 js/config.js BS.PLAN.screen) */
+    if ($("#mapDesc") && PLS.desc) $("#mapDesc").textContent = PLS.desc;
+    if ($("#mapNote") && PLS.note) $("#mapNote").textContent = PLS.note;
+    if ($("#mapTag") && PL.name) $("#mapTag").textContent = PL.name;
+    if ($("#mapHint") && PLS.planHint) $("#mapHint").textContent = PLS.planHint;
+    renderMapSources();
+    paintMapCount();
     renderProductPlatforms();
     paintProductNote();
     renderAffiliatePlatforms();   // 🛍️ v2.2.1 — 블로그 모드 제휴 플랫폼(쿠팡·쇼핑커넥트·브커)
@@ -9582,6 +10043,45 @@
       });
     }
     if ($("#btnPlanRetry")) $("#btnPlanRetry").addEventListener("click", function () { generateClusterPlan(); });
+
+    /* 🗺 내 글 지도 (v2.4.3) — 제목 칸·불러오기·지도 표 버튼 */
+    if ($("#mapTitles")) {
+      $("#mapTitles").addEventListener("input", paintMapCount);
+      $("#mapTitles").addEventListener("change", paintMapCount);
+    }
+    if ($("#btnMapLoad")) $("#btnMapLoad").addEventListener("click", function () { fillMapTitles(); });
+    if ($("#mapSource")) $("#mapSource").addEventListener("change", function () { fillMapTitles(); });
+    if ($("#btnMapClear")) {
+      $("#btnMapClear").addEventListener("click", function () {
+        setMapTitles([]);
+        toast(PLS.cleared || "제목 칸을 비웠습니다");
+      });
+    }
+    if ($("#mapBody")) {
+      $("#mapBody").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+        if (!b) return;
+        var row = b.closest ? b.closest("tr[data-i]") : null;
+        var i = row ? parseInt(row.getAttribute("data-i"), 10) : -1;
+        if (i < 0) return;
+        var act = b.getAttribute("data-act");
+        if (act === "copy") {
+          var g = state.map && state.map.groups ? state.map.groups[i] : null;
+          if (!g) return;
+          copyPlain(mapText(g)).then(function (ok) { toast(ok ? "후속 글 한 줄을 복사했습니다" : "복사 실패"); });
+          return;
+        }
+        useMap(i, act === "use");
+      });
+    }
+    if ($("#btnMapCopy")) {
+      $("#btnMapCopy").addEventListener("click", function () {
+        if (!state.map) { toast("복사할 내 글 지도가 없습니다"); return; }
+        copyPlain(state.map.md).then(function (ok) { toast(ok ? (PLS.copyDone || "내 글 지도를 복사했습니다") : "복사 실패"); });
+      });
+    }
+    if ($("#btnMapRetry")) $("#btnMapRetry").addEventListener("click", function () { generateMapPlan(); });
+    if ($("#btnMapBacklog")) $("#btnMapBacklog").addEventListener("click", saveMapBacklog);
     if ($("#btnToBlog")) $("#btnToBlog").addEventListener("click", function () { convertArticleMode("blog"); });
     if ($("#btnToCafe")) $("#btnToCafe").addEventListener("click", function () { convertArticleMode("cafe"); });
 
@@ -9926,6 +10426,25 @@
   BS.renderClusterPlan = renderClusterPlan;
   BS.useCluster = useCluster;
   BS.clusterText = clusterText;
+  /* v2.4.3 검증용 — 🗺 내 글 지도 제목 분해·지도 파서·표 HTML·중복 후보 제거·이어짐
+     예: BS.splitTitleList("제목1\n2) 제목2")  ·  BS.parseMapPlan(원문) · BS.mapTableHtmlForTest() */
+  BS.splitTitleList = splitTitleList;
+  BS.parseMapPlan = parseMapPlan;
+  BS.mapDropDuplicates = mapDropDuplicates;
+  BS.mapRowHtml = mapRowHtml;
+  BS.mapText = mapText;
+  BS.renderMapPlan = renderMapPlan;
+  BS.useMap = useMap;
+  BS.generateMapPlan = generateMapPlan;
+  BS.fillMapTitles = fillMapTitles;
+  BS.saveMapBacklog = saveMapBacklog;
+  BS.mapTableHtmlForTest = function () {
+    var p = state.map;
+    if (!p || !p.groups) return "";
+    var cols = PL.cols || [];
+    return '<table class="map-table"><thead><tr>' + cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") +
+      '</tr></thead><tbody>' + p.groups.map(mapRowHtml).join("") + "</tbody></table>";
+  };
   BS.stageLabels = function () { return { draft: stageLabel("draft"), audit: stageLabel("audit") }; };
   /* v2.1.1 검증용 — 잠금 해시·해제 여부·해제/재잠금을 콘솔에서 직접 확인
      예: BS.lock.hash("입력값")  ·  BS.lock.open()  ·  BS.lock.verify(x) */
