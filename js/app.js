@@ -2414,6 +2414,13 @@
 
   function bodyToHtml(lines, opt) {
     opt = opt || {};
+    /* v2.4.1 — 본문에 섞여 들어온 이미지 생성 프롬프트 줄은 그리지 않는다.
+       opt.promptsOut 를 주면 뺀 프롬프트를 거기에 모아 준다(화면 별도 구역용). */
+    if (!opt.keepImagePrompts) {
+      var sp = splitInlineImagePrompts(lines);
+      lines = sp.body;
+      if (opt.promptsOut && sp.prompts.length) opt.promptsOut.push.apply(opt.promptsOut, sp.prompts);
+    }
     var rich = !!opt.inline;   // true = 스마트에디터용(인라인 스타일 + 빈 줄)
     var S = {
       p: rich ? ' style="font-size:1em;line-height:1.95;margin:0;color:#222"' : "",
@@ -2536,6 +2543,92 @@
   function isImagePromptSection(label) {
     return /^이미지\s*프롬프트/.test(String(label || "").replace(/\s+/g, " "));
   }
+
+  /* ---------- 🎨 본문에 섞여 들어온 이미지 생성 프롬프트 걸러내기 (v2.4.1 · 2026-11-24) ----------
+     지연님 — 스마트에디터 화면 사진과 함께 "글 본문에 이렇게 이미지 생성프롬프트가 표시되지 않게 수정해줘".
+     원고 본문 문단 사이에
+       [사진 1번 위치 — 썸네일 1번(타이포형, 1:1): 반타블랙(#000100) 단색 배경, …]
+       [사진 2번 위치 — …]   [이미지 프롬프트 …]   [썸네일 1번 …]
+     같은 줄이 그대로 들어오면 스마트에디터 복사본에 프롬프트가 글과 섞여 발행본에 노출된다.
+     프롬프트(prompts.js·젬 지침·지식)로 먼저 막고, 그래도 남아 오면 여기서 걸러
+     본문 복사본에서는 빼고 화면의 '🎨 이미지 생성 프롬프트' 칸으로 옮긴다.
+     (영문 프롬프트 내용·스타일 규칙은 그대로다 — 바뀌는 것은 '어디에 보이는가'뿐) */
+  var INLINE_IMG_PROMPT = /^[\s>]*(?:[-*•]\s*)?(?:[\[(（]\s*(?:사진|이미지|이미지\s*프롬프트|썸네일|배너\s*이미지)|(?:사진|이미지|썸네일|배너\s*이미지)\s*\d*\s*번?\s*(?:위치|프롬프트))/;
+
+  /* 여는 괄호가 줄 안에서 닫히지 않았으면 다음 줄까지 프롬프트 블록으로 본다 */
+  function bracketBalanced(t) {
+    var opens = 0, closes = 0, i;
+    for (i = 0; i < t.length; i++) {
+      if (t.charAt(i) === "[") opens++;
+      else if (t.charAt(i) === "]") closes++;
+    }
+    return opens <= closes;
+  }
+
+  /* 프롬프트 문장에 자주 나오는 표 — 감싸는 괄호 없이 여러 줄로 끝나는 프롬프트를 붙잡는다 */
+  var PROMPT_WORD = /(realistic|textless|no words|aspect ratio|photorealistic|full[- ]?bleed|negative space|8k|1:1|3:1|#[0-9a-f]{6}|프롬프트|타이포|썸네일|본문\s*이미지|렌더링|결합형|기입|풀프레임)/i;
+
+  function looksLikePromptText(t) {
+    var s = String(t == null ? "" : t).trim();
+    if (!s) return false;
+    if (/^#{1,4}\s/.test(s)) return false;
+    if (PROMPT_WORD.test(s)) return true;
+    var hangul = (s.match(/[가-힣]/g) || []).length;
+    var latin = (s.match(/[A-Za-z]/g) || []).length;
+    if (!hangul && !latin) return false;
+    return latin / (hangul + latin) >= 0.5;   // 영문 위주 줄 = 프롬프트 본문
+  }
+
+  /* i번째 줄이 이미지 프롬프트 블록이면 그 블록의 줄 배열을, 아니면 null */
+  function inlinePromptBlockAt(lines, i) {
+    var arr = lines || [];
+    var t = String(arr[i] == null ? "" : arr[i]).trim();
+    if (!t || !INLINE_IMG_PROMPT.test(t)) return null;
+    var block = [t];
+    /* 같은 줄에서 '['가 안 닫혔거나, 괄호 없이 프롬프트 어휘가 보이면 이어지는 줄을 붙인다.
+       빈 줄·새 소제목·다음 프롬프트 줄·평범한 한국어 문장을 만나면 거기서 끊어 본문을 삼키지 않는다 */
+    var opened = /^[\[(（]/.test(t) && !bracketBalanced(t);
+    var cont = opened || (!/^[\[(（]/.test(t) && PROMPT_WORD.test(t));
+    var j = i + 1;
+    while (cont && j < arr.length && block.length < 12) {
+      var nxt = String(arr[j] == null ? "" : arr[j]).trim();
+      if (!nxt || /^#{1,4}\s/.test(nxt) || INLINE_IMG_PROMPT.test(nxt)) break;
+      if (block.length >= 2 && !looksLikePromptText(nxt)) break;
+      block.push(nxt);
+      j++;
+      if (opened) {
+        if (bracketBalanced(block.join(" "))) opened = false;
+      } else if (!looksLikePromptText(nxt)) {
+        break;
+      }
+    }
+    return block;
+  }
+
+  /* 본문 줄 배열 → { body: 프롬프트를 뺀 본문, prompts: [{name, text, raw}] } */
+  function splitInlineImagePrompts(lines) {
+    var arr = lines || [];
+    var body = [], prompts = [], i = 0;
+    while (i < arr.length) {
+      var blk = inlinePromptBlockAt(arr, i);
+      if (!blk) { body.push(arr[i]); i++; continue; }
+      var raw = blk.join(" ").replace(/\s+/g, " ").trim();
+      var inner = raw.replace(/^[\s>]*(?:[-*•]\s*)?[\[(（]\s*/, "").replace(/\s*[\])）]\s*$/, "").trim();
+      var m = inner.match(/^((?:사진|이미지|이미지\s*프롬프트|썸네일|배너\s*이미지)[^—–:\]|]{0,20})/);
+      prompts.push({ name: (m ? m[1] : (BS.BODY_IMAGE_GUARD || {}).title || "이미지 프롬프트").replace(/\s+/g, " ").trim(), text: inner, raw: raw });
+      i += blk.length;
+    }
+    return { body: body, prompts: prompts };
+  }
+
+  /* 마크다운(복사·글자수)에서도 같은 줄을 뺀다 — 줄 단위로만 본다 */
+  function stripInlineImagePrompts(md) {
+    var txt = String(md || "");
+    if (!/[\[(（]?\s*(?:사진|이미지|썸네일|배너)\s*\d*\s*번?\s*(?:위치|프롬프트)|[\[(（]\s*(?:사진|이미지|썸네일)/.test(txt)) return txt;
+    var sp = splitInlineImagePrompts(txt.replace(/\r/g, "").split("\n"));
+    if (!sp.prompts.length) return txt;
+    return sp.body.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
   /* ---------- 🖼️ 이미지 프롬프트 세트 — 항목별 카드 + [📋 프롬프트 복사] (v2.2.6) ----------
      지연님 "[#29929] 전에는 이부분도 명확히 구분해서 복사탭 있어서 그거만 눌러서 복사하게 했었어".
      출력 예시가 [그룹] → '- 항목' → '  "영문 프롬프트"' 순서라 그대로 파싱해 카드로 그린다.
@@ -2632,18 +2725,38 @@
     });
   }
 
+  /* ---------- 🎨 본문에서 옮긴 이미지 생성 프롬프트 상자 (v2.4.1) ----------
+     AI가 본문 문단 사이에 넣어 온 프롬프트를 buildRichHtml·buildMarkdown에서는 빼고,
+     화면에서는 여기에 모아 보여 준다(카드마다 [📋 프롬프트 복사]). */
+  function inlineImagePromptsHtml(prompts) {
+    if (!prompts || !prompts.length) return "";
+    var html = ['<div class="memo-box imgset-box moved-box">',
+      '<strong>🎨 이미지 생성 프롬프트 · 본문에서 옮김 (복사본에는 빠집니다)</strong>',
+      '<div class="imgset-note">AI가 본문 문단 사이에 넣어 온 이미지 프롬프트 ' + prompts.length + '건입니다. 스마트에디터 복사본·마크다운·글자수에서는 빠지고 여기에만 남깁니다 — 이미지를 만들 때는 이 프롬프트를 쓰세요.</div>'];
+    prompts.forEach(function (p, i) {
+      var name = String(p.name || "").trim() || "이미지 프롬프트 " + (i + 1);
+      html.push('<div class="imgset-card" data-i="' + i + '">' +
+        '<div class="imgset-card-head"><strong>' + esc(name) + "</strong></div>" +
+        '<div class="imgset-prompt">' + esc(p.text || "") + "</div>" +
+        '<div class="imgset-foot"><button type="button" class="btn small primary" data-imgset-copy="' + i + '">📋 프롬프트 복사</button></div>' +
+        "</div>");
+    });
+    html.push("</div>");
+    return html.join("");
+  }
+
   /* 이 화면에서만 보여 주고 복사본에서는 빠지는 계획용 머리말 */
   function isPlanSection(label) {
     return /^제목\s*후보/.test(label) || /^최종\s*추천\s*제목/.test(label) || /^추천\s*제목/.test(label);
   }
   function stripMetaSections(md) {
-    return String(md || "")
+    return stripInlineImagePrompts(String(md || "")
       .replace(/##\s*제목\s*후보[\s\S]*?(?=##\s|$)/, "")
       .replace(/##\s*(?:🏆\s*)?(?:최종\s*추천\s*제목|추천\s*제목)[\s\S]*?(?=##\s|$)/, "")
       .replace(/##\s*작업\s*메모[\s\S]*?(?=##\s|$)/, "")
       .replace(/##\s*(?:🖼\uFE0F?\s*)?이미지\s*프롬프트(?:\s*세트)?[\s\S]*?(?=##\s|$)/, "")
       .replace(/\n{3,}/g, "\n\n")
-      .trim();
+      .trim());
   }
 
   /* 모델이 고른 최종 추천 제목 읽기 ("추천: ..." / 첫줄) */
@@ -2688,6 +2801,7 @@
     var secs = r.sections;
     var html = [];
     var cafeNoteDone = false;
+    var inlinePrompts = [];   // v2.4.1 — 본문에서 걸러낸 이미지 생성 프롬프트
     html.push('<div class="art-title">' + stripStrayMarks(esc(r.title || "(제목 미선택)")) + "</div>");
     if (isProductResult(r) && !hasProductDisclosure(r.md)) html.push(disclosureHtml(false, r, true));
     /* 🧾 v2.3.5 — 블로그 모드도 대가성 문구를 제목 바로 아래(본문 최상단)에 한 번 */
@@ -2757,15 +2871,16 @@
         return;
       }
       html.push("<h2>" + stripStrayMarks(esc(label)) + "</h2>");
-      html.push(bodyToHtml(sec.body));
+      html.push(bodyToHtml(sec.body, { promptsOut: inlinePrompts }));
       if (isProductResult(r) && /한눈에\s*비교/.test(label)) {
         html.push('<p class="buy-line">' + buyCardHtml(false, (BS.PRODUCT.linkCard || {}).mid, r) + "</p>");
       }
     });
 
+    /* v2.4.1 — 본문에서 걸러낸 이미지 생성 프롬프트는 사진·이미지 작업용이라 글 끝(제휴 카드 위)에 따로 보여 준다 */
+    if (inlinePrompts.length) html.push(inlineImagePromptsHtml(inlinePrompts));
     // 제휴·공정위 블록 (블로그 모드만) / 상품 리뷰는 링크 카드·공정위 문구를 따로
-    if (isCafeResult(r)) {
-      if (!hasCafeDisclaimer(r.md) && !cafeNoteDone) html.push(cafeDisclaimerHtml(false));
+    if (isCafeResult(r)) {      if (!hasCafeDisclaimer(r.md) && !cafeNoteDone) html.push(cafeDisclaimerHtml(false));
     } else if (isProductResult(r)) {
       /* 공정위 문구는 본문 최상단에 이미 넣었다 */
     } else {
