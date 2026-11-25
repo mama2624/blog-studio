@@ -2371,6 +2371,108 @@
     return stripStrayMarks(h);
   }
 
+  /* ---------- 📋 목차 앵커 제거 · 번호마다 한 줄 (v2.4.5 · 2026-11-25) ----------
+     지연님: "작업실에서 뽑은 글을 스마트에디터에 붙이면 [1. …](#toc-1) [2. …](#toc-2)와
+     <a id=\"toc-1\"></a> 코드가 그대로 보이고, 목차가 한 줄로 뭉개지고, 목차와 서문 경계가 없다."
+     → 원고에 앵커 코드가 섞여 와도 화면 미리보기·스마트에디터 복사본·마크다운/일반 텍스트
+       어디에도 코드를 남기지 않고, 목차는 번호마다 한 줄씩, 목차 끝에는 구분선을 넣는다. */
+  var TOC_EMPTY_ANCHOR = /<a\b[^>]*\b(?:id|name)\s*=\s*["']?toc[^>]*>(?:\s*<\/a\s*>)?/gi;
+  var TOC_MD_LINK = /\[([^\[\]]*)\]\(\s*#[^)\s]*toc[^)\s]*\s*\)/gi;
+
+  /* 빈 앵커 태그(<a id="toc-1"></a>)와 `[제목](#toc-1)` 마크다운 내부 앵커를 벗겨 텍스트만 남긴다 */
+  function stripTocAnchors(text) {
+    return String(text == null ? "" : text)
+      .replace(TOC_EMPTY_ANCHOR, "")
+      .replace(TOC_MD_LINK, "$1")
+      .replace(/\(\s*#[^)\s]*toc[^)\s]*\s*\)/gi, "")
+      .replace(/(?:^|\s)#toc-\d+\b/gi, " ");
+  }
+
+  /* 한 줄에 '1. … 2. … 3. …'처럼 붙어 나온 목차를 번호 앞에서 끊는다(1부터 이어질 때만) */
+  function splitTocItems(line) {
+    var s = String(line == null ? "" : line).trim();
+    if (!s) return [];
+    var prefix = "";
+    var bm = s.match(/^([-*•])\s+/);
+    if (bm) { prefix = bm[1] + " "; s = s.slice(bm[0].length); }
+    var re = /(^|\s)(\d{1,2})[.)]\s+/g;
+    var cuts = [], expect = 1, m;
+    while ((m = re.exec(s))) {
+      var n = parseInt(m[2], 10);
+      if (n === expect) { cuts.push(m.index + m[1].length); expect++; }
+    }
+    if (cuts.length < 2) return [prefix + s];
+    var out = [], from = 0;
+    cuts.forEach(function (p) {
+      if (p > from) {
+        var seg = s.slice(from, p).trim();
+        if (seg) out.push(prefix + seg);
+        from = p;
+      }
+    });
+    var tail = s.slice(from).trim();
+    if (tail) out.push(prefix + tail);
+    return out.length ? out : [prefix + s];
+  }
+
+  /* 목차 섹션 본문 정리 — 앵커 제거, 번호당 한 줄, 목차 안의 --- 구분선은 걷어 낸다(구분선은 렌더가 넣는다) */
+  function normalizeTocBody(body) {
+    var out = [];
+    (body || []).forEach(function (raw) {
+      var line = stripTocAnchors(raw);
+      var t = line.trim();
+      if (!t) { out.push(""); return; }
+      if (/^([-*_=])\1{2,}$/.test(t)) return;   // --- · *** · ___ 구분선
+      splitTocItems(line).forEach(function (x) { out.push(x); });
+    });
+    while (out.length && !out[0].trim()) out.shift();
+    while (out.length && !out[out.length - 1].trim()) out.pop();
+    return out;
+  }
+
+  /* 섹션 전체에서 목차 앵커를 걷어 낸다(목차 밖에 섞여 온 앵커도 화면·복사본에 남기지 않는다) */
+  function cleanSections(secs) {
+    (secs || []).forEach(function (sec) {
+      var label = sectionLabel(sec.h);
+      if (/^목차/.test(label)) { sec.body = normalizeTocBody(sec.body); return; }
+      sec.body = (sec.body || []).map(function (l) { return stripTocAnchors(l); });
+    });
+    return secs;
+  }
+
+  /* 마크다운/일반 텍스트용 — 앵커 제거 + 목차 번호당 한 줄 + 목차 끝 구분선(---) */
+  function sanitizeTocMarkdown(md) {
+    var lines = String(md == null ? "" : md).replace(/\r/g, "").split("\n");
+    var out = [], inToc = false, tocDone = false;
+    function closeToc() {
+      if (!inToc || !tocDone) return;
+      while (out.length && !out[out.length - 1].trim()) out.pop();
+      if (out.length && !/^-{3,}$/.test(out[out.length - 1].trim())) out.push("", "---", "");
+      else out.push("");
+    }
+    lines.forEach(function (raw) {
+      var line = stripTocAnchors(raw);
+      var m = line.match(/^\s{0,3}##(?!#)\s*(.+?)\s*$/);
+      if (m) {
+        closeToc();
+        inToc = /^목차/.test(sectionLabel(m[1]));
+        tocDone = false;
+        out.push(line);
+        return;
+      }
+      if (inToc) {
+        var t = line.trim();
+        if (!t) { out.push(""); return; }
+        if (/^([-*_=])\1{2,}$/.test(t)) return;
+        splitTocItems(line).forEach(function (x) { out.push(x); tocDone = true; });
+        return;
+      }
+      out.push(line);
+    });
+    /* 목차가 파일 끝이면 closeToc 이 불리지 않으므로 구분선이 붙지 않는다(다음 섹션이 없음) */
+    return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
   function splitSections(md) {
     var lines = md.replace(/\r/g, "").split("\n");
     var secs = [];
@@ -2399,9 +2501,9 @@
         if (m2) { cur2 = { h: m2[1].trim(), body: [] }; secs2.push(cur2); return; }
         if (cur2) cur2.body.push(raw); else pre2.push(raw);
       });
-      if (secs2.length > secs.length) return { secs: secs2, pre: pre2 };
+      if (secs2.length > secs.length) return { secs: cleanSections(secs2), pre: pre2 };
     }
-    return { secs: secs, pre: pre };
+    return { secs: cleanSections(secs), pre: pre };
   }
 
   function pickSection(secs, names) {
@@ -2855,6 +2957,7 @@
     var html = [];
     var cafeNoteDone = false;
     var inlinePrompts = [];   // v2.4.1 — 본문에서 걸러낸 이미지 생성 프롬프트
+    var tocIdx = -1;          // v2.4.5 — 목차 바로 뒤에 구분선을 넣을 위치
     html.push('<div class="art-title">' + stripStrayMarks(esc(r.title || "(제목 미선택)")) + "</div>");
     if (isProductResult(r) && !hasProductDisclosure(r.md)) html.push(disclosureHtml(false, r, true));
     /* 🧾 v2.3.5 — 블로그 모드도 대가성 문구를 제목 바로 아래(본문 최상단)에 한 번 */
@@ -2925,10 +3028,14 @@
       }
       html.push("<h2>" + stripStrayMarks(esc(label)) + "</h2>");
       html.push(bodyToHtml(sec.body, { promptsOut: inlinePrompts }));
+      if (/^목차/.test(label)) tocIdx = html.length;   // v2.4.5
       if (isProductResult(r) && /한눈에\s*비교/.test(label)) {
         html.push('<p class="buy-line">' + buyCardHtml(false, (BS.PRODUCT.linkCard || {}).mid, r) + "</p>");
       }
     });
+
+    /* v2.4.5 — 목차와 다음 섹션(서두 등) 사이 구분선 (목차가 마지막이면 넣지 않는다) */
+    if (tocIdx > 0 && tocIdx < html.length) html.splice(tocIdx, 0, TOC_SEP_HTML);
 
     /* v2.4.1 — 본문에서 걸러낸 이미지 생성 프롬프트는 사진·이미지 작업용이라 글 끝(제휴 카드 위)에 따로 보여 준다 */
     if (inlinePrompts.length) html.push(inlineImagePromptsHtml(inlinePrompts));
@@ -2943,7 +3050,7 @@
     bindImagePromptCopies($("#articlePreview"));   // v2.2.6 — 카드별 [📋 프롬프트 복사]
 
     // 글자수 (형광펜 기호 ==·@@는 본문 글자로 세지 않는다)
-    var plain = stripEmphasisMarks(stripMetaSections(r.md));
+    var plain = stripEmphasisMarks(sanitizeTocMarkdown(stripMetaSections(r.md)));
     var cc = charCount(plain);
     $("#charCount").textContent = "본문 " + cc.noSpace.toLocaleString() + "자 (공백 제외) · " + cc.withSpace.toLocaleString() + "자 (공백 포함)";
   }
@@ -3089,6 +3196,8 @@
      - 소제목(h3) 아래·문단 사이는 빈 줄 딱 1줄, 소제목 앞과 섹션 제목 앞은 2줄.
      - 어떤 경우에도 빈 줄이 3줄 이상 연속하지 않는다. */
   var RICH_GAP = "<p><br></p>";
+  /* v2.4.5 — 목차와 다음 섹션(서두 등) 사이 구분선. 스마트에디터도 <hr>은 그대로 보존한다. */
+  var TOC_SEP_HTML = '<hr style="border:0;border-top:1px solid #d6cdbe;height:1px;margin:0">';
   var RICH_H3_STYLE = ' style="font-size:1.18em;font-weight:800;line-height:1.55;margin:0;color:#1d1a17"';
   /* 복사본에 제목을 남기지 않는 구조 라벨 — 본문 흐름만 이어 붙인다 */
   var STRUCT_LABEL = /^(서두|본문|맺음말|서론|결론)(\s*\d+)?(\s*[:：].*)?(\s*[\(\[].*[\)\]])?$/;
@@ -3104,6 +3213,7 @@
     var prodMode = mode === "product";
     var cafeNoteDone = false;
     var parts = [];
+    var tocPartIdx = -1;
     var h2s = ' style="font-size:1.42em;font-weight:800;line-height:1.45;margin:0;color:#1d1a17;letter-spacing:-.01em"';
     var h3s = RICH_H3_STYLE;
     var pS = ' style="font-size:1em;line-height:1.95;margin:0;color:#222"';
@@ -3187,6 +3297,8 @@
       if (KEEP_H2.test(label)) {
         add("<h2" + h2s + ">" + stripStrayMarks(esc(label)) + "</h2>", 2);
         addBody(sec.body, 1);
+        /* v2.4.5 — 목차 바로 뒤(서두 앞)에 구분선을 넣을 자리를 기억해 둔다 */
+        if (/^목차/.test(label) && !cafeMode) tocPartIdx = parts.length;
         return;
       }
       add("<h3" + h3s + "><strong>" + stripStrayMarks(esc(label)) + "</strong></h3>", 2);
@@ -3195,6 +3307,11 @@
         add('<p style="margin:0">' + buyCardHtml(true, (BS.PRODUCT.linkCard || {}).mid, r) + "</p>", 2);
       }
     });
+    /* v2.4.5 — 목차 끝과 다음 섹션(서두 등) 사이에 명확한 구분선. 목차가 마지막이면 넣지 않는다. */
+    if (tocPartIdx > 0 && tocPartIdx < parts.length) {
+      parts.splice(tocPartIdx, 0, { html: TOC_SEP_HTML, gaps: 1 });
+      if (parts[tocPartIdx + 1]) parts[tocPartIdx + 1].gaps = 1;
+    }
     /* 글 용도별 마무리 — ☕ 카페는 부드러운 면책 한 줄, 🛒 리뷰는 공정위 문구 */
     if (cafeMode) {
       if (!hasCafeDisclaimer(r.md) && !cafeNoteDone) add(cafeDisclaimerHtml(true), 2);
@@ -3225,7 +3342,7 @@
   function buildMarkdown() {
     var r = state.result;
     if (!r) return "";
-    var md = "# " + (r.title || "") + "\n\n" + stripEmphasisMarks(stripMetaSections(r.md));
+    var md = "# " + (r.title || "") + "\n\n" + stripEmphasisMarks(sanitizeTocMarkdown(stripMetaSections(r.md)));
     /* ☕ 카페 글 — 제휴·공정위 없이, 맨 끝 부드러운 면책만 */
     if (isCafeResult(r)) {
       if (!hasCafeDisclaimer(r.md)) md += "\n\n" + cafeDisclaimerText();
@@ -3234,7 +3351,7 @@
     /* 🛒 제휴 리뷰 — 공정위 문구는 맨 앞(본문 최상단), 상품 링크 카드는 글 끝 */
     if (isProductResult(r)) {
       var ptitle = "# " + (r.title || "") + "\n\n";
-      var pbody = stripEmphasisMarks(stripMetaSections(r.md));
+      var pbody = stripEmphasisMarks(sanitizeTocMarkdown(stripMetaSections(r.md)));
       var pout = ptitle + (hasProductDisclosure(r.md) ? "" : disclosureTextFor(r) + "\n\n") + pbody;
       pout += "\n\n> 👉 [" + ((BS.PRODUCT.linkCard || {}).bottom || "상품 정보 확인").replace(/^👉\s*/, "") + "](" + buyHref(r) + ")";
       return pout;
@@ -3245,7 +3362,7 @@
     /* 🧾 v2.3.5 — 대가성 문구는 글 끝이 아니라 제목 바로 아래(본문 최상단)에 */
     var mout = "# " + (r.title || "") + "\n\n" +
       (disc && blogDisclosureWanted(r) ? blogDisclosureText() + "\n\n" : "") +
-      stripEmphasisMarks(stripMetaSections(r.md));
+      stripEmphasisMarks(sanitizeTocMarkdown(stripMetaSections(r.md)));
     if (aff) {
       var link = ($("#coupangLink").value || "").trim();
       mout += "\n\n> 👉 [추천 상품 보러가기](" + (link || ("https://www.coupang.com/np/search?q=" + encodeURIComponent(r.topic || ""))) + ")";
