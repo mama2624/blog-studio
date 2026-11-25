@@ -252,6 +252,16 @@ textarea{resize:vertical;line-height:1.6}
 .foot{padding:26px 4px 10px;font-size:12px;color:var(--ink-3);line-height:1.6}
 .foot p{margin:3px 0}
 .foot-dim{color:#a89f94}
+/* v2.4.5 — 누적된 업데이트 기록은 접어 둔다(평소에는 한 줄만) */
+.foot-hist{margin:8px 0 0}
+.foot-hist summary{cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:#8d857c;font-size:12px;font-weight:700;border:1px solid #e0d8cc;background:#faf7f2;border-radius:999px;padding:5px 12px;list-style:none;user-select:none}
+.foot-hist summary::-webkit-details-marker{display:none}
+.foot-hist summary::before{content:"▸";font-size:10px}
+.foot-hist[open] summary::before{content:"▾"}
+.foot-hist summary:hover{color:#b8452a;border-color:#d8cbb8}
+.foot-hist summary:focus-visible{outline:2px solid #b8452a;outline-offset:2px}
+.foot-hist[open] summary{margin-bottom:6px}
+.foot-hist .foot-dim{line-height:1.75}
 
 @media (max-width:620px){
   body{font-size:15.5px}
