@@ -2,12 +2,12 @@
  "version": "1.3",
  "studio": "2.3.9",
  "prev": {
-  "generated_at": "2026-11-26T06:59:25+09:00",
-  "age_minutes": 59,
+  "generated_at": "2026-11-26T07:58:09+09:00",
+  "age_minutes": 55,
   "count": 42
  },
- "generated_at": "2026-11-26T07:58:09+09:00",
- "generated_label": "11월 26일 07:58 기준",
+ "generated_at": "2026-11-26T08:53:39+09:00",
+ "generated_label": "11월 26일 08:53 기준",
  "auto_note": "매시 10분 GitHub Actions 자동 갱신",
  "sources": [
   {
@@ -30,9 +30,9 @@
    "id": "naver",
    "name": "네이버 많이 본 뉴스",
    "ok": true,
-   "count": 539,
+   "count": 541,
    "error": "",
-   "detail": "경제 46 · 생활·문화 42 · IT·과학 43",
+   "detail": "경제 46 · 생활·문화 44 · IT·과학 41",
    "url": "https://news.naver.com/main/ranking/popularDay.naver"
   },
   {
@@ -85,13 +85,13 @@
    "id": "mama2624",
    "name": "생활픽스",
    "emoji": "🏠",
-   "count": 6
+   "count": 7
   },
   {
    "id": "jiyn74",
    "name": "행복한긍정씨",
    "emoji": "💰",
-   "count": 14
+   "count": 15
   },
   {
    "id": "2sunshines",
@@ -103,7 +103,7 @@
    "id": "jinjin2624",
    "name": "긍정사랑",
    "emoji": "🩺",
-   "count": 8
+   "count": 6
   }
  ],
  "keywords": [
@@ -116,7 +116,7 @@
    "src": [
     "네이버"
    ],
-   "score": 67.0,
+   "score": 62.0,
    "traffic": "",
    "state": "",
    "rank": 1,
@@ -132,16 +132,32 @@
    ],
    "src": [
     "네이버",
-    "네이트",
-    "연예·생활"
+    "네이트"
    ],
-   "score": 100.0,
+   "score": 96.0,
    "traffic": "",
    "state": "",
    "rank": 2,
    "news": [],
-   "prev": 4,
-   "delta": 2,
+   "prev": 2,
+   "delta": 0,
+   "new": false
+  },
+  {
+   "k": "겨울 여행지",
+   "blogs": [
+    "2sunshines"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 92.0,
+   "traffic": "",
+   "state": "",
+   "rank": 3,
+   "news": [],
+   "prev": 6,
+   "delta": 3,
    "new": false
   },
   {
@@ -155,28 +171,27 @@
    "score": 92.0,
    "traffic": "",
    "state": "",
-   "rank": 3,
-   "news": [],
-   "prev": 5,
-   "delta": 2,
-   "new": false
-  },
-  {
-   "k": "암 초기증상",
-   "blogs": [
-    "jinjin2624"
-   ],
-   "src": [
-    "네이버",
-    "건강"
-   ],
-   "score": 91.0,
-   "traffic": "",
-   "state": "",
    "rank": 4,
    "news": [],
    "prev": 3,
    "delta": -1,
+   "new": false
+  },
+  {
+   "k": "연예인 결혼",
+   "blogs": [
+    "mama2624"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 82.0,
+   "traffic": "",
+   "state": "",
+   "rank": 5,
+   "news": [],
+   "prev": 12,
+   "delta": 7,
    "new": false
   },
   {
@@ -187,61 +202,62 @@
    "src": [
     "네이버"
    ],
-   "score": 87.0,
-   "traffic": "",
-   "state": "",
-   "rank": 5,
-   "news": [],
-   "prev": 14,
-   "delta": 9,
-   "new": false
-  },
-  {
-   "k": "겨울 여행지",
-   "blogs": [
-    "2sunshines"
-   ],
-   "src": [
-    "네이버"
-   ],
    "score": 82.0,
    "traffic": "",
    "state": "",
    "rank": 6,
    "news": [],
-   "prev": 2,
-   "delta": -4,
-   "new": false
-  },
-  {
-   "k": "비트코인 시세",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 82.0,
-   "traffic": "",
-   "state": "",
-   "rank": 7,
-   "news": [],
-   "prev": 6,
+   "prev": 5,
    "delta": -1,
    "new": false
   },
   {
-   "k": "장바구니 물가",
+   "k": "마이크론 주가 급락",
    "blogs": [
     "jiyn74"
    ],
    "src": [
-    "네이버"
+    "시그널"
    ],
-   "score": 77.0,
+   "score": 81.0,
+   "traffic": "",
+   "state": "NEW",
+   "rank": 7,
+   "news": [],
+   "prev": 0,
+   "delta": 0,
+   "new": true
+  },
+  {
+   "k": "암 초기증상",
+   "blogs": [
+    "jinjin2624"
+   ],
+   "src": [
+    "네이버",
+    "건강"
+   ],
+   "score": 81.0,
    "traffic": "",
    "state": "",
    "rank": 8,
+   "news": [],
+   "prev": 4,
+   "delta": -4,
+   "new": false
+  },
+  {
+   "k": "빗썸 해킹 추가 피해",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "시그널"
+   ],
+   "score": 78.0,
+   "traffic": "",
+   "state": "▲",
+   "rank": 9,
    "news": [],
    "prev": 0,
    "delta": 0,
@@ -258,11 +274,45 @@
    "score": 77.0,
    "traffic": "",
    "state": "",
-   "rank": 9,
+   "rank": 10,
    "news": [],
-   "prev": 8,
+   "prev": 9,
    "delta": -1,
    "new": false
+  },
+  {
+   "k": "김새롬 재혼 2세 계획",
+   "blogs": [
+    "mama2624"
+   ],
+   "src": [
+    "시그널"
+   ],
+   "score": 75.0,
+   "traffic": "",
+   "state": "NEW",
+   "rank": 11,
+   "news": [],
+   "prev": 0,
+   "delta": 0,
+   "new": true
+  },
+  {
+   "k": "겨울 보습 관리",
+   "blogs": [
+    "mama2624"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 72.0,
+   "traffic": "",
+   "state": "",
+   "rank": 12,
+   "news": [],
+   "prev": 0,
+   "delta": 0,
+   "new": true
   },
   {
    "k": "겨울 패딩",
@@ -275,79 +325,78 @@
    "score": 72.0,
    "traffic": "",
    "state": "",
-   "rank": 10,
-   "news": [],
-   "prev": 9,
-   "delta": -1,
-   "new": false
-  },
-  {
-   "k": "연금 수령액",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 72.0,
-   "traffic": "",
-   "state": "",
-   "rank": 11,
-   "news": [],
-   "prev": 7,
-   "delta": -4,
-   "new": false
-  },
-  {
-   "k": "연예인 결혼",
-   "blogs": [
-    "mama2624"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 72.0,
-   "traffic": "",
-   "state": "",
-   "rank": 12,
-   "news": [],
-   "prev": 15,
-   "delta": 3,
-   "new": false
-  },
-  {
-   "k": "정부 지원금",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 72.0,
-   "traffic": "",
-   "state": "",
    "rank": 13,
    "news": [],
-   "prev": 16,
-   "delta": 3,
+   "prev": 10,
+   "delta": -3,
    "new": false
   },
   {
-   "k": "기준금리 전망",
+   "k": "노후 준비",
    "blogs": [
     "jiyn74"
    ],
    "src": [
-    "네이버",
-    "연예·생활"
+    "네이버"
    ],
-   "score": 71.0,
+   "score": 72.0,
    "traffic": "",
    "state": "",
    "rank": 14,
    "news": [],
-   "prev": 23,
-   "delta": 9,
+   "prev": 24,
+   "delta": 10,
+   "new": false
+  },
+  {
+   "k": "비트코인 시세",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 72.0,
+   "traffic": "",
+   "state": "",
+   "rank": 15,
+   "news": [],
+   "prev": 7,
+   "delta": -8,
+   "new": false
+  },
+  {
+   "k": "장바구니 물가",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 72.0,
+   "traffic": "",
+   "state": "",
+   "rank": 16,
+   "news": [],
+   "prev": 8,
+   "delta": -8,
+   "new": false
+  },
+  {
+   "k": "주담대 금리",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 72.0,
+   "traffic": "",
+   "state": "",
+   "rank": 17,
+   "news": [],
+   "prev": 25,
+   "delta": 8,
    "new": false
   },
   {
@@ -362,10 +411,44 @@
    "score": 71.0,
    "traffic": "",
    "state": "",
-   "rank": 15,
+   "rank": 18,
    "news": [],
-   "prev": 13,
-   "delta": -2,
+   "prev": 15,
+   "delta": -3,
+   "new": false
+  },
+  {
+   "k": "기준금리 전망",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 67.0,
+   "traffic": "",
+   "state": "",
+   "rank": 19,
+   "news": [],
+   "prev": 14,
+   "delta": -5,
+   "new": false
+  },
+  {
+   "k": "연금 수령액",
+   "blogs": [
+    "jiyn74"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 67.0,
+   "traffic": "",
+   "state": "",
+   "rank": 20,
+   "news": [],
+   "prev": 11,
+   "delta": -9,
    "new": false
   },
   {
@@ -379,46 +462,44 @@
    "score": 67.0,
    "traffic": "",
    "state": "",
-   "rank": 16,
+   "rank": 21,
    "news": [],
-   "prev": 25,
-   "delta": 9,
+   "prev": 16,
+   "delta": -5,
    "new": false
   },
   {
-   "k": "수면 습관",
+   "k": "정부 지원금",
    "blogs": [
-    "2sunshines"
+    "jiyn74"
    ],
    "src": [
-    "네이버",
-    "건강"
+    "네이버"
    ],
-   "score": 66.0,
+   "score": 67.0,
    "traffic": "",
    "state": "",
-   "rank": 17,
+   "rank": 22,
    "news": [],
-   "prev": 19,
-   "delta": 2,
+   "prev": 13,
+   "delta": -9,
    "new": false
   },
   {
-   "k": "제철 음식",
+   "k": "환율 전망",
    "blogs": [
-    "2sunshines"
+    "jiyn74"
    ],
    "src": [
-    "네이버",
-    "연예·생활"
+    "네이버"
    ],
-   "score": 66.0,
+   "score": 67.0,
    "traffic": "",
    "state": "",
-   "rank": 18,
+   "rank": 23,
    "news": [],
-   "prev": 26,
-   "delta": 8,
+   "prev": 27,
+   "delta": 4,
    "new": false
   },
   {
@@ -433,29 +514,46 @@
    "score": 66.0,
    "traffic": "",
    "state": "",
-   "rank": 19,
+   "rank": 24,
    "news": [],
-   "prev": 20,
-   "delta": 1,
+   "prev": 19,
+   "delta": -5,
    "new": false
   },
   {
-   "k": "영화 추천",
+   "k": "수면 습관",
    "blogs": [
-    "mama2624"
+    "2sunshines"
    ],
    "src": [
     "네이버",
-    "연예·생활"
+    "건강"
    ],
    "score": 65.0,
    "traffic": "",
    "state": "",
-   "rank": 20,
+   "rank": 25,
    "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
+   "prev": 17,
+   "delta": -8,
+   "new": false
+  },
+  {
+   "k": "감기 증상",
+   "blogs": [
+    "jinjin2624"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 62.0,
+   "traffic": "",
+   "state": "",
+   "rank": 26,
+   "news": [],
+   "prev": 28,
+   "delta": 2,
+   "new": false
   },
   {
    "k": "겨울 면역력 음식",
@@ -468,14 +566,14 @@
    "score": 62.0,
    "traffic": "",
    "state": "",
-   "rank": 21,
+   "rank": 27,
    "news": [],
    "prev": 21,
-   "delta": 0,
+   "delta": -6,
    "new": false
   },
   {
-   "k": "고혈압 관리",
+   "k": "관절·디스크",
    "blogs": [
     "jinjin2624"
    ],
@@ -485,11 +583,11 @@
    "score": 62.0,
    "traffic": "",
    "state": "",
-   "rank": 22,
+   "rank": 28,
    "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
+   "prev": 29,
+   "delta": 1,
+   "new": false
   },
   {
    "k": "금값 시세",
@@ -502,129 +600,61 @@
    "score": 62.0,
    "traffic": "",
    "state": "",
-   "rank": 23,
-   "news": [],
-   "prev": 28,
-   "delta": 5,
-   "new": false
-  },
-  {
-   "k": "노후 준비",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 62.0,
-   "traffic": "",
-   "state": "",
-   "rank": 24,
-   "news": [],
-   "prev": 24,
-   "delta": 0,
-   "new": false
-  },
-  {
-   "k": "주담대 금리",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 62.0,
-   "traffic": "",
-   "state": "",
-   "rank": 25,
-   "news": [],
-   "prev": 17,
-   "delta": -8,
-   "new": false
-  },
-  {
-   "k": "최저임금",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 62.0,
-   "traffic": "",
-   "state": "",
-   "rank": 26,
-   "news": [],
-   "prev": 33,
-   "delta": 7,
-   "new": false
-  },
-  {
-   "k": "환율 전망",
-   "blogs": [
-    "jiyn74"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 62.0,
-   "traffic": "",
-   "state": "",
-   "rank": 27,
-   "news": [],
-   "prev": 34,
-   "delta": 7,
-   "new": false
-  },
-  {
-   "k": "감기 증상",
-   "blogs": [
-    "jinjin2624"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 61.0,
-   "traffic": "",
-   "state": "",
-   "rank": 28,
-   "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
-  },
-  {
-   "k": "관절·디스크",
-   "blogs": [
-    "jinjin2624"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 61.0,
-   "traffic": "",
-   "state": "",
    "rank": 29,
    "news": [],
-   "prev": 18,
-   "delta": -11,
+   "prev": 23,
+   "delta": -6,
    "new": false
   },
   {
-   "k": "국가건강검진 항목",
+   "k": "제철 음식",
    "blogs": [
-    "jinjin2624"
+    "2sunshines"
    ],
    "src": [
     "네이버"
    ],
-   "score": 61.0,
+   "score": 62.0,
    "traffic": "",
    "state": "",
    "rank": 30,
    "news": [],
-   "prev": 27,
-   "delta": -3,
+   "prev": 18,
+   "delta": -12,
+   "new": false
+  },
+  {
+   "k": "집 정리 수납",
+   "blogs": [
+    "mama2624"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 62.0,
+   "traffic": "",
+   "state": "",
+   "rank": 31,
+   "news": [],
+   "prev": 34,
+   "delta": 3,
+   "new": false
+  },
+  {
+   "k": "고혈압 관리",
+   "blogs": [
+    "jinjin2624"
+   ],
+   "src": [
+    "네이버"
+   ],
+   "score": 61.0,
+   "traffic": "",
+   "state": "",
+   "rank": 32,
+   "news": [],
+   "prev": 22,
+   "delta": -10,
    "new": false
   },
   {
@@ -638,28 +668,11 @@
    "score": 61.0,
    "traffic": "",
    "state": "",
-   "rank": 31,
+   "rank": 33,
    "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
-  },
-  {
-   "k": "우울증 증상",
-   "blogs": [
-    "jinjin2624"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 61.0,
-   "traffic": "",
-   "state": "",
-   "rank": 32,
-   "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
+   "prev": 31,
+   "delta": -2,
+   "new": false
   },
   {
    "k": "장염 증상",
@@ -672,49 +685,32 @@
    "score": 61.0,
    "traffic": "",
    "state": "",
-   "rank": 33,
+   "rank": 34,
    "news": [],
-   "prev": 32,
+   "prev": 33,
    "delta": -1,
    "new": false
   },
   {
-   "k": "집 정리 수납",
-   "blogs": [
-    "mama2624"
-   ],
-   "src": [
-    "네이버"
-   ],
-   "score": 61.0,
-   "traffic": "",
-   "state": "",
-   "rank": 34,
-   "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
-  },
-  {
-   "k": "이강인",
+   "k": "thứ hạng của sporting gặp man utd",
    "blogs": [],
    "src": [
     "구글 트렌드"
    ],
    "score": 104.0,
-   "traffic": "5000+",
+   "traffic": "200+",
    "state": "NEW",
    "rank": 35,
    "news": [
     {
-     "t": "'27위 추락' 아틀레티코 구할 이강인 출격! 시메오네 선택받았다...비킹전 선발, UCL 시즌 첫 골 정조준 - 머니투데이",
-     "u": "https://www.mt.co.kr/sports/2026/11/26/202611260446778645O",
-     "s": "머니투데이"
+     "t": "Video bóng đá Sporting Lisbon - MU: Mãn nhãn màn rượt đuổi tỉ số (Cúp C1)",
+     "u": "https://www.24h.com.vn/bong-da/video-bong-da-sporting-lisbon-mu-man-nhan-man-ruot-duoi-ti-so-cup-c1-c48a1814104.html",
+     "s": "Tin tức 24h"
     },
     {
-     "t": "'공격포인트 가뭄' ATM 이강인, 내일 UCL서 갈증 풀까",
-     "u": "https://www.newsis.com/view/NISX20261125_0003882798",
-     "s": "뉴시스"
+     "t": "Man Utd rơi chiến thắng trong trận cầu nhiều tranh cãi",
+     "u": "https://vnexpress.net/man-utd-roi-chien-thang-trong-tran-cau-nhieu-tranh-cai-5148943.html",
+     "s": "VnExpress"
     }
    ],
    "prev": 0,
@@ -722,25 +718,25 @@
    "new": true
   },
   {
-   "k": "삼성중공업",
+   "k": "mu",
    "blogs": [],
    "src": [
     "구글 트렌드"
    ],
    "score": 100.0,
-   "traffic": "100+",
+   "traffic": "200+",
    "state": "NEW",
    "rank": 36,
    "news": [
     {
-     "t": "삼성중공업 정기 임원인사 부사장 3명·상무 6명 승진",
-     "u": "https://www.yna.co.kr/view/AKR20261125064600003",
-     "s": "연합뉴스"
+     "t": "QUICK SPARK: Micron Stock Eyes Worst 2-Month Drop Since September 2001",
+     "u": "https://www.benzinga.com/markets/equities/26/11/63637521/micron-stock-worst-two-month-drop-since-2001",
+     "s": "Benzinga"
     },
     {
-     "t": "‘이왕근號’ 삼성重, 해양사업 고삐⋯ FLNG·다각화 ‘정조준’",
-     "u": "https://www.viva100.com/article/20261125500916",
-     "s": "브릿지경제"
+     "t": "Micron: This Is A Fire Sale (NASDAQ:MU)",
+     "u": "https://seekingalpha.com/article/4972001-micron-this-is-a-fire-sale",
+     "s": "Seeking Alpha"
     }
    ],
    "prev": 0,
@@ -748,25 +744,26 @@
    "new": true
   },
   {
-   "k": "한국대학신문",
+   "k": "금융감독원",
    "blogs": [],
    "src": [
-    "구글 트렌드"
+    "구글 트렌드",
+    "시그널"
    ],
-   "score": 96.0,
-   "traffic": "200+",
+   "score": 100.0,
+   "traffic": "100+",
    "state": "NEW",
    "rank": 37,
    "news": [
     {
-     "t": "최교진 사퇴에 교원단체들 “수능 AI 부정 대비 부족 리더십 한계”",
-     "u": "https://news.kbs.co.kr/news/view.do?ncd=8719643",
-     "s": "KBS 뉴스"
+     "t": "[금주의인물] ‘닮고 싶은 상사?’ 이찬진 금융감독원장 ‘李대통령 변호인’ 꼬리표 떼나",
+     "u": "https://weekly.hankooki.com/news/articleView.html?idxno=7194930",
+     "s": "주간한국"
     },
     {
-     "t": "[이수정칼럼] 장관 사직으로 해결될 수 없다",
-     "u": "https://www.joongboo.com/news/articleView.html?idxno=363743535",
-     "s": "중부일보"
+     "t": "이찬진, 금감원 직원 '닮고 싶은 상사'로 뽑혀 총 19명 선정",
+     "u": "https://www.fnnews.com/news/202611191800013352",
+     "s": "파이낸셜뉴스"
     }
    ],
    "prev": 0,
@@ -774,25 +771,52 @@
    "new": true
   },
   {
-   "k": "알테오젠",
+   "k": "나스닥 100",
+   "blogs": [],
+   "src": [
+    "구글 트렌드",
+    "시그널"
+   ],
+   "score": 96.0,
+   "traffic": "200+",
+   "state": "NEW",
+   "rank": 38,
+   "news": [
+    {
+     "t": "마이클 버리, 나스닥 100 풋옵션 전량 매도 “포트폴리오는 롱 중심”",
+     "u": "https://kr.investing.com/news/stock-market-news/article-2190694",
+     "s": "Investing.com 한국어"
+    },
+    {
+     "t": "‘빅쇼트’ 버리, 나스닥 하락 베팅 청산 엔비디아 재매도 예고",
+     "u": "https://www.g-enews.com/article/Global-Biz/2026/11/2026112608153972229a1f309431_1",
+     "s": "글로벌이코노믹"
+    }
+   ],
+   "prev": 0,
+   "delta": 0,
+   "new": true
+  },
+  {
+   "k": "필라데피아 대 마이애미",
    "blogs": [],
    "src": [
     "구글 트렌드"
    ],
-   "score": 92.0,
-   "traffic": "100+",
+   "score": 88.0,
+   "traffic": "1000+",
    "state": "",
-   "rank": 38,
+   "rank": 39,
    "news": [
     {
-     "t": "알테오젠 기술 엔허투SC 임상 환자 축소는 악재? 사례 찾아보니",
-     "u": "https://pharm.edaily.co.kr/News/Read?newsId=01685926645649656",
-     "s": "팜이데일리"
+     "t": "LIVE | Heat 66, 76ers 79",
+     "u": "https://www.nba.com/game/mia-vs-phi-0022600055/box-score",
+     "s": "NBA.com"
     },
     {
-     "t": "[종목이 보영] 급락장서 오른 알테오젠 로열티 전망은 하향",
-     "u": "https://www.straightnews.co.kr/news/articleView.html?idxno=316177",
-     "s": "스트레이트뉴스"
+     "t": "Dallas Mavericks vs Denver Nuggets Nov 24, 2026 Box Scores",
+     "u": "https://www.nba.com/game/dal-vs-den-0022600054/box-score",
+     "s": "NBA.com"
     }
    ],
    "prev": 0,
@@ -800,29 +824,14 @@
    "new": true
   },
   {
-   "k": "호프 수상 나홍진 칸에서",
-   "blogs": [],
-   "src": [
-    "시그널"
-   ],
-   "score": 90.0,
-   "traffic": "",
-   "state": "NEW",
-   "rank": 39,
-   "news": [],
-   "prev": 0,
-   "delta": 0,
-   "new": true
-  },
-  {
-   "k": "모두의카드 청소년 확대",
+   "k": "이강인 선발 2-0 승리",
    "blogs": [],
    "src": [
     "시그널"
    ],
    "score": 87.0,
    "traffic": "",
-   "state": "▲",
+   "state": "NEW",
    "rank": 40,
    "news": [],
    "prev": 0,
@@ -837,33 +846,33 @@
    ],
    "score": 84.0,
    "traffic": "",
-   "state": "▼",
+   "state": "",
    "rank": 41,
    "news": [],
-   "prev": 0,
+   "prev": 41,
    "delta": 0,
-   "new": true
+   "new": false
   },
   {
-   "k": "삼성그룹",
+   "k": "리그 오브 레전드 챔피언스 코리아",
    "blogs": [],
    "src": [
     "구글 트렌드"
    ],
    "score": 84.0,
-   "traffic": "100+",
+   "traffic": "500+",
    "state": "",
    "rank": 42,
    "news": [
     {
-     "t": "무게감 커진 리서치, 격하한 중공업 삼성 '교체설' CEO는 대부분 유임",
-     "u": "https://www.investchosun.com/site/data/html_dir/2026/11/24/2026112480079.html",
-     "s": "인베스트조선"
+     "t": "Bluffing joins DN SOOpers ahead of the 2027 LCK season",
+     "u": "https://www.sheepesports.com/en/articles/bluffing-joins-dn-soopers-ahead-of-the-2027-lck-season/en",
+     "s": "Sheep Esports"
     },
     {
-     "t": "삼성 전자 계열사, 오늘 조직개편 단행 로봇·AI 등 미래사업 조직 키우나",
-     "u": "https://www.newsis.com/view/NISX20261125_0003883178",
-     "s": "뉴시스"
+     "t": "Cuzz Leaves KT, Returns to DNS After Two Years",
+     "u": "https://www.invenglobal.com/articles/28718/cuzz-leaves-kt-returns-to-dns-after-two-years",
+     "s": "Inven Global"
     }
    ],
    "prev": 0,
@@ -873,62 +882,60 @@
  ],
  "news": [
   {
-   "t": "[단독] 불량인데 “그냥 사용” 중국산 쏘나타 국내 4만 대",
-   "u": "https://n.news.naver.com/article/056/0012301197?ntype=RANKING",
-   "s": "KBS",
+   "t": "\"이걸 들고 다닌다고?\" 벽돌 만큼 무거운데 550만원 역대 최고가 워크맨",
+   "u": "https://n.news.naver.com/article/277/0005847458?ntype=RANKING",
+   "s": "아시아경제",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "\"자꾸 특정 라인에서 죽어 나가\" 삼성 반도체 닦다가 또‥",
-   "u": "https://n.news.naver.com/article/214/0001538050?ntype=RANKING",
-   "s": "MBC",
+   "t": "[속보] 김정은, 북한 핵시설 현지지도 \"전술핵 다영역 활용화 주목해야\"",
+   "u": "https://n.news.naver.com/article/469/0000967842?ntype=RANKING",
+   "s": "한국일보",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "[속보] 나라경제 ‘나쁨’ 74.9%, 11달 만 최고치 李대통령 ‘잘함’은 37.9%로 상승",
-   "u": "https://n.news.naver.com/article/029/0003061211?ntype=RANKING",
-   "s": "디지털타임스",
+   "t": "서울에 동전 1만6000개 숨긴 작가 이번엔 말하는 다람쥐와 두꺼비",
+   "u": "https://n.news.naver.com/article/003/0014345623?ntype=RANKING",
+   "s": "뉴시스",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "엄마 수술비 훔쳐 간 중학생 직접 잡았는데 부모는 \"알아서 하세요\"",
-   "u": "https://n.news.naver.com/article/008/0005446551?ntype=RANKING",
-   "s": "머니투데이",
+   "t": "'리트 만점자' 과외 대학생, 경찰 출석 \"죽음이 도피처 돼선 안 돼\"",
+   "u": "https://n.news.naver.com/article/586/0000143025?ntype=RANKING",
+   "s": "시사저널",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "[단독] “버스 없애라” 대통령 한마디에 출퇴근 현장은 1년째 ‘혼란’",
-   "u": "https://n.news.naver.com/article/005/0001887525?ntype=RANKING",
-   "s": "국민일보",
-   "src": "네이버",
-   "blogs": []
-  },
-  {
-   "t": "어린이집 교사들, 아동학대 혐의 인정...부모들 \"엄벌 촉구\"",
-   "u": "https://n.news.naver.com/article/052/0002438020?ntype=RANKING",
+   "t": "AI로 되살아난 고인...조롱의 도구된 딥페이크 [앵커리포트]",
+   "u": "https://n.news.naver.com/article/052/0002438076?ntype=RANKING",
    "s": "YTN",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "'이진우 과외교사' 경찰 출석하며 \"명복을 빕니다, 하지만\"",
-   "u": "https://n.news.naver.com/article/437/0000522442?ntype=RANKING",
-   "s": "JTBC",
+   "t": "'세무냥이'는 혼자 했다는데 경찰이 범행 재현에 올인하는 이유",
+   "u": "https://n.news.naver.com/article/079/0004213945?ntype=RANKING",
+   "s": "노컷뉴스",
    "src": "네이버",
    "blogs": []
   },
   {
-   "t": "반도체 호황의 여파 삼전닉스 예치금, 주담대 금리까지 밀어올려",
-   "u": "https://n.news.naver.com/article/028/0002833940?ntype=RANKING",
-   "s": "한겨레",
+   "t": "가수 비, 대출받아 920억 강남 빌딩 사더니 5년 만에 ‘깜짝’",
+   "u": "https://n.news.naver.com/article/016/0002728526?ntype=RANKING",
+   "s": "헤럴드경제",
    "src": "네이버",
-   "blogs": [
-    "jiyn74"
-   ]
+   "blogs": []
+  },
+  {
+   "t": "한국인들 쓰레기 막 버리고 새치기까지 ‘헐값’ 스시자로에 대마도 신음",
+   "u": "https://n.news.naver.com/article/009/0005769125?ntype=RANKING",
+   "s": "매일경제",
+   "src": "네이버",
+   "blogs": []
   }
  ],
  "stats": {
@@ -939,387 +946,328 @@
  },
  "homefeed": {
   "version": "v1.9.7",
-  "observedAt": "2026-11-26 07:58",
+  "observedAt": "2026-11-26 08:53",
   "observedDate": "2026-11-26",
   "stale": false,
   "ok": true,
   "stats": {
-   "total": 44,
+   "total": 32,
    "len": {
-    "min": 19,
+    "min": 16,
     "median": 36,
-    "mean": 36.5,
-    "max": 62,
+    "mean": 37.2,
+    "max": 59,
     "buckets": {
-     "~24자": 2,
-     "25~36자": 21,
-     "37~44자": 15,
-     "45~50자": 1,
-     "51자~": 5
+     "~24자": 4,
+     "25~36자": 12,
+     "37~44자": 11,
+     "45~50자": 2,
+     "51자~": 3
     }
    },
    "counts": {
-    "digit": 27,
-    "money": 17,
-    "quote": 8,
-    "question": 11,
+    "digit": 22,
+    "money": 12,
+    "quote": 21,
+    "question": 10,
     "exclaim": 2,
     "limit": 4,
-    "flip": 2,
-    "vague": 3,
+    "flip": 1,
+    "vague": 0,
     "first": 1,
-    "brand": 14,
-    "badEnding": 2,
+    "brand": 18,
+    "badEnding": 0,
     "questionOnly": 0
    },
    "rates": {
-    "digit": 61.4,
-    "money": 38.6,
-    "quote": 18.2,
-    "question": 25.0,
-    "exclaim": 4.5,
-    "limit": 9.1,
-    "flip": 4.5,
-    "vague": 6.8,
-    "first": 2.3,
-    "brand": 31.8,
-    "badEnding": 4.5,
+    "digit": 68.8,
+    "money": 37.5,
+    "quote": 65.6,
+    "question": 31.2,
+    "exclaim": 6.2,
+    "limit": 12.5,
+    "flip": 3.1,
+    "vague": 0.0,
+    "first": 3.1,
+    "brand": 56.2,
+    "badEnding": 0.0,
     "questionOnly": 0.0
    },
    "angles": [
     {
      "n": "①",
      "k": "생활 속 실수·손해 회피",
-     "count": 3,
-     "pct": 6.8,
-     "examples": [
-      "친구 결혼식에 10만원 축의 했다가 손절당했네요",
-      "59세 김성령, 20년째 ‘아침 식사’ 꼭 챙긴다⋯“거르면 심장병 위험 27%↑”",
-      "트레이더스 이거 누가 그냥 지나쳐요? 이건 너무하잖아요"
-     ]
+     "count": 0,
+     "pct": 0.0,
+     "examples": []
     },
     {
      "n": "②",
      "k": "확인 1가지",
-     "count": 6,
-     "pct": 13.6,
+     "count": 1,
+     "pct": 3.1,
      "examples": [
-      "59세 김성령, 20년째 ‘아침 식사’ 꼭 챙긴다⋯“거르면 심장병 위험 27%↑”",
-      "“50대에도 날씬한 오연수의 아침식사” 딱 3가지 재료로 다이어트 단호박빵 만들기 노밀가루빵",
-      "\"내 발로 걷고, 혼자 일어나려면.. 꼭 해야 합니다.\" 시니어를 위한 필수 하체운동 6가지"
+      "\"좋은 줄 알고 매일 했는데..\" 겨울철 전기차 배터리 수명 줄이는 습관 6가지"
      ]
     },
     {
      "n": "③",
      "k": "반전·상식 뒤집기",
-     "count": 2,
-     "pct": 4.5,
+     "count": 1,
+     "pct": 3.1,
      "examples": [
-      "말 대신 이렇게 표현해요, 우리가 몰랐던 강아지 언어",
-      "다이소 3군데 돌고 겨우 구했습니다.. 보이면 묻지도 따지지도 말고 담는 추천템"
+      "“S클래스보다 편하다고?” 회장님도 타보면 생각 달라진다는 럭셔리 SUV."
      ]
     },
     {
      "n": "④",
      "k": "공감·내 얘기",
-     "count": 1,
-     "pct": 2.3,
-     "examples": [
-      "또 저거네?..공항에서 유독 자주 띄는 운동브랜드 로고"
-     ]
+     "count": 0,
+     "pct": 0.0,
+     "examples": []
     },
     {
      "n": "⑤",
      "k": "시즌·시의성",
-     "count": 3,
-     "pct": 6.8,
+     "count": 2,
+     "pct": 6.2,
      "examples": [
-      "큰 가방 좋아하는데.. 연말 모임엔 작은 명품백이 예쁠 것 같아요",
-      "2026 겨울네일아트 디자인 추천 올리브영 네일팁 데싱디바",
-      "삼성전자 배당금 지급일 11월 27일, 100주 보유하면 얼마 받을까?"
+      "네이버 음악앱 '바이브' 8년 만에 문 닫는다…12월31일 종료",
+      "\"좋은 줄 알고 매일 했는데..\" 겨울철 전기차 배터리 수명 줄이는 습관 6가지"
      ]
     },
     {
      "n": "⑥",
      "k": "따옴표 인용·말맛",
-     "count": 8,
-     "pct": 18.2,
+     "count": 21,
+     "pct": 65.6,
      "examples": [
-      "\"현백코어\" 따위 집어치우라는 범삼성가 부회장님의 파격적인 스타일",
-      "래퍼 퀸 와사비, 10kg 넘게 요요 왔다…“마운자로 내성 생겼다”",
-      "59세 김성령, 20년째 ‘아침 식사’ 꼭 챙긴다⋯“거르면 심장병 위험 27%↑”"
+      "네이버 음악앱 '바이브' 8년 만에 문 닫는다…12월31일 종료",
+      "2천만원에 650km \"현대차 맞아?\" 쏘나타급 세단",
+      "이럴수가! \"4900대에서 500대로 추락\"...쏘렌토 앞에서 무너진 SUV"
      ]
     },
     {
      "n": "⑦",
      "k": "숫자 실험·기록",
-     "count": 2,
-     "pct": 4.5,
+     "count": 3,
+     "pct": 9.4,
      "examples": [
-      "매일 폼롤러 위에 서기 30초, 한 달 후 생기는 변화",
-      "무지위크 뭐사지?써보고 써보다 12년차 주부가 정착한 무인양품 추천템 BEST3"
+      "네이버 음악앱 '바이브' 8년 만에 문 닫는다…12월31일 종료",
+      "\"아빠들 벌써 난리났다\" 21년 만에 확 바뀐다는 국민 1톤 트럭, 디젤도 뺀다",
+      "\"이걸 벌써 할인해?\" 출시 1년 만에 가격 떡락한 지쇼크 신상 파격 세일"
      ]
     }
    ],
    "panels": {
-    "추천·구독": 19,
-    "건강": 13,
-    "리빙": 12
+    "자동차": 32
    },
    "media": {
-    "인플루언서": 26,
-    "블로그": 13,
     "뉴스": 4,
-    "카페": 1
+    "인플루언서": 17,
+    "카페": 2,
+    "블로그": 9
    },
    "matters": {
-    "연예·화제": 11,
-    "리빙·살림": 12,
-    "패션·뷰티": 5,
-    "건강·질병": 12,
-    "먹거리·장보기": 4
+    "기타": 28,
+    "육아·교육": 1,
+    "경제·제도·돈": 1,
+    "자기계발·심리": 1,
+    "먹거리·장보기": 1
    }
   },
-  "promptBlock": "[📊 네이버 홈판 인기글 실측 — 2026-11-26 비로그인 수집 44건]\n· 판 분포: 추천·구독 19 · 건강 13 · 리빙 12\n· 매체: 인플루언서 59% · 블로그 29% · 뉴스 9% · 카페 2%\n· 제목 길이: 최소 19자 / 중앙 36자 / 최대 62자 — 가장 많은 구간 25~36자 21건(47.7%)\n· 제목 장치: 숫자 61.4% · 금액·수치 38.6% · 따옴표 18.2% · 조건 한정 9.1% · 반전 4.5% · 고유명사 31.8%\n· 7각도 실측: ①7% ②14% ③4% ④2% ⑤7% ⑥18% ⑦4%\n· 이번 실측에서 '후기'로 끝나는 제목은 2건 — 홈판에서 가장 약한 끝맺음이다\n· 실제 제목 예(그대로 베끼지 말고 각도·길이·숫자 감각만 참고):\n  ⑥ \"현백코어\" 따위 집어치우라는 범삼성가 부회장님의 파격적인 스타일\n  ② 59세 김성령, 20년째 ‘아침 식사’ 꼭 챙긴다⋯“거르면 심장병 위험 27%↑”\n  ① 친구 결혼식에 10만원 축의 했다가 손절당했네요\n  ⑤ 큰 가방 좋아하는데.. 연말 모임엔 작은 명품백이 예쁠 것 같아요",
+  "promptBlock": "[📊 네이버 홈판 인기글 실측 — 2026-11-26 비로그인 수집 32건]\n· 판 분포: 자동차 32\n· 매체: 인플루언서 53% · 블로그 28% · 뉴스 12% · 카페 6%\n· 제목 길이: 최소 16자 / 중앙 36자 / 최대 59자 — 가장 많은 구간 25~36자 12건(37.5%)\n· 제목 장치: 숫자 68.8% · 금액·수치 37.5% · 따옴표 65.6% · 조건 한정 12.5% · 반전 3.1% · 고유명사 56.2%\n· 7각도 실측: ①0% ②3% ③3% ④0% ⑤6% ⑥66% ⑦9%\n· 이번 실측에서 '후기'로 끝나는 제목은 0건 — 홈판에서 가장 약한 끝맺음이다\n· 실제 제목 예(그대로 베끼지 말고 각도·길이·숫자 감각만 참고):\n  ⑥ 네이버 음악앱 '바이브' 8년 만에 문 닫는다…12월31일 종료\n  ⑦ \"아빠들 벌써 난리났다\" 21년 만에 확 바뀐다는 국민 1톤 트럭, 디젤도 뺀다\n  ⑤ \"좋은 줄 알고 매일 했는데..\" 겨울철 전기차 배터리 수명 줄이는 습관 6가지\n  ③ “S클래스보다 편하다고?” 회장님도 타보면 생각 달라진다는 럭셔리 SUV.",
   "items": [
    {
-    "title": "순자산 50억 있어도 회사 열심히 다녀야 하는 이유",
-    "url": "https://in.naver.com/bloom/contents/internal/1020926996694912",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "[Chuu LENS] 츄렌즈 봉봉베어부 원데이 솔직 후기 더치블랙 및 허니초코 착용샷 체감 직경 비교",
-    "url": "https://in.naver.com/dayun/contents/internal/1021211931023680",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "에스티로더 더블웨어 파운데이션 1N0 포슬린 후기 (리뉴얼 버전)",
-    "url": "https://in.naver.com/gyerimong/contents/internal/1021233845196832",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "큰 가방 좋아하는데.. 연말 모임엔 작은 명품백이 예쁠 것 같아요",
-    "url": "https://in.naver.com/nilla/contents/internal/1017315709863232",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "8년 묵은 친구네 창문 저 혼자 닦고 왔어요. 가능한 이유는?#유리제로#창문청소 #살림꿀팁 #생활꿀팁 #창문청소",
-    "url": "https://m.blog.naver.com/mijin2337/clip/16878250",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "2026 겨울네일아트 디자인 추천 올리브영 네일팁 데싱디바",
-    "url": "https://in.naver.com/youridalbit/contents/internal/1021192222312416",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "강아지 귀긁기 상처 외이염 증상 구분하기",
-    "url": "https://in.naver.com/hj12165445/contents/internal/1021095747533248",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "말 대신 이렇게 표현해요, 우리가 몰랐던 강아지 언어",
-    "url": "https://in.naver.com/eruriee/contents/internal/1021147902453824",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "거실 서재화 하고 싶지만 인테리어는 포기 못한다면",
-    "url": "https://blog.naver.com/hyean__home/224466578053",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "평소 키 170cm로 보였는데.. 150cm로 보이게 만든 이주빈 패션",
-    "url": "https://blog.naver.com/somethingthatilove/224491082903",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "천호 현대백화점 크리스마스트리 고양이 보고 서울 실내 놀기 좋은 곳",
-    "url": "https://in.naver.com/sunsun1890/contents/internal/1021094839634208",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "파주 프리미엄아울렛 프라다 매장 패딩 착용 후기",
-    "url": "https://in.naver.com/baeksufassion/contents/internal/1017162158593760",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "서귀포 림프순환 테라피 오늘도바디케어, 스톤 아로마와 셀프 관리법",
-    "url": "https://blog.naver.com/sunny_life02/224492076586",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "삼성전자 배당금 지급일 11월 27일, 100주 보유하면 얼마 받을까?",
-    "url": "https://in.naver.com/jc-life/contents/internal/1021023056353536",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "굿파트너2 장나라 김혜윤 옷 패션 가방 셔츠 자켓 귀걸이 시계 정보",
-    "url": "https://blog.naver.com/vnfls0021/224491706827",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "또 저거네?..공항에서 유독 자주 띄는 운동브랜드 로고",
-    "url": "https://in.naver.com/ailee__k/contents/internal/1019599926966528",
-    "panel": "추천·구독",
-    "media": "인플루언서"
-   },
-   {
-    "title": "\"현백코어\" 따위 집어치우라는 범삼성가 부회장님의 파격적인 스타일",
-    "url": "https://blog.naver.com/romance1019/224482950603",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "2026 자라 블랙프라이데이 세일 기간 할인 품목 앱 오픈 시간 총정리",
-    "url": "https://blog.naver.com/kim_the_garden/224491212577",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "마이크론(MU) 목표주가 반토막, 메모리 반도체 슈퍼사이클은 끝나가는 걸까?",
-    "url": "https://blog.naver.com/hb240331/224491402421",
-    "panel": "추천·구독",
-    "media": "블로그"
-   },
-   {
-    "title": "래퍼 퀸 와사비, 10kg 넘게 요요 왔다…“마운자로 내성 생겼다”",
-    "url": "https://n.news.naver.com/article/296/0000107804",
-    "panel": "건강",
+    "title": "네이버 음악앱 '바이브' 8년 만에 문 닫는다…12월31일 종료",
+    "url": "https://n.news.naver.com/article/421/0009310678",
+    "panel": "자동차",
     "media": "뉴스"
    },
    {
-    "title": "친구 결혼식에 10만원 축의 했다가 손절당했네요",
-    "url": "https://blog.naver.com/enjoy1677/224488489254",
-    "panel": "건강",
-    "media": "블로그"
-   },
-   {
-    "title": "매일 폼롤러 위에 서기 30초, 한 달 후 생기는 변화",
-    "url": "https://blog.naver.com/kimie1129/224458026516",
-    "panel": "건강",
-    "media": "블로그"
-   },
-   {
-    "title": "59세 김성령, 20년째 ‘아침 식사’ 꼭 챙긴다⋯“거르면 심장병 위험 27%↑”",
-    "url": "https://n.news.naver.com/article/296/0000107825",
-    "panel": "건강",
-    "media": "뉴스"
-   },
-   {
-    "title": "“50대에도 날씬한 오연수의 아침식사” 딱 3가지 재료로 다이어트 단호박빵 만들기 노밀가루빵",
-    "url": "https://in.naver.com/cookingsunny/contents/internal/1017830716491232",
-    "panel": "건강",
+    "title": "2천만원에 650km \"현대차 맞아?\" 쏘나타급 세단",
+    "url": "https://in.naver.com/gomdora/contents/internal/1013182078603712",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "저탄고지 다이어트 식단표 45kg 대까지 빠졌던 현실 식단",
-    "url": "https://in.naver.com/chojy0303/contents/internal/1017845466445312",
-    "panel": "건강",
+    "title": "아이오닉9 취소할게요, 현대 팰리세이드 하이브리드 재평가 ㄷㄷ",
+    "url": "https://in.naver.com/meucity/contents/internal/1018181791012288",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "식도암4기,직장암4기.나는 암 환자 이지만 살아갈 것이다. 눈이 부시게.",
-    "url": "https://blog.naver.com/yeumzang/224461961058",
-    "panel": "건강",
-    "media": "블로그"
-   },
-   {
-    "title": "채소라고 방심했다간 체중 늘 수도…다이어트식의 반전",
-    "url": "https://n.news.naver.com/article/022/0004178183",
-    "panel": "건강",
-    "media": "뉴스"
-   },
-   {
-    "title": "단순 등 통증인 줄 알았는데, 이게 췌장암 신호라고?",
-    "url": "https://blog.naver.com/brain-theraphy/224466008499",
-    "panel": "건강",
-    "media": "블로그"
-   },
-   {
-    "title": "17kg나 다이어트 했는데.. 따라하지 말라니..",
-    "url": "https://in.naver.com/dltmdrmsl/contents/internal/1019437644994560",
-    "panel": "건강",
-    "media": "인플루언서"
-   },
-   {
-    "title": "\"내 발로 걷고, 혼자 일어나려면.. 꼭 해야 합니다.\" 시니어를 위한 필수 하체운동 6가지",
-    "url": "https://blog.naver.com/pshhh9301/224474593960",
-    "panel": "건강",
-    "media": "블로그"
-   },
-   {
-    "title": "“국 끓이기 전 ‘30초’ 투자하세요”… 신경 쓰이는 ‘나트륨’ 줄어듭니다",
-    "url": "https://n.news.naver.com/article/346/0000119483",
-    "panel": "건강",
-    "media": "뉴스"
-   },
-   {
-    "title": "침묵의 장기 췌장을 살리는 최고의 식품 5가지",
-    "url": "https://in.naver.com/konggaeng/contents/internal/1012145981251936",
-    "panel": "건강",
-    "media": "인플루언서"
-   },
-   {
-    "title": "이게 케이크라고..?! GS25 편의점 본죽 초코케이크 후기",
-    "url": "https://in.naver.com/mangdy/contents/internal/1019013968955840",
-    "panel": "리빙",
-    "media": "인플루언서"
-   },
-   {
-    "title": "트레이더스 이거 누가 그냥 지나쳐요? 이건 너무하잖아요",
-    "url": "https://in.naver.com/podosomsatang/contents/internal/1019747442280928",
-    "panel": "리빙",
-    "media": "인플루언서"
-   },
-   {
-    "title": "집에서 와서 먹으니 더 맛있는 까까",
-    "url": "https://cafe.naver.com/jpnstory/4452302?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo0NDUyMzAyLCJjYWZlVXJsIjoianBuc3RvcnkiLCJpc3N1ZWRBdCI6MTc5NTY0NzI0ODM0NX0.K3kjYh-uiBCH5eLaDW88kgTKH7S4GkHzLRr73DALIuI",
-    "panel": "리빙",
+    "title": "이게 뭐죠? 원래 이런건가요?",
+    "url": "https://cafe.naver.com/iroid/5547995?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjo1NTQ3OTk1LCJjYWZlVXJsIjoiaXJvaWQiLCJpc3N1ZWRBdCI6MTc5NTY1MDYzMDMxNH0.wlIdvAiOMU0d01VJbDwPJOg_ulkvHj9AwiLz7UUW3j0",
+    "panel": "자동차",
     "media": "카페"
    },
    {
-    "title": "\"아니 다이소에 이런 것까지?\" 갑자기 추워진 날씨에 바로 집어 온 3가지",
-    "url": "https://in.naver.com/aayomin/contents/internal/1020308118956128",
-    "panel": "리빙",
+    "title": "이럴수가! \"4900대에서 500대로 추락\"...쏘렌토 앞에서 무너진 SUV",
+    "url": "https://blog.naver.com/mobility_trend/224464344973",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "기름값이 문제지만 \"GV80보다 좋던데요?\" 오너들이 극찬하고 타는 럭셔리 대형 SUV",
+    "url": "https://blog.naver.com/roadlog_99/224486120335",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "정신병 걸릴 것 같은 대한민국 고속도로 상황",
+    "url": "https://in.naver.com/leesj4308/contents/internal/1018390698247936",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "코스트코“계산할 때 손이 덜덜 떨렸는데..”먹어보고 오히려잘 샀다 싶었던 3가지",
-    "url": "https://in.naver.com/happytoday/contents/internal/1018904269813184",
-    "panel": "리빙",
+    "title": "\"2천짜리 K9 나왔는데 한숨\" 예비오너들, 계약 하려다 갑자기 멈칫",
+    "url": "https://in.naver.com/daki/contents/internal/1016916662543616",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "코스트코 이거 비싸서 손 떨면서 사 왔는데 먹어보고 입틀막... 매대 다 비어있던 이유가 있네요",
-    "url": "https://in.naver.com/tlsrb2008/contents/internal/1020612574881664",
-    "panel": "리빙",
+    "title": "\"H자 램프만 지우는 줄 알았는데..\" 현대 싼타페 페이스리프트, 대형 화면과 줄어든 버튼까지 바뀐다",
+    "url": "https://blog.naver.com/cardogirl/224488099650",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "\"아빠들 벌써 난리났다\" 21년 만에 확 바뀐다는 국민 1톤 트럭, 디젤도 뺀다",
+    "url": "https://in.naver.com/mindev/contents/internal/1016798524155424",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "다이소 3군데 돌고 겨우 구했습니다.. 보이면 묻지도 따지지도 말고 담는 추천템",
-    "url": "https://in.naver.com/eunvely_19/contents/internal/1019354159777952",
-    "panel": "리빙",
+    "title": "4134만원 풀옵션, 2027 현대 아반떼 하이브리드 인스퍼레이션 시승기",
+    "url": "https://in.naver.com/redrpm/contents/internal/1015456979412416",
+    "panel": "자동차",
     "media": "인플루언서"
    },
    {
-    "title": "무지위크 뭐사지?써보고 써보다 12년차 주부가 정착한 무인양품 추천템 BEST3",
-    "url": "https://in.naver.com/yellowin23/contents/internal/1019528530073504",
-    "panel": "리빙",
+    "title": "\"쏘렌토 계약했는데 이게 나오나?\" 쉐보레 블레이저 풀체인지 심상치 않다!",
+    "url": "https://in.naver.com/ehs311/contents/internal/1020676798932896",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "연봉 상위 1%들도 못탄다는 '외제차'",
+    "url": "https://in.naver.com/bumbum/contents/internal/1020858954012544",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "‘4000만원대 렉스턴 온다’⋯ BYD 독주 막으러 KGM·한국지엠 ‘PHEV 총공세’",
+    "url": "https://blog.naver.com/brnews0915/224489558199",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "\"이래서 2억 넘는거네\" GV90 네오룬 주행 영상 다시보니",
+    "url": "https://in.naver.com/ddihw/contents/internal/1016778551547360",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "투싼 NX5 풀체인지 썬팅 가성비 정점 하버캠프 알루본드",
+    "url": "https://in.naver.com/carstermotors/contents/internal/1019791509145792",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "폴스타4 차박, 배터리 20% 남아도 캠핑 모드가 끝나는 이유",
+    "url": "https://in.naver.com/heading100/contents/internal/1017439787554560",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "1,660만원을 더 얹고도 화려함을 뺐다, 레인지로버 SV 블랙",
+    "url": "https://in.naver.com/wbear/contents/internal/1015527443285376",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "빅뱅 신곡에 검색 급증…유튜브 타고 세계로 퍼진 MAMA 열기",
+    "url": "https://n.news.naver.com/article/018/0006415670",
+    "panel": "자동차",
+    "media": "뉴스"
+   },
+   {
+    "title": "신차에 이렇게 녹이 있을 수 있나요??",
+    "url": "https://cafe.naver.com/noljatravel/1935770?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1haXJz.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfVVJMIiwiYXJ0aWNsZUlkIjoxOTM1NzcwLCJjYWZlVXJsIjoibm9samF0cmF2ZWwiLCJpc3N1ZWRBdCI6MTc5NTY1MDc1MDI5OH0.kMYNkf2BtYCeBsOOGD2hOG7kMNvOVZD_fDZCnQD5TNQ",
+    "panel": "자동차",
+    "media": "카페"
+   },
+   {
+    "title": "“S클래스보다 편하다고?” 회장님도 타보면 생각 달라진다는 럭셔리 SUV.",
+    "url": "https://in.naver.com/helovestory/contents/internal/1015333482594560",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "\"이걸 벌써 할인해?\" 출시 1년 만에 가격 떡락한 지쇼크 신상 파격 세일",
+    "url": "https://blog.naver.com/avecjtm/224473717411",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "\"타스만보다 잘팔리는 이유? KGM 픽업트럭 무쏘 실물보니\"",
+    "url": "https://blog.naver.com/autocarnic/224466608448",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "이게 1,700만원이면 \"쏘나타 어쩌나\" 하루만에 1만대 팔린 전기세단",
+    "url": "https://in.naver.com/ddong2/contents/internal/1018497265378624",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "\"투싼, 스포티지 안보이네..\" 디자인, 가격 압승이라는 '국산차'",
+    "url": "https://in.naver.com/bumbum/contents/internal/1020202036951296",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "\"좋은 줄 알고 매일 했는데..\" 겨울철 전기차 배터리 수명 줄이는 습관 6가지",
+    "url": "https://in.naver.com/oksk2002kr/contents/internal/1015723650626976",
+    "panel": "자동차",
+    "media": "인플루언서"
+   },
+   {
+    "title": "\"1650만원 할인은 못 참지\" 완전변경 신차 공개됐는데, 판매량 역주행 중이라는 '이 SUV'",
+    "url": "https://blog.naver.com/mobility_trend/224477937242",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "\"안 탄다더니...\" BYD 씨라이언 6 DM-i 인기만 좋다?",
+    "url": "https://blog.naver.com/owlseok/224467251485",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "'가성비 강자' 샤오미도 흔들…램마겟돈에 中 스마트폰 직격탄",
+    "url": "https://n.news.naver.com/article/421/0009310684",
+    "panel": "자동차",
+    "media": "뉴스"
+   },
+   {
+    "title": "티타늄 케이스에 담아내는 눈송이, 그랜드세이코 스노우플레이크 37mm(GRAND SEIKO SBGX355)",
+    "url": "https://blog.naver.com/dog_poo_philosophy/224486593553",
+    "panel": "자동차",
+    "media": "블로그"
+   },
+   {
+    "title": "“이직하려면 AI 프롬프트 내라고?”…직장인 78% “노하우 도용 우려”",
+    "url": "https://n.news.naver.com/article/018/0006415662",
+    "panel": "자동차",
+    "media": "뉴스"
+   },
+   {
+    "title": "카니발 KA4 페이스리프트 전후 차이, 가격과 디자인 비교",
+    "url": "https://in.naver.com/djusti/contents/internal/1015488039401216",
+    "panel": "자동차",
     "media": "인플루언서"
    }
   ]
@@ -6001,8 +5949,8 @@
  "hotItems": {
   "version": "1.0",
   "studio": "2.1.0",
-  "generated_at": "2026-11-26T07:58:40+09:00",
-  "generated_label": "11월 26일 07:58 기준",
+  "generated_at": "2026-11-26T08:54:07+09:00",
+  "generated_label": "11월 26일 08:54 기준",
   "auto_note": "매시 10분 GitHub Actions 자동 갱신 · 0원 공개 소스 2곳",
   "keep_hours": 72,
   "sources": [
@@ -6012,7 +5960,7 @@
     "url": "https://www.clien.net/service/board/jirum",
     "ok": true,
     "count": 29,
-    "ms": 866,
+    "ms": 753,
     "error": "",
     "stale": false
    },
@@ -6022,7 +5970,7 @@
     "url": "https://hothub.app/rss.xml",
     "ok": true,
     "count": 25,
-    "ms": 413,
+    "ms": 350,
     "error": "",
     "stale": false
    }
@@ -6045,16 +5993,40 @@
     "k": "코스피 급락"
    },
    {
+    "k": "겨울 여행지"
+   },
+   {
     "k": "아파트 값"
    },
    {
-    "k": "암 초기증상"
+    "k": "연예인 결혼"
    },
    {
     "k": "한파 대비"
    },
    {
-    "k": "겨울 여행지"
+    "k": "마이크론 주가 급락"
+   },
+   {
+    "k": "암 초기증상"
+   },
+   {
+    "k": "빗썸 해킹 추가 피해"
+   },
+   {
+    "k": "치매 초기증상"
+   },
+   {
+    "k": "김새롬 재혼 2세 계획"
+   },
+   {
+    "k": "겨울 보습 관리"
+   },
+   {
+    "k": "겨울 패딩"
+   },
+   {
+    "k": "노후 준비"
    },
    {
     "k": "비트코인 시세"
@@ -6063,100 +6035,76 @@
     "k": "장바구니 물가"
    },
    {
-    "k": "치매 초기증상"
-   },
-   {
-    "k": "겨울 패딩"
-   },
-   {
-    "k": "연금 수령액"
-   },
-   {
-    "k": "연예인 결혼"
-   },
-   {
-    "k": "정부 지원금"
-   },
-   {
-    "k": "기준금리 전망"
+    "k": "주담대 금리"
    },
    {
     "k": "청년 지원금"
    },
    {
+    "k": "기준금리 전망"
+   },
+   {
+    "k": "연금 수령액"
+   },
+   {
     "k": "전세 시세"
    },
    {
-    "k": "수면 습관"
-   },
-   {
-    "k": "제철 음식"
-   },
-   {
-    "k": "혈당 낮추는 식단"
-   },
-   {
-    "k": "영화 추천"
-   },
-   {
-    "k": "겨울 면역력 음식"
-   },
-   {
-    "k": "고혈압 관리"
-   },
-   {
-    "k": "금값 시세"
-   },
-   {
-    "k": "노후 준비"
-   },
-   {
-    "k": "주담대 금리"
-   },
-   {
-    "k": "최저임금"
+    "k": "정부 지원금"
    },
    {
     "k": "환율 전망"
    },
    {
+    "k": "혈당 낮추는 식단"
+   },
+   {
+    "k": "수면 습관"
+   },
+   {
     "k": "감기 증상"
+   },
+   {
+    "k": "겨울 면역력 음식"
    },
    {
     "k": "관절·디스크"
    },
    {
-    "k": "국가건강검진 항목"
+    "k": "금값 시세"
    },
    {
-    "k": "나트륨 줄이는 식단"
-   },
-   {
-    "k": "우울증 증상"
-   },
-   {
-    "k": "장염 증상"
+    "k": "제철 음식"
    },
    {
     "k": "집 정리 수납"
    },
    {
-    "k": "이강인"
+    "k": "고혈압 관리"
    },
    {
-    "k": "삼성중공업"
+    "k": "나트륨 줄이는 식단"
    },
    {
-    "k": "한국대학신문"
+    "k": "장염 증상"
    },
    {
-    "k": "알테오젠"
+    "k": "thứ hạng của sporting gặp man utd"
    },
    {
-    "k": "호프 수상 나홍진 칸에서"
+    "k": "mu"
    },
    {
-    "k": "모두의카드 청소년 확대"
+    "k": "금융감독원"
+   },
+   {
+    "k": "나스닥 100"
+   },
+   {
+    "k": "필라데피아 대 마이애미"
+   },
+   {
+    "k": "이강인 선발 2-0 승리"
    }
   ],
   "notes": [
@@ -6175,7 +6123,7 @@
     "topic": "Madlio Premium 리딤",
     "url": "https://www.clien.net/service/board/jirum/19294397",
     "author": "LeChatNoir",
-    "views": 15900,
+    "views": 16000,
     "votes": 15,
     "comments": 41,
     "posted_at": "2026-11-18 08:30:54",
@@ -6194,7 +6142,7 @@
     "matched_keywords": [],
     "score": 162.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6206,7 +6154,7 @@
     "topic": "필립스 소닉케어 파워플로서 5000 (=워터픽, $59.96/무배)",
     "url": "https://www.clien.net/service/board/jirum/19296664",
     "author": "오라질",
-    "views": 10900,
+    "views": 11000,
     "votes": 4,
     "comments": 18,
     "posted_at": "2026-11-21 22:36:27",
@@ -6224,8 +6172,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 112.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6237,7 +6185,7 @@
     "topic": "Koss Porta Pro LE",
     "url": "https://www.clien.net/service/board/jirum/19296583",
     "author": "LeChatNoir",
-    "views": 10800,
+    "views": 10900,
     "votes": 1,
     "comments": 19,
     "posted_at": "2026-11-21 18:22:51",
@@ -6255,8 +6203,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 108.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6268,7 +6216,7 @@
     "topic": "텐가 30% 세일",
     "url": "https://www.clien.net/service/board/jirum/19293092",
     "author": "LeChatNoir",
-    "views": 21000,
+    "views": 21100,
     "votes": 4,
     "comments": 13,
     "posted_at": "2026-11-16 11:50:37",
@@ -6287,7 +6235,7 @@
     "matched_keywords": [],
     "score": 101.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6299,7 +6247,7 @@
     "topic": "apple TV+ 6개월간 월 2900원씩 프로모션",
     "url": "https://www.clien.net/service/board/jirum/19296182",
     "author": "라디",
-    "views": 14400,
+    "views": 14500,
     "votes": 2,
     "comments": 14,
     "posted_at": "2026-11-20 19:50:06",
@@ -6317,8 +6265,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 100.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6330,7 +6278,7 @@
     "topic": "2026 맥북에어 M5, 16GB / 512GB, MDHE4LL/A",
     "url": "https://www.clien.net/service/board/jirum/19297493",
     "author": "베린이탈출원해요",
-    "views": 12100,
+    "views": 12200,
     "votes": 0,
     "comments": 16,
     "posted_at": "2026-11-23 20:27:32",
@@ -6348,8 +6296,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 96.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6361,7 +6309,7 @@
     "topic": "도레이씨 안경닦이 안경수건 천 도레이 극세사 클리너 선물용",
     "url": "https://www.clien.net/service/board/jirum/19297766",
     "author": "쾰른",
-    "views": 7297,
+    "views": 7389,
     "votes": 1,
     "comments": 13,
     "posted_at": "2026-11-24 10:42:33",
@@ -6379,8 +6327,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 92.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6392,7 +6340,7 @@
     "topic": "Bowers & Wilkins Pi6",
     "url": "https://www.clien.net/service/board/jirum/19294762",
     "author": "LeChatNoir",
-    "views": 14800,
+    "views": 14900,
     "votes": 3,
     "comments": 9,
     "posted_at": "2026-11-18 19:57:04",
@@ -6411,7 +6359,7 @@
     "matched_keywords": [],
     "score": 86.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6441,8 +6389,39 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 84.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
+    "is_new": true
+   },
+   {
+    "id": "clien_19298517",
+    "sn": "19298517",
+    "source": "clien_jirum",
+    "source_name": "클리앙 알뜰구매",
+    "title": "[네이버] 인케이스 외 할인",
+    "topic": "인케이스 외 할인",
+    "url": "https://www.clien.net/service/board/jirum/19298517",
+    "author": "백화련",
+    "views": 6319,
+    "votes": 2,
+    "comments": 7,
+    "posted_at": "2026-11-25 19:19:15",
+    "price": null,
+    "currency": null,
+    "discount_pct": null,
+    "mall": "네이버",
+    "clien_category": "상품정보",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "is_product": true,
+    "adult": false,
+    "kind": "deal",
+    "matched_keywords": [],
+    "score": 82.0,
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6454,7 +6433,7 @@
     "topic": "Mark of the Deep 무료 외",
     "url": "https://www.clien.net/service/board/jirum/19295737",
     "author": "공허의날개",
-    "views": 11400,
+    "views": 11500,
     "votes": 6,
     "comments": 2,
     "posted_at": "2026-11-20 01:28:58",
@@ -6472,39 +6451,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 80.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
-    "is_new": true
-   },
-   {
-    "id": "clien_19298517",
-    "sn": "19298517",
-    "source": "clien_jirum",
-    "source_name": "클리앙 알뜰구매",
-    "title": "[네이버] 인케이스 외 할인",
-    "topic": "인케이스 외 할인",
-    "url": "https://www.clien.net/service/board/jirum/19298517",
-    "author": "백화련",
-    "views": 5857,
-    "votes": 2,
-    "comments": 5,
-    "posted_at": "2026-11-25 19:19:15",
-    "price": null,
-    "currency": null,
-    "discount_pct": null,
-    "mall": "네이버",
-    "clien_category": "상품정보",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "is_product": true,
-    "adult": false,
-    "kind": "deal",
-    "matched_keywords": [],
-    "score": 78.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6516,7 +6464,7 @@
     "topic": "오디오테크니카 AT-SB727 휴대용 무선 블루투스 턴테이블",
     "url": "https://www.clien.net/service/board/jirum/19296761",
     "author": "LeChatNoir",
-    "views": 22700,
+    "views": 22900,
     "votes": 1,
     "comments": 4,
     "posted_at": "2026-11-22 09:47:53",
@@ -6534,8 +6482,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 78.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6547,7 +6495,7 @@
     "topic": "프로스펙스 메타 넥워머 4,830원 (무배)",
     "url": "https://www.clien.net/service/board/jirum/19296785",
     "author": "조미카엘",
-    "views": 12900,
+    "views": 13000,
     "votes": 3,
     "comments": 1,
     "posted_at": "2026-11-22 10:35:46",
@@ -6565,8 +6513,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 76.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6578,7 +6526,7 @@
     "topic": "삼성 썬더스 굿즈 & 유니폼(24-25) 50% 할인",
     "url": "https://www.clien.net/service/board/jirum/19294031",
     "author": "수서반장",
-    "views": 13100,
+    "views": 13200,
     "votes": 1,
     "comments": 0,
     "posted_at": "2026-11-17 15:34:09",
@@ -6597,7 +6545,7 @@
     "matched_keywords": [],
     "score": 75.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6627,8 +6575,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 72.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6659,7 +6607,7 @@
     "matched_keywords": [],
     "score": 70.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6690,7 +6638,7 @@
     "matched_keywords": [],
     "score": 70.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6702,7 +6650,7 @@
     "topic": "AD TimeBar 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19297426",
     "author": "LeChatNoir",
-    "views": 5758,
+    "views": 5808,
     "votes": 2,
     "comments": 5,
     "posted_at": "2026-11-23 17:08:44",
@@ -6720,8 +6668,8 @@
     "kind": "info",
     "matched_keywords": [],
     "score": 70.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6733,7 +6681,7 @@
     "topic": "HW Terramaster Mk III Hybrid 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19296755",
     "author": "LeChatNoir",
-    "views": 7610,
+    "views": 7656,
     "votes": 1,
     "comments": 6,
     "posted_at": "2026-11-22 09:28:58",
@@ -6751,8 +6699,8 @@
     "kind": "info",
     "matched_keywords": [],
     "score": 70.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6764,7 +6712,7 @@
     "topic": "Zu0̸x5 Fit Digital Watch Face 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19296066",
     "author": "LeChatNoir",
-    "views": 7125,
+    "views": 7161,
     "votes": 1,
     "comments": 6,
     "posted_at": "2026-11-20 16:16:20",
@@ -6782,8 +6730,8 @@
     "kind": "info",
     "matched_keywords": [],
     "score": 70.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6795,7 +6743,7 @@
     "topic": "Widget Project 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19293029",
     "author": "LeChatNoir",
-    "views": 14000,
+    "views": 14100,
     "votes": 2,
     "comments": 7,
     "posted_at": "2026-11-16 10:46:44",
@@ -6814,8 +6762,39 @@
     "matched_keywords": [],
     "score": 68.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
+   },
+   {
+    "id": "clien_19298277",
+    "sn": "19298277",
+    "source": "clien_jirum",
+    "source_name": "클리앙 알뜰구매",
+    "title": "[네이버페이+삼성페이] SK주유소 5만원 이상 주유시 3천포인트 지급(~12.31)",
+    "topic": "SK주유소 5만원 이상 주유시 3천포인트 지급(~12.31)",
+    "url": "https://www.clien.net/service/board/jirum/19298277",
+    "author": "하양러브",
+    "views": 5811,
+    "votes": 1,
+    "comments": 1,
+    "posted_at": "2026-11-25 11:51:15",
+    "price": null,
+    "currency": null,
+    "discount_pct": null,
+    "mall": "네이버",
+    "clien_category": "상품정보",
+    "category": "money",
+    "category_label": "금융·혜택",
+    "category_emoji": "💰",
+    "blog": "jiyn74",
+    "is_product": true,
+    "adult": false,
+    "kind": "deal",
+    "matched_keywords": [],
+    "score": 68.0,
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
+    "is_new": true
    },
    {
     "id": "clien_19298007",
@@ -6826,7 +6805,7 @@
     "topic": "진주햄 천하장사 오리지날+콰트로치즈 28gX총48개 12,560원",
     "url": "https://www.clien.net/service/board/jirum/19298007",
     "author": "사랙이",
-    "views": 4473,
+    "views": 4535,
     "votes": 0,
     "comments": 2,
     "posted_at": "2026-11-24 19:28:33",
@@ -6843,9 +6822,9 @@
     "adult": false,
     "kind": "deal",
     "matched_keywords": [],
-    "score": 66.7,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "score": 67.4,
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6857,7 +6836,7 @@
     "topic": "아이폰 17 & 에어팟 프로 3 세일",
     "url": "https://www.clien.net/service/board/jirum/19296168",
     "author": "LeChatNoir",
-    "views": 14500,
+    "views": 14600,
     "votes": 0,
     "comments": 1,
     "posted_at": "2026-11-20 19:19:46",
@@ -6875,39 +6854,8 @@
     "kind": "deal",
     "matched_keywords": [],
     "score": 66.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
-    "is_new": true
-   },
-   {
-    "id": "clien_19298277",
-    "sn": "19298277",
-    "source": "clien_jirum",
-    "source_name": "클리앙 알뜰구매",
-    "title": "[네이버페이+삼성페이] SK주유소 5만원 이상 주유시 3천포인트 지급(~12.31)",
-    "topic": "SK주유소 5만원 이상 주유시 3천포인트 지급(~12.31)",
-    "url": "https://www.clien.net/service/board/jirum/19298277",
-    "author": "하양러브",
-    "views": 5581,
-    "votes": 0,
-    "comments": 0,
-    "posted_at": "2026-11-25 11:51:15",
-    "price": null,
-    "currency": null,
-    "discount_pct": null,
-    "mall": "네이버",
-    "clien_category": "상품정보",
-    "category": "money",
-    "category_label": "금융·혜택",
-    "category_emoji": "💰",
-    "blog": "jiyn74",
-    "is_product": true,
-    "adult": false,
-    "kind": "deal",
-    "matched_keywords": [],
-    "score": 64.0,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    },
    {
@@ -6919,7 +6867,7 @@
     "topic": "북클럽 런칭 이벤트. 구독 시 책 2권 무료 (11월 23일까지)",
     "url": "https://www.clien.net/service/board/jirum/19293189",
     "author": "D10S",
-    "views": 12800,
+    "views": 12900,
     "votes": 1,
     "comments": 1,
     "posted_at": "2026-11-16 13:27:28",
@@ -6938,7 +6886,7 @@
     "matched_keywords": [],
     "score": 62.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
    },
    {
@@ -6969,8 +6917,39 @@
     "matched_keywords": [],
     "score": 58.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
+   },
+   {
+    "id": "clien_19298613",
+    "sn": "19298613",
+    "source": "clien_jirum",
+    "source_name": "클리앙 알뜰구매",
+    "title": "[플레이스토어] 스타듀밸리 50% 할인 2,950원",
+    "topic": "스타듀밸리 50% 할인 2,950원",
+    "url": "https://www.clien.net/service/board/jirum/19298613",
+    "author": "컴퓨터",
+    "views": 2145,
+    "votes": 0,
+    "comments": 0,
+    "posted_at": "2026-11-25 22:59:57",
+    "price": 2950,
+    "currency": "KRW",
+    "discount_pct": 50,
+    "mall": "플레이스토어",
+    "clien_category": "상품정보",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "is_product": true,
+    "adult": false,
+    "kind": "deal",
+    "matched_keywords": [],
+    "score": 54.5,
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
+    "is_new": true
    },
    {
     "id": "clien_19294728",
@@ -6981,7 +6960,7 @@
     "topic": "SamWatch Digital Harmony I 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19294728",
     "author": "LeChatNoir",
-    "views": 9700,
+    "views": 9737,
     "votes": 1,
     "comments": 1,
     "posted_at": "2026-11-18 18:08:32",
@@ -7000,39 +6979,8 @@
     "matched_keywords": [],
     "score": 54.0,
     "first_seen": "2026-11-18T20:43:51+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": false
-   },
-   {
-    "id": "clien_19298613",
-    "sn": "19298613",
-    "source": "clien_jirum",
-    "source_name": "클리앙 알뜰구매",
-    "title": "[플레이스토어] 스타듀밸리 50% 할인 2,950원",
-    "topic": "스타듀밸리 50% 할인 2,950원",
-    "url": "https://www.clien.net/service/board/jirum/19298613",
-    "author": "컴퓨터",
-    "views": 1853,
-    "votes": 0,
-    "comments": 0,
-    "posted_at": "2026-11-25 22:59:57",
-    "price": 2950,
-    "currency": "KRW",
-    "discount_pct": 50,
-    "mall": "플레이스토어",
-    "clien_category": "상품정보",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "is_product": true,
-    "adult": false,
-    "kind": "deal",
-    "matched_keywords": [],
-    "score": 51.5,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
-    "is_new": true
    },
    {
     "id": "clien_19298282",
@@ -7043,9 +6991,9 @@
     "topic": "SamWatch Digital Shu 2 2025 일시 무료",
     "url": "https://www.clien.net/service/board/jirum/19298282",
     "author": "LeChatNoir",
-    "views": 3063,
+    "views": 3166,
     "votes": 2,
-    "comments": 5,
+    "comments": 6,
     "posted_at": "2026-11-25 11:58:47",
     "price": null,
     "currency": null,
@@ -7060,13 +7008,31 @@
     "adult": false,
     "kind": "info",
     "matched_keywords": [],
-    "score": 50.6,
-    "first_seen": "2026-11-26T07:58:40+09:00",
-    "last_seen": "2026-11-26T07:58:40+09:00",
+    "score": 53.7,
+    "first_seen": "2026-11-26T08:54:07+09:00",
+    "last_seen": "2026-11-26T08:54:07+09:00",
     "is_new": true
    }
   ],
   "hot_posts": [
+   {
+    "id": "hothub_8AA420ECBD94EBA6ACEC9584",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "리그 오브 레전드 챔피언스 코리아",
+    "topic": "리그 오브 레전드 챔피언스 코리아",
+    "url": "https://www.google.com/search?q=%EB%A6%AC%EA%B7%B8%20%EC%98%A4%EB%B8%8C%20%EB%A0%88%EC%A0%84%EB%93%9C%20%EC%B1%94%ED%94%BC%EC%96%B8%EC%8A%A4%20%EC%BD%94%EB%A6%AC%EC%95%84",
+    "community": "www.google.com",
+    "published": "2026-11-26 08:21",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [
+     "리그 오브 레전드 챔피언스 코리아"
+    ],
+    "score": 10.0
+   },
    {
     "id": "hothub_rdviewidstockusno2536956",
     "source": "hothub",
@@ -7100,38 +7066,6 @@
     "score": 0.0
    },
    {
-    "id": "hothub_97B4EB8C8020EC9881ED9994",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "박스오피스 2위 · 슬픈 열대",
-    "topic": "박스오피스 2위 · 슬픈 열대",
-    "url": "https://search.naver.com/search.naver?query=%EC%8A%AC%ED%94%88%20%EC%97%B4%EB%8C%80%20%EC%98%81%ED%99%94",
-    "community": "search.naver.com",
-    "published": "2026-11-26 01:33",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_ECA081EC84B1EC8B9CED9798",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "법학적성시험",
-    "topic": "법학적성시험",
-    "url": "https://www.google.com/search?q=%EB%B2%95%ED%95%99%EC%A0%81%EC%84%B1%EC%8B%9C%ED%97%98",
-    "community": "www.google.com",
-    "published": "2026-11-26 07:47",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
     "id": "hothub_oardviewiddcbestno481673",
     "source": "hothub",
     "source_name": "핫허브",
@@ -7148,14 +7082,14 @@
     "score": 0.0
    },
    {
-    "id": "hothub_tboard300143read77520216",
+    "id": "hothub_97B4EB8C8020EC9881ED9994",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "별로라는 반응 많은 유튜브 업데이트",
-    "topic": "별로라는 반응 많은 유튜브 업데이트",
-    "url": "https://bbs.ruliweb.com/best/board/300143/read/77520216",
-    "community": "루리웹",
-    "published": "2026-11-26 07:18",
+    "title": "박스오피스 2위 · 슬픈 열대",
+    "topic": "박스오피스 2위 · 슬픈 열대",
+    "url": "https://search.naver.com/search.naver?query=%EC%8A%AC%ED%94%88%20%EC%97%B4%EB%8C%80%20%EC%98%81%ED%99%94",
+    "community": "search.naver.com",
+    "published": "2026-11-26 01:33",
     "category": "etc",
     "category_label": "기타",
     "category_emoji": "•",
@@ -7164,34 +7098,34 @@
     "score": 0.0
    },
    {
-    "id": "hothub_okrviewcodehumorNo225013",
+    "id": "hothub_krviewcodefreebNo3454820",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "세계 최악의 음식 순위에 들어간 한국음식",
-    "topic": "세계 최악의 음식 순위에 들어간 한국음식",
-    "url": "https://www.bobaedream.co.kr/view?code=humor&No=225013",
+    "title": "배달 오토바이 출입금지 아파트 설명",
+    "topic": "배달 오토바이 출입금지 아파트 설명",
+    "url": "https://www.bobaedream.co.kr/view?code=freeb&No=3454820",
     "community": "보배드림",
-    "published": "2026-11-26 00:56",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
+    "published": "2026-11-26 05:26",
+    "category": "auto",
+    "category_label": "자동차·용품",
+    "category_emoji": "🚗",
     "blog": "mama2624",
     "matched_keywords": [],
     "score": 0.0
    },
    {
-    "id": "hothub_arketboard1020read109378",
+    "id": "hothub_tboard300143read77520618",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "[네이버페이] 일일적립, 클릭 44원, 라이브예고 18원",
-    "topic": "[네이버페이] 일일적립, 클릭 44원, 라이브예고 18원",
-    "url": "https://bbs.ruliweb.com/market/board/1020/read/109378",
+    "title": "하씨 미쳤나봐",
+    "topic": "하씨 미쳤나봐",
+    "url": "https://bbs.ruliweb.com/best/board/300143/read/77520618",
     "community": "루리웹",
-    "published": "2026-11-26 00:35",
-    "category": "money",
-    "category_label": "금융·혜택",
-    "category_emoji": "💰",
-    "blog": "jiyn74",
+    "published": "2026-11-26 08:18",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
     "matched_keywords": [],
     "score": 0.0
    },
@@ -7212,82 +7146,18 @@
     "score": 0.0
    },
    {
-    "id": "hothub_inglebungle1472no2728517",
+    "id": "hothub_okrviewcodehumorNo225035",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "ㅅㄱㅂㄱ 굴레이 댄스",
-    "topic": "ㅅㄱㅂㄱ 굴레이 댄스",
-    "url": "https://gall.dcinside.com/mgallery/board/view/?id=singlebungle1472&no=2728517",
-    "community": "디시인사이드",
-    "published": "2026-11-25 23:59",
+    "title": "작년에 급하다고 50 빌려간 친구",
+    "topic": "작년에 급하다고 50 빌려간 친구",
+    "url": "https://www.bobaedream.co.kr/view?code=humor&No=225035",
+    "community": "보배드림",
+    "published": "2026-11-26 07:28",
     "category": "etc",
     "category_label": "기타",
     "category_emoji": "•",
     "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_pstheqoonethot4418218602",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "🖤헤라X더쿠🖤 8년 연속 쿠션 브랜드 1위! 헤라 블랙 쿠션 파운데이션 체험 이벤트",
-    "topic": "🖤헤라X더쿠🖤 8년 연속 쿠션 브랜드 1위! 헤라 블랙 쿠션 파운데이션 체험 이벤트",
-    "url": "https://theqoo.net/hot/4418218602",
-    "community": "더쿠",
-    "published": "2026-11-26 00:17",
-    "category": "beauty",
-    "category_label": "뷰티·미용",
-    "category_emoji": "💄",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_dviewidneostockno7355075",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "나 45살 아줌마인데",
-    "topic": "나 45살 아줌마인데",
-    "url": "https://gall.dcinside.com/board/view/?id=neostock&no=7355075",
-    "community": "디시인사이드",
-    "published": "2026-11-26 00:41",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_heqoonetsquare4418328279",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "마운자로 때문에 장사가 안된다는 PT사장",
-    "topic": "마운자로 때문에 장사가 안된다는 PT사장",
-    "url": "https://theqoo.net/square/4418328279",
-    "community": "더쿠",
-    "published": "2026-11-26 06:11",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_tboard300143read77520403",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "[속보] 구글 “핵융합 시뮬 11.8배 가속 알고리즘 발견”",
-    "topic": "[속보] 구글 “핵융합 시뮬 11.8배 가속 알고리즘 발견”",
-    "url": "https://bbs.ruliweb.com/best/board/300143/read/77520403",
-    "community": "루리웹",
-    "published": "2026-11-26 07:18",
-    "category": "food",
-    "category_label": "식품·식재료",
-    "category_emoji": "🍎",
-    "blog": "2sunshines",
     "matched_keywords": [],
     "score": 0.0
    },
@@ -7303,6 +7173,86 @@
     "category": "fashion",
     "category_label": "패션·잡화",
     "category_emoji": "👕",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_inglebungle1472no2728771",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "준표햄 이러면 투스트라이크임?",
+    "topic": "준표햄 이러면 투스트라이크임?",
+    "url": "https://gall.dcinside.com/mgallery/board/view/?id=singlebungle1472&no=2728771",
+    "community": "디시인사이드",
+    "published": "2026-11-26 06:59",
+    "category": "food",
+    "category_label": "식품·식재료",
+    "category_emoji": "🍎",
+    "blog": "2sunshines",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_dviewidstockusno18584759",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "삼하 성과급 무조건 막아야함",
+    "topic": "삼하 성과급 무조건 막아야함",
+    "url": "https://gall.dcinside.com/mgallery/board/view/?id=stockus&no=18584759",
+    "community": "디시인사이드",
+    "published": "2026-11-26 02:15",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_oardviewiddcbestno481685",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "[군갤] 계란볶음밥의 날 기념 계란볶음밥 해먹기",
+    "topic": "[군갤] 계란볶음밥의 날 기념 계란볶음밥 해먹기",
+    "url": "https://gall.dcinside.com/board/view/?id=dcbest&no=481685",
+    "community": "디시인사이드",
+    "published": "2026-11-26 07:26",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_viewidai_utilizeno204771",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "지피티 이 새끼 분석하는거 정확한거 보소",
+    "topic": "지피티 이 새끼 분석하는거 정확한거 보소",
+    "url": "https://gall.dcinside.com/mgallery/board/view/?id=ai_utilize&no=204771",
+    "community": "디시인사이드",
+    "published": "2026-11-26 01:27",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_okrviewcodebestNo1050139",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "세계 최악의 음식 순위에 들어간 한국음식",
+    "topic": "세계 최악의 음식 순위에 들어간 한국음식",
+    "url": "https://www.bobaedream.co.kr/view?code=best&No=1050139",
+    "community": "보배드림",
+    "published": "2026-11-26 01:52",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
     "blog": "mama2624",
     "matched_keywords": [],
     "score": 0.0
@@ -7324,6 +7274,22 @@
     "score": 0.0
    },
    {
+    "id": "hothub_arketboard1020read109380",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "[네이버페이] 연금확인 20원",
+    "topic": "[네이버페이] 연금확인 20원",
+    "url": "https://bbs.ruliweb.com/market/board/1020/read/109380",
+    "community": "루리웹",
+    "published": "2026-11-26 01:35",
+    "category": "money",
+    "category_label": "금융·혜택",
+    "category_emoji": "💰",
+    "blog": "jiyn74",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
     "id": "hothub_idbitcoins_new1no9215455",
     "source": "hothub",
     "source_name": "핫허브",
@@ -7340,17 +7306,17 @@
     "score": 0.0
    },
    {
-    "id": "hothub_dviewidstockusno18584759",
+    "id": "hothub_rdviewidgame_devno238226",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "삼하 성과급 무조건 막아야함",
-    "topic": "삼하 성과급 무조건 막아야함",
-    "url": "https://gall.dcinside.com/mgallery/board/view/?id=stockus&no=18584759",
+    "title": "[30K] 플레이 테스트 및 피드백 요청드립니다.",
+    "topic": "[30K] 플레이 테스트 및 피드백 요청드립니다.",
+    "url": "https://gall.dcinside.com/mgallery/board/view/?id=game_dev&no=238226",
     "community": "디시인사이드",
-    "published": "2026-11-26 02:15",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
+    "published": "2026-11-26 02:50",
+    "category": "beauty",
+    "category_label": "뷰티·미용",
+    "category_emoji": "💄",
     "blog": "mama2624",
     "matched_keywords": [],
     "score": 0.0
@@ -7364,22 +7330,6 @@
     "url": "https://t.me/Doorinews/167434",
     "community": "t.me",
     "published": "2026-11-26 01:16",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_okrviewcodebestNo1050109",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "철거하려다 신고당한 집.jpg",
-    "topic": "철거하려다 신고당한 집.jpg",
-    "url": "https://www.bobaedream.co.kr/view?code=best&No=1050109",
-    "community": "보배드림",
-    "published": "2026-11-26 07:54",
     "category": "etc",
     "category_label": "기타",
     "category_emoji": "•",
@@ -7404,14 +7354,46 @@
     "score": 0.0
    },
    {
-    "id": "hothub_oardviewiddcbestno481665",
+    "id": "hothub_pstheqoonethot4418328279",
     "source": "hothub",
     "source_name": "핫허브",
-    "title": "[싱갤] 중국 영화에서 표현 된 마오쩌둥의 아들 마오안잉",
-    "topic": "[싱갤] 중국 영화에서 표현 된 마오쩌둥의 아들 마오안잉",
-    "url": "https://gall.dcinside.com/board/view/?id=dcbest&no=481665",
-    "community": "디시인사이드",
-    "published": "2026-11-26 00:26",
+    "title": "마운자로 때문에 장사가 안된다는 PT사장",
+    "topic": "마운자로 때문에 장사가 안된다는 PT사장",
+    "url": "https://theqoo.net/hot/4418328279",
+    "community": "더쿠",
+    "published": "2026-11-26 07:34",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_httpstmeehdwl11340",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "11/25 미 증시, AI 신용위험등에 큰 폭 하락 후 반발 매수와 옵션 수급에 낙폭 축소",
+    "topic": "11/25 미 증시, AI 신용위험등에 큰 폭 하락 후 반발 매수와 옵션 수급에 낙폭 축소",
+    "url": "https://t.me/ehdwl/11340",
+    "community": "t.me",
+    "published": "2026-11-26 06:21",
+    "category": "etc",
+    "category_label": "기타",
+    "category_emoji": "•",
+    "blog": "mama2624",
+    "matched_keywords": [],
+    "score": 0.0
+   },
+   {
+    "id": "hothub_serviceboardpark19298314",
+    "source": "hothub",
+    "source_name": "핫허브",
+    "title": "전세가 없고 월세만 있는 유럽의 주거난 상황",
+    "topic": "전세가 없고 월세만 있는 유럽의 주거난 상황",
+    "url": "https://www.clien.net/service/board/park/19298314",
+    "community": "클리앙",
+    "published": "2026-11-26 08:19",
     "category": "etc",
     "category_label": "기타",
     "category_emoji": "•",
@@ -7427,39 +7409,7 @@
     "topic": "007 퍼스트 라이트 — 39,500원 · 50% 할인",
     "url": "https://store.steampowered.com/app/3768760",
     "community": "store.steampowered.com",
-    "published": "2026-11-26 06:09",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_psnewshadaiotopicid37639",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "AI는 모두에게 같은 조언을 하고 있다",
-    "topic": "AI는 모두에게 같은 조언을 하고 있다",
-    "url": "https://news.hada.io/topic?id=37639",
-    "community": "news.hada.io",
-    "published": "2026-11-26 00:10",
-    "category": "etc",
-    "category_label": "기타",
-    "category_emoji": "•",
-    "blog": "mama2624",
-    "matched_keywords": [],
-    "score": 0.0
-   },
-   {
-    "id": "hothub_rdviewidgame_devno238211",
-    "source": "hothub",
-    "source_name": "핫허브",
-    "title": "슬롭 냄새 (더) 빼기",
-    "topic": "슬롭 냄새 (더) 빼기",
-    "url": "https://gall.dcinside.com/mgallery/board/view/?id=game_dev&no=238211",
-    "community": "디시인사이드",
-    "published": "2026-11-26 00:33",
+    "published": "2026-11-26 08:45",
     "category": "etc",
     "category_label": "기타",
     "category_emoji": "•",
