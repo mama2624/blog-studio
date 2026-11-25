@@ -64,7 +64,7 @@
 - 기록·증빙: `work/gem-v244-skills/VERIFY-2026-11-25-v244.md` · 스크린샷 `work/gem-v244-skills/shots/`
 
 **검증 (2026-11-25)**
-- `python3 work/bs245-gem/test_v245_gemraw.py HEAD` — **47 PASS · 0 FAIL**: 문법 · 블록 존재 · **기존 지침 줄이 한 줄도 사라지지 않음** · knowledge 바이트 동일 · 메타 chars/bytes/sha256 실측 일치 · 앱 4파일에서 삭제된 줄 없음.
+- `python3 work/bs245-gem/test_v245_gemraw.py 6ecfb2d`(변경 직전 커밋 기준) — **47 PASS · 0 FAIL**: 문법 · 블록 존재 · **기존 지침 줄이 한 줄도 사라지지 않음** · knowledge 바이트 동일 · 메타 chars/bytes/sha256 실측 일치 · 앱 4파일에서 삭제된 줄 없음.
 - `python3 work/bs245-gem/test_v245_app.py` — **13 PASS · 0 FAIL**: 실제 앱 스크립트를 quickjs로 읽어 원고 프롬프트에 v2.4.4 블록이 실리는지, 상품형 숏폼 대본에만 4칸·대가성 칸이 들어가고 일반 숏폼엔 안 들어가는지(v2.4.4 동작 그대로) 확인.
 
 **이번에 손대지 않은 곳**
