@@ -31,7 +31,10 @@
   · 검색량 = monthlyPcQcCnt + monthlyMobileQcCnt ('< 10' 은 5 로 본다)
   · 경쟁도 = compIdx (낮음/중간/높음 → 낮음/보통/높음)
   · 내 글 수 = 글 제목에 그 키워드가 들어간 편수(공백·기호 무시). 0편일 때만 빈집으로 올린다.
-  · 정렬 = 검색량 × 경쟁도 가중치(낮음 1.4 · 보통 1.15 · 높음 1.0), 기본 상위 20개
+  · 주가·시세·환율·조회·설치형(BAN 목록)은 뺀다 — 읽는 사람이 없는 조회형이고
+    지연님 블로그(소비자 설명형 장문)와도 맞지 않는다.
+  · 정렬 = 검색량 × 경쟁도 가중치(낮음 1.4 · 보통 1.15 · 높음 1.0) × 구간 가중치(미들 테일 선호)
+    → 기본 상위 20개, 한 블로그가 8개를 넘지 않게 균형을 맞추고 남는 자리는 점수순으로 채운다.
 """
 
 from __future__ import annotations
@@ -73,10 +76,15 @@ def signature(secret: str, timestamp: str, method: str, uri: str) -> str:
 
 
 def keywordstool(hints: list[str], customer: str, license_: str, secret: str, show_detail: bool = True) -> list[dict]:
-    """hintKeywords(최대 5개) → relatedKeywordList"""
+    """hintKeywords(최대 5개) → relatedKeywordList
+
+    띄어쓰기 있는 씨앗('아파트 관리비' 등)은 반드시 %20 으로 보내야 한다.
+    urlencode 기본값('+')으로 보내면 네이버가 HTTP 400 으로 거절한다(2026-11-26 첫 실행에서 확인).
+    """
     ts = str(int(time.time() * 1000))
     query = urllib.parse.urlencode(
-        {"hintKeywords": ",".join(hints[:5]), "showDetail": "1" if show_detail else "0"}
+        {"hintKeywords": ",".join(hints[:5]), "showDetail": "1" if show_detail else "0"},
+        quote_via=urllib.parse.quote,
     )
     req = urllib.request.Request(f"{API_HOST}{API_URI}?{query}")
     req.add_header("X-Timestamp", ts)
@@ -178,6 +186,24 @@ def suggest(keyword: str) -> tuple[str, str]:
 # ────────────────────────────── 조립 ──────────────────────────────
 STOP = {"뜻", "의미", "영어로", "한자", "유래"}
 
+# 빈집 후보에서 빼는 검색 의도 — 주가·시세·조회·설치형은 글로 써도 읽는 사람이 없고
+# 지연님 블로그(소비자 설명형 장문)와도 맞지 않는다. 2026-11-26 첫 실행에서 '미국증시 462만'
+# 같은 조회형이 상위를 채워 걸러냈다.
+BAN = re.compile(
+    r"(주가|증시|지수|종목|시세|공시|코인|비트코인|로또|당첨|환율|환전|계산기|"
+    r"실시간|날씨|어플|다운로드|설치|로그인|바로가기|사이트|홈페이지|고객센터|전화번호|"
+    r"운세|타로)"
+)
+
+
+def vol_weight(v: int) -> float:
+    """미들 테일 선호 — 3,000~150,000회가 개인이 1페이지를 노릴 수 있는 구간."""
+    if v < 3000:
+        return 0.75
+    if v <= 150000:
+        return 1.0
+    return 0.6
+
 
 def build(rows_by_keyword: dict, posts: dict, args) -> list[dict]:
     total_posts = len(posts)
@@ -186,7 +212,7 @@ def build(rows_by_keyword: dict, posts: dict, args) -> list[dict]:
         vol = info["volume"]
         if vol < args.min_volume:
             continue
-        if len(norm(kw)) < 2 or any(s in kw for s in STOP):
+        if len(norm(kw)) < 2 or any(s in kw for s in STOP) or BAN.search(kw):
             continue
         mine = count_my_posts(posts, kw)
         if mine > 0:
@@ -207,12 +233,29 @@ def build(rows_by_keyword: dict, posts: dict, args) -> list[dict]:
                 f"월 검색량 {vol:,}회(PC {info['pc']:,} · 모바일 {info['mobile']:,})인데 "
                 f"내 글 {total_posts:,}편 제목에 '{kw}'가 없습니다."
             ),
-            "_score": round(vol * COMP_WEIGHT.get(comp, 1.0), 1),
+            "_score": round(vol * COMP_WEIGHT.get(comp, 1.0) * vol_weight(vol), 1),
         })
     out.sort(key=lambda r: (-r["_score"], -r["volume"], r["keyword"]))
     for r in out:
         r.pop("_score", None)
-    return out[: args.max] if args.max else out
+    if not args.max:
+        return out
+    # 블로그 한 곳이 표를 다 차지하지 않게 균형을 맞춘다(남는 자리는 점수순으로 채움)
+    cap = args.per_blog
+    picked, rest, used = [], [], {}
+    for r in out:
+        blog = r.get("blog", "")
+        if len(picked) < args.max and used.get(blog, 0) < cap:
+            picked.append(r)
+            used[blog] = used.get(blog, 0) + 1
+        else:
+            rest.append(r)
+    for r in rest:
+        if len(picked) >= args.max:
+            break
+        picked.append(r)
+    picked.sort(key=lambda r: -(r["volume"] or 0))
+    return picked
 
 
 def merge_notes(old: str, vacant_n: int, checked: int, ok_batches: int, fails: int, stamp: str) -> str:
@@ -232,6 +275,7 @@ def main() -> int:
     ap.add_argument("--secret", default=os.environ.get("NAVER_AD_SECRET_KEY", ""))
     ap.add_argument("--min-volume", type=int, default=1000, help="빈집 후보 최소 월 검색량 (기본 1000)")
     ap.add_argument("--max", type=int, default=20, help="vacant 최대 행 수 (기본 20, 0이면 제한 없음)")
+    ap.add_argument("--per-blog", type=int, default=8, help="한 블로그가 차지할 수 있는 최대 행 수 (기본 8)")
     ap.add_argument("--sleep", type=float, default=0.3, help="API 호출 간격(초)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -258,16 +302,30 @@ def main() -> int:
     for bi, batch in enumerate(batches, 1):
         words = [kw for kw, _ in batch]
         blog = batch[0][1]
-        try:
-            items = keywordstool(words, args.customer, args.license_, args.secret)
-            ok += 1
-        except urllib.error.HTTPError as e:
-            fails += 1
-            print(f"  [{bi}/{len(batches)}] HTTP {e.code} — {words[0]} 등", file=sys.stderr)
-            continue
-        except Exception as e:  # noqa: BLE001 — 네트워크·JSON 오류 모두 다음 묶음으로
-            fails += 1
-            print(f"  [{bi}/{len(batches)}] 실패 {type(e).__name__}: {e}", file=sys.stderr)
+        items = None
+        for attempt in (1, 2):
+            try:
+                items = keywordstool(words, args.customer, args.license_, args.secret)
+                ok += 1
+                break
+            except urllib.error.HTTPError as e:
+                detail = ""
+                try:
+                    detail = e.read().decode("utf-8", "replace")[:160]
+                except Exception:  # noqa: BLE001
+                    pass
+                print(f"  [{bi}/{len(batches)}] 시도{attempt} HTTP {e.code}{(' — ' + detail) if detail else ''}", file=sys.stderr)
+                if attempt == 2:
+                    fails += 1
+                else:
+                    time.sleep(1.5)
+            except Exception as e:  # noqa: BLE001 — 네트워크·JSON 오류 모두 다음 묶음으로
+                print(f"  [{bi}/{len(batches)}] 시도{attempt} 실패 {type(e).__name__}: {e}", file=sys.stderr)
+                if attempt == 2:
+                    fails += 1
+                else:
+                    time.sleep(1.5)
+        if items is None:
             continue
         for it in items:
             kw = (it.get("relKeyword") or "").strip()
