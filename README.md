@@ -46,11 +46,21 @@
 - 파일이 없거나 비어 있으면 **숫자를 지어내지 않고** `아직 데이터가 없습니다` + 무엇이 필요한지 네 줄만 보여 준다(null은 `확인 필요`로 표시).
 - 수집(하루 1회)은 GitHub Actions 또는 크리 님 점검 파이프라인이 맡고, 서치콘솔 서비스 계정·네이버 검색광고 키는 **GitHub Secrets에만** 둔다.
 
+**수집 파이프라인 (2026-11-26 첫 가동)**
+1. 서치콘솔(`mama2624@gmail.com`) → 실적 → **28일** → `내보내기` → CSV 다운로드 → ZIP이 `downloads/`에 떨어짐.
+   - `sc-domain:gold-queen.com` 하나로 `blog.gold-queen.com`(긍정뿜뿜)·`in.gold-queen.com`(InsureWise)·`sub`·`www`·`saju`·`link`가 모두 잡힌다. 티스토리 URL 속성을 따로 받았으면 `--zip`을 반복 지정.
+2. `python3 tools/build_seo_opportunities.py --zip <실적 ZIP> --posts <내_블로그_전체_글목록.txt> --keyword-map tools/seo-keyword-map.json`
+   - 글목록 대조 → 평균 게재순위 **4~15위**·노출 **2회 이상**·태그/카테고리 제외 → `data/seo-opportunities.json` 저장.
+3. 확인된 검색어는 서치콘솔에서 검색어 행을 눌러 `페이지` 탭으로 내려가 확인한 짝만 `tools/seo-keyword-map.json`에 적는다. 확인 못 한 글은 `null`(`확인 필요`).
+- 네이버 블로그 3곳(3,811편)은 서치콘솔 속성이 없어 구글 순위 데이터가 없다(네이버·다음 검색이 주 채널). 그래서 boost는 gold-queen.com 계열(티스토리 개인 도메인 포함)만 담긴다.
+- 첫 가동 결과: 28일(2026-10-27~11-23) 페이지 152행 → 중복 정리 129 → 글 URL 63편 → 글목록 매칭 57편 → 4~15위 30편 → 노출 2회 이상 **19편**이 표에 올라갔다.
+
 ### 4) 검증 (2026-11-26 · v2.4.6)
 - 단위 테스트 88 PASS · 0 FAIL — `python3 work/bs246-test/test_v246.py` (판본·설정 계약·스타일별 프롬프트·5종 파서·요청문·썸네일 후보·카드 렌더 + v2.4.5 목차 회귀)
 - 화면 확인 29 PASS · 0 FAIL — `python3 work/bs246-test/ui_check.py` (스타일 칩 4개·카드 5개·후보 담기/빼기·빈 상태와 샘플 표·모바일 390px·콘솔 오류 0)
 - 실서버 확인 — `BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs246-test/ui_check.py` 도 29 PASS · 0 FAIL (2026-11-26 09:44 KST · 커밋 `5fe5cbe` · Pages run 45730762488 success)
 - 캡처: `work/bs246-test/shots/v246_영상_스타일_문구5종_*.png` · `v246_썸네일_후보_*.png` · `v246_빈집_데이터없음_*.png` · `v246_빈집_표_*.png`
+- 서치콘솔 파이프라인 **32 PASS · 0 FAIL** — `python3 work/bs246-test/test_seo_pipeline.py` (계약 8 · 데이터 15 · 화면 계약 6 · 재현성 3 — 커밋본과 생성기 재실행 결과를 `updatedAt` 빼고 대조)
 
 ## 📋 목차 앵커 금지 · 번호당 한 줄 · 목차-서두 구분선 (v2.4.5 · 2026-11-25)
 
