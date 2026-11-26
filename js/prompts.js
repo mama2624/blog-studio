@@ -1515,6 +1515,16 @@ BS.prompts = (function () {
     head.push("");
     head.push("먼저 썸네일에 넣을 문구를 정해 줘. 이 글을 처음 보는 40~50대가 1초 안에 '왜?' 하고 멈추는 한 마디다. 아래 규칙을 그대로 따른다.");
     head.push("");
+    /* 🔥 v2.4.6 — 🎬 대본의 썸네일 문구 5종 중 지연님이 고른 후보. 있으면 그 말을 살려 두 줄을 뽑는다. */
+    var picks = (o.picks || []).filter(function (p) { return p && String(p.text || "").trim(); });
+    if (picks.length) {
+      head.push("지연님이 🎬 대본에서 고른 썸네일 문구 후보(톤별):");
+      picks.forEach(function (p, i) {
+        head.push("  " + (i + 1) + ") [" + String(p.tone || "후보").trim() + "] \"" + String(p.text).trim() + "\"");
+      });
+      head.push("→ 1번·2번 썸네일에 넣을 두 줄은 이 후보의 말을 살려 고른다(후보 한 줄을 두 줄로 나눠 써도 된다). 후보에 없는 새 각도를 써도 되지만 제목 축약·요약어는 금지.");
+      head.push("");
+    }
     return [
       {
         role: "썸네일 1번 · 타이포 전용 (글자만)",
@@ -2563,6 +2573,21 @@ BS.prompts = (function () {
     lines.push("- 자막: " + (f.captionLen || ""));
     lines.push("- 장면 수: " + (f.sceneCount || "4~5") + "개 (한 장면 = 6초 클립 하나로 만들 수 있는 동작 하나)");
     lines.push("");
+    /* 🖋 v2.4.6 — 대본 스타일. 말하는 순서만 바뀌고 구간·분량은 그대로 */
+    var stSys = BS.videoStyle(o.styleId);
+    lines.push("[🖋 대본 스타일 — " + stSys.label + " (" + stSys.sub + ")]");
+    lines.push(stSys.rule);
+    lines.push("→ 첫 3초·나레이션 분량·장면 수·연출표의 시간 구간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 바뀌는 것은 말하는 순서와 가운데 네 칸의 이름(" + ((stSys.mids || []).join(" → ")) + ")뿐이다.");
+    lines.push("");
+    /* 🔥 v2.4.6 — 썸네일 문구 5종(톤별). 출력 항목과 한 몸이다 */
+    var ttSys = V.thumbTones || {};
+    if ((ttSys.items || []).length) {
+      lines.push("[🔥 썸네일 문구 5종 — 톤마다 하나 (v2.4.6)]");
+      (ttSys.items || []).forEach(function (tn, i) { lines.push((i + 1) + ". " + tn.label + " — " + tn.rule); });
+      var ttMarks = ["①", "②", "③", "④", "⑤"];
+      (ttSys.rules || []).forEach(function (r, i) { lines.push((ttMarks[i] || ((i + 1) + ")")) + " " + r); });
+      lines.push("");
+    }
     var pickSys = pickFirstBlock();
     if (pickSys) { lines.push(pickSys); lines.push(""); }
     lines.push("[대본 규칙]");
@@ -2641,6 +2666,8 @@ BS.prompts = (function () {
     var V = BS.VIDEO || {};
     var PI = V.productInfo || {};
     var YD = V.youtubeDisclosure || {};
+    var TT = V.thumbTones || {};
+    var st = BS.videoStyle(o.styleId);                 // 🖋 v2.4.6
     var f = o.fmt || BS.videoFormat(o.formatId);
     var parts = [];
     var isShort = f.id !== "long";    // 🎯 v2.3.9 — 클립·릴스 공식 4가지는 숏폼에만
@@ -2654,6 +2681,7 @@ BS.prompts = (function () {
     if (o.title) parts.push("- 원고 제목: " + o.title);
     parts.push("- 블로그: " + (blog.name || "") + " (" + (blog.account || "") + ")");
     parts.push("- 영상 형식: " + (f.emoji || "") + " " + (f.label || "") + " (" + (f.sub || "") + ") · " + (f.seconds || "") + " · " + (f.ratio || ""));
+    parts.push("- 대본 스타일: " + st.emoji + " " + st.label + " (" + st.sub + ")");
     parts.push("- 나레이션 분량: " + (f.narrationLen || ""));
     parts.push("- 장면 수: " + (f.sceneCount || "4~5") + "개");
     if (o.persona6) parts.push("- 화자: " + (o.persona6.emoji || "") + " " + (o.persona6.label || "") + " — 나레이션·자막·마무리 모두 이 사람 목소리로 (금지어: " + (o.persona6.banned || []).join(" / ") + ")");
@@ -2697,8 +2725,11 @@ BS.prompts = (function () {
       parts.push("");
     }
     parts.push("## 추천 썸네일 문구");
-    parts.push("1) \"(의외성·경고형, 8~14자)\"");
-    parts.push("2) \"(질문·숫자형, 8~18자)\"");
+    parts.push("(아래 5줄을 순서 그대로 채운다 — 톤마다 하나, 서로 다른 각도. 아래 규칙을 지키고, 규칙 줄은 출력하지 않는다)");
+    (TT.rules || []).forEach(function (r) { parts.push("- " + r); });
+    (TT.items || []).forEach(function (tn, i) {
+      parts.push((i + 1) + ") [" + tn.label + "] \"(" + tn.hint + ")\"");
+    });
     parts.push("");
     parts.push("## 3초 후크");
     parts.push("\"(첫 3초에 화면과 함께 나갈 한 문장, 15~25자)\"");
@@ -2721,14 +2752,15 @@ BS.prompts = (function () {
       parts.push("");
     } else {
       parts.push("## 30초 절차형 연출표");
-      parts.push("(네 구간과 시간은 바꾸지 않는다. 구간마다 다섯 항목을 따로 적고, 자막은 12자 내외. 절차는 동사로 시작하는 4단계로 나누고, 순서를 바꾸면 결과가 달라지는 구조로 만든다)");
+      parts.push("(네 구간과 시간은 바꾸지 않는다. 구간마다 다섯 항목을 따로 적고, 자막은 12자 내외. " + (st.midHint || "절차는 동사로 시작하는 4단계로 나누고, 순서를 바꾸면 결과가 달라지는 구조로 만든다") + ")");
+      var sdMids = (st.mids && st.mids.length === 4) ? st.mids : ["절차 1단계", "절차 2단계", "절차 3단계", "절차 4단계"];
       var sdBlocks = [
         { time: "0~3초", name: "훅" },
         { time: "4~8초", name: "원리" },
-        { time: "9~24초", name: "절차 1단계" },
-        { time: "9~24초", name: "절차 2단계" },
-        { time: "9~24초", name: "절차 3단계" },
-        { time: "9~24초", name: "절차 4단계" },
+        { time: "9~24초", name: sdMids[0] },
+        { time: "9~24초", name: sdMids[1] },
+        { time: "9~24초", name: sdMids[2] },
+        { time: "9~24초", name: sdMids[3] },
         { time: "25~30초", name: "결론 + CTA" }
       ];
       sdBlocks.forEach(function (b) {
@@ -2799,7 +2831,7 @@ BS.prompts = (function () {
       parts.push("2. 위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");
       parts.push("3. 나레이션 대본에는 무대 지시((웃음), [BGM] 같은 것)를 넣지 않는다. 말하는 문장만 쓴다.");
       parts.push("4. 연출표의 구간 시간(0~3·4~8·9~24·25~30초)은 바꾸지 않는다. 채울 내용이 없으면 '(없음)'으로 적고 시간을 늘리지 않는다. 라이선스는 확인한 것만 쓰고, 확인하지 못했으면 '확인 필요'로 적는다.");
-      if (isShort) parts.push("5. 불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄을 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
+      if (isShort) parts.push("5. 불편한 순간은 5개, 중국어 검색어는 15개, 플랫폼별 CTA는 3줄, 썸네일 문구는 5개(톤마다 하나)를 채운다. 수를 줄이지 말고, 채울 내용이 없으면 '(없음)'으로 적는다.");
       if (isProductScript) parts.push("6. 상품 정보 4칸과 대가성 표시는 칸 이름·순서를 바꾸지 않고 반드시 채운다. 확인하지 못한 가격·배송은 '확인 필요'로 적고 나레이션에 읽지 않는다.");
     } else {
       parts.push("위 형식만 출력한다. 인사말·설명·썸네일 이미지 프롬프트·코드블록(```)은 넣지 않는다.");

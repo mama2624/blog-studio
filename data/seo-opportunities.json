@@ -1,0 +1,21 @@
+{
+  "version": "v2.4.6",
+  "updatedAt": null,
+  "status": "pending",
+  "source": {
+    "searchConsole": false,
+    "naverAd": false,
+    "posts": 0
+  },
+  "vacant": [],
+  "boost": [],
+  "readme": [
+    "이 파일은 작업실(https://mama2624.github.io/blog-studio/)의 '🕳️ 내 글 순위 · 빈집 기회' 표가 읽는 유일한 데이터입니다.",
+    "작업실은 정적 웹이라 서치콘솔·검색광고 API를 직접 부르지 않습니다. GitHub Actions(또는 크리 님 점검 파이프라인)가 하루 1회 이 파일을 갱신합니다.",
+    "vacant[] (① 바로 쓸 만한 빈집 주제): keyword, volume(월 검색량), competition(낮음/보통/높음), myPosts(내 글 수), title 또는 angle(추천 각도·제목), reason. 검색량이 있는데 내 글 목록에 같은 주제가 없는 키워드만 넣습니다.",
+    "boost[] (② 보강하면 1페이지 갈 내 글): title, url, keyword, rank(구글 평균 순위 4~20), impressions, clicks, advice(보강할 것). 1~3위는 이미 1페이지, 21위 이하는 새 글 대상이라 넣지 않습니다.",
+    "값을 확인하지 못했으면 0이나 추정값 대신 null로 둡니다. 작업실은 null을 '확인 필요'로 표시합니다.",
+    "키(서치콘솔 서비스 계정·네이버 검색광고 API 키)는 이 저장소에 넣지 않고 GitHub Secrets에만 둡니다."
+  ],
+  "notes": "2026-11-26 v2.4.6에서 데이터 구조와 화면만 먼저 만들었습니다. 수집 파이프라인이 붙으면 vacant·boost가 채워집니다. 서치콘솔 OAuth·네이버 검색광고 키 발급과 크리 님 측 파이프라인 연계는 진행 중입니다."
+}

@@ -46,6 +46,8 @@
     threads: null,    // 🧵 스레드 타래 (v1.9.0) {threads, comment, hashtags, memo}
     video: null,      // 🎬 영상 대본 (v1.9.0) {thumbs, hook, narration, captions, scenes, memo}
     videoFormat: "short",  // 영상 형식 — short(30~45초 숏폼) · long(유튜브 롱폼)
+    videoStyle: "basic",   // 🖋 대본 스타일 (v2.4.6) — basic · story · points · compare
+    thumbPicks: [],        // 🔥 썸네일 문구 5종에서 고른 후보 (v2.4.6) — [{tone, text}]
     threadAccount: "",     // 📮 업로드 계정 id (v1.9.1) — 빈 값이면 원고 블로그로 자동 선택
     threadWhen: "now",     // 업로드 희망 시간 칩 id — now · h1 · tonight · tomorrow8
     threadWhenCustom: "",  // 직접 입력한 시간 (있으면 칩보다 우선)
@@ -4732,6 +4734,8 @@
     $("#apiImgBox").open = false;
     state.thumbs = [];
     if ($("#thumbList")) $("#thumbList").innerHTML = "";
+    state.thumbPicks = [];                                    // 🔥 v2.4.6 — 새 원고면 고른 썸네일 문구도 비운다
+    paintThumbPicks();
     state.cardNews = [];                                      // 🃏 v2.3.8
     if ($("#cardNewsList")) $("#cardNewsList").innerHTML = "";
     setStatus($("#cardNewsStatus"), "");
@@ -4751,6 +4755,7 @@
     setStatus($("#threadStatus"), "");
     setStatus($("#videoStatus"), "");
     paintVideoTabs();
+    paintVideoStyles();
     refreshBanner();
     if (!state.result.blogger) show($("#bannerCard"), !isCafeResult(state.result));
     paintConvertButtons();
@@ -5267,17 +5272,45 @@
     return lines.join("\n").trim();
   }
 
+  /* 🔥 v2.4.6 — 썸네일 문구 5종. '1) [이유형] "문구"' 줄에서 톤과 문구를 나눈다.
+     번호도 톤 괄호도 없는 줄은 규칙·설명으로 보고 버린다(프롬프트의 '- 규칙' 줄이
+     문구로 둔갑하지 않게). 예전 2줄 응답(번호만·톤 없음)은 그대로 읽는다. */
+  function parseThumbLines(body) {
+    var thumbs = [], tones = [];
+    String(body || "").replace(/\r/g, "").split("\n").forEach(function (raw) {
+      var t = raw.trim();
+      if (!t) return;
+      var numbered = /^[-*·•]?\s*\d+\s*[).]/.test(t);
+      var quoted = /^["'“”‘’]/.test(t.replace(/^[-*·•]\s*/, ""));
+      t = t.replace(/^[-*·•]\s*/, "").replace(/^\d+\s*[).]\s*/, "").trim();
+      var tone = "";
+      var m = t.match(/^[\[(【]?\s*([^\])】]{1,16}?)\s*[\])】]\s*[—–\-:·]?\s*(.*)$/);
+      if (m && /형|질문|공감|이유|반전|숫자/.test(m[1]) && !/^[\d,]+$/.test(m[1])) {
+        tone = m[1]; t = m[2];
+      }
+      if (!numbered && !tone && !quoted) return;
+      t = t.replace(/^[—–\-:·]\s*/, "");
+      t = t.replace(/^["'“”‘’]+/, "").replace(/["'“”‘’]+$/, "").trim();
+      if (!t) return;
+      if (thumbs.length >= 5) return;
+      thumbs.push(t); tones.push(tone);
+    });
+    return { thumbs: thumbs, tones: tones };
+  }
+
   /* 영상 응답 → { thumbs, hook, narration, captions, scenes, memo } */
   function parseVideoScript(text) {
     var heads = splitHeads(text);
-    var out = { thumbs: [], hook: "", pick: "", product: "", disc: "", narration: "", captions: [], scenes: [], memo: "",
+    var out = { thumbs: [], thumbTones: [], hook: "", pick: "", product: "", disc: "", narration: "", captions: [], scenes: [], memo: "",
       direct: "", license: "", pain: "", cnkw: "", cta: "", remake: "", raw: String(text || "") };
     var seq = 0;
     heads.forEach(function (h) {
       var name = h.head;
       var body = h.body.join("\n").trim();
       if (/^추천\s*썸네일/.test(name)) {
-        out.thumbs = pickNumbered(body, 2);
+        var th = parseThumbLines(body);           // 🔥 v2.4.6 — 5종(톤별)
+        out.thumbs = th.thumbs;
+        out.thumbTones = th.tones;
       } else if (/^상품\s*선정/.test(name)) {
         out.pick = body;
       } else if (/^상품\s*정보/.test(name)) {
@@ -5535,6 +5568,42 @@
     show($("#threadUploadBox"), false);
   }
 
+  /* 🔥 v2.4.6 — 썸네일 문구 5종만 한 덩어리로 (톤 이름 그대로) */
+  function videoThumbsText() {
+    var v = state.video;
+    if (!v || !v.thumbs.length) return "";
+    var L = ["[" + (((BS.VIDEO || {}).thumbTones || {}).title || "썸네일 문구 5종") + " — 지연님 블로그 작업실 v" + (BS.VERSION || "") + "]"];
+    v.thumbs.forEach(function (t, i) {
+      var tone = (v.thumbTones && v.thumbTones[i]) || BS.thumbTone(i).label;
+      L.push((i + 1) + ") [" + tone + "] " + t);
+    });
+    return L.join("\n");
+  }
+
+  /* 🔥 v2.4.6 — 🖼️ 맞춤 이미지에 보이는 '고른 썸네일 문구' 줄 */
+  function paintThumbPicks() {
+    var box = $("#thumbPicks");
+    if (!box) return;
+    var picks = state.thumbPicks || [];
+    while (box.firstChild) box.removeChild(box.firstChild);
+    if (!picks.length) { show(box, false); return; }
+    show(box, true);
+    var head = document.createElement("div");
+    head.className = "thumb-picks-head";
+    head.textContent = "🔥 대본에서 고른 썸네일 문구 " + picks.length + "개 — 썸네일 2종 프롬프트에 후보로 들어갑니다";
+    box.appendChild(head);
+    var list = document.createElement("div");
+    list.className = "thumb-picks-list";
+    picks.forEach(function (p, i) {
+      var chip = document.createElement("span");
+      chip.className = "thumb-pick";
+      chip.innerHTML = "<b>" + esc(p.tone || BS.thumbTone(i).label) + "</b><span>" + esc(p.text || "") + "</span>" +
+        '<button type="button" data-pick-idx="' + i + '" aria-label="후보에서 빼기">✕</button>';
+      list.appendChild(chip);
+    });
+    box.appendChild(list);
+  }
+
   /* 피클에게 그대로 붙여넣을 영상 제작 요청 한 덩어리 */
   function videoRequestText() {
     var v = state.video;
@@ -5551,6 +5620,9 @@
     L.push("");
     L.push("주제: " + (topic || ""));
     L.push("형식: " + f.emoji + " " + f.label + " (" + f.sub + ") · " + f.seconds + " · " + f.ratio);
+    /* 🖋 v2.4.6 — 대본 스타일 */
+    var st = BS.videoStyle(v.styleId || ((BS.VIDEO || {}).defaultStyle));
+    L.push("스타일: " + st.emoji + " " + st.label + " (" + st.sub + ")");
     L.push("톤: " + ((BS.VIDEO && BS.VIDEO.persona) || "") + " · AI티 없는 구어체 나레이션");
     if (v.pick) { L.push(""); L.push("[상품 선정 — 대본보다 먼저]"); L.push(v.pick); }
     /* 🛒 v2.4.4 — 상품 정보 4칸 */
@@ -5558,8 +5630,11 @@
     /* 🎯 v2.3.9 — 불편한 순간 5 → 2 (첫 3초 재료) */
     if (v.pain) { L.push(""); L.push("[🎯 불편한 순간 5 → 2 — 첫 3초 재료]"); L.push(v.pain); }
     L.push("");
-    L.push("[추천 썸네일 문구]");
-    v.thumbs.forEach(function (t, i) { L.push((i + 1) + ") " + t); });
+    L.push("[추천 썸네일 문구 5종]");
+    v.thumbs.forEach(function (t, i) {
+      var tone = (v.thumbTones && v.thumbTones[i]) || BS.thumbTone(i).label;
+      L.push((i + 1) + ") [" + tone + "] " + t);
+    });
     L.push("");
     L.push("[3초 후크]");
     L.push(v.hook || "");
@@ -5619,6 +5694,34 @@
     $$("#videoFormatTabs .vf-tab").forEach(function (b) {
       b.classList.toggle("active", (b.getAttribute("data-fmt") || "") === state.videoFormat);
     });
+  }
+
+  /* 🖋 v2.4.6 — 대본 스타일 칩. 문구는 js/config.js BS.VIDEO.styles 한 곳만 고친다. */
+  function paintVideoStyles() {
+    var box = $("#videoStyleTabs");
+    if (!box) return;
+    var styles = (BS.VIDEO && BS.VIDEO.styles) || [];
+    var hint = box.querySelector(".vf-hint");
+    while (box.firstChild) box.removeChild(box.firstChild);
+    var lbl = document.createElement("span");
+    lbl.className = "vf-lbl";
+    lbl.textContent = "🖋 대본 스타일";
+    box.appendChild(lbl);
+    styles.forEach(function (st) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "vf-tab" + (st.id === state.videoStyle ? " active" : "");
+      b.setAttribute("data-style", st.id);
+      b.setAttribute("title", st.sub + (st.rule ? " — " + st.rule : ""));
+      b.textContent = st.emoji + " " + st.label;
+      box.appendChild(b);
+    });
+    box.appendChild(hint || (function () {
+      var h = document.createElement("span");
+      h.className = "vf-hint";
+      h.textContent = "고른 스타일로 대본을 새로 씁니다";
+      return h;
+    })());
   }
 
   /* 스레드·영상 대본 공통 호출 — 원고 생성과 같은 모델 자동 전환 경로를 탄다 */
@@ -5804,20 +5907,47 @@
       card("🎯 불편한 순간 5 → 2", "첫 3초 재료", v.pain, "📋 불편한 순간 복사", "copy-pain", 9, function (val) { v.pain = val; });
     }
 
+    if (v.thumbs.length) {
+      var thP = document.createElement("p");
+      thP.className = "mp-hint";
+      thP.innerHTML = "🔥 <b>썸네일 문구 5종</b> — 이유·반전·숫자·공감·질문 톤으로 하나씩 뽑았습니다. 마음에 드는 문구는 <b>➕ 썸네일 후보</b>로 담으면 🖼️ 맞춤 이미지의 썸네일 프롬프트에 후보로 들어갑니다.";
+      box.appendChild(thP);
+    }
     v.thumbs.forEach(function (t, i) {
+      var tone = (v.thumbTones && v.thumbTones[i]) || BS.thumbTone(i).label;
       var c = document.createElement("div");
       c.className = "img-prompt-card thumb-card";
       c.innerHTML =
         '<div class="ipc-head"><strong>썸네일 문구 ' + (i + 1) + '</strong>' +
-        '<span class="ipc-badge">' + (i === 0 ? "의외성·경고형" : "질문·숫자형") + '</span></div>' +
+        '<span class="ipc-badge">' + esc(tone) + '</span></div>' +
         '<textarea rows="2" spellcheck="false"></textarea>' +
-        '<div class="ipc-foot"><button type="button" class="btn small primary" data-act="copy-thumb">📋 문구 복사</button></div>';
+        '<div class="ipc-foot">' +
+        '<button type="button" class="btn small primary" data-act="copy-thumb">📋 문구 복사</button>' +
+        '<button type="button" class="btn small ghost" data-act="pick-thumb">➕ 썸네일 후보</button>' +
+        '<span class="ipc-tip">' + esc(BS.thumbTone(i).hint || "") + '</span>' +
+        '</div>';
       var ta = c.querySelector("textarea");
       ta.value = t;
       ta.addEventListener("input", function (e) { v.thumbs[i] = e.target.value; autoGrow(e.target); });
       c.querySelector('[data-act="copy-thumb"]').addEventListener("click", function () {
         copyPlain(v.thumbs[i]).then(function (ok) { toast(ok ? "썸네일 문구를 복사했습니다" : "복사 실패"); });
       });
+      var pickBtn = c.querySelector('[data-act="pick-thumb"]');
+      function paintPick() {
+        var on = state.thumbPicks.some(function (p) { return p.text === v.thumbs[i]; });
+        pickBtn.textContent = on ? "✓ 후보에 담김" : "➕ 썸네일 후보";
+        pickBtn.classList.toggle("primary", !!on);
+        pickBtn.classList.toggle("ghost", !on);
+      }
+      pickBtn.addEventListener("click", function () {
+        var at = -1;
+        state.thumbPicks.forEach(function (p, k) { if (p.text === v.thumbs[i]) at = k; });
+        if (at >= 0) state.thumbPicks.splice(at, 1);
+        else state.thumbPicks.push({ tone: tone, text: v.thumbs[i] });
+        paintPick(); paintThumbPicks();
+        toast(at >= 0 ? "썸네일 후보에서 뺐습니다" : "썸네일 후보에 담았습니다 — 🖼️ 맞춤 이미지의 썸네일 프롬프트에 후보로 들어갑니다");
+      });
+      paintPick();
       box.appendChild(c);
       autoGrow(ta);
     });
@@ -5943,14 +6073,17 @@
     if (!r) { toast("먼저 원고를 만들어 주세요 — 그 원고 내용으로 영상 대본을 만듭니다"); return; }
     if (!apiKeyOrAsk()) return;
     var f = BS.videoFormat(formatId || state.videoFormat);
+    var st = BS.videoStyle(state.videoStyle);            // 🖋 v2.4.6
     state.videoFormat = f.id;
     paintVideoTabs();
+    paintVideoStyles();
     var req;
     try {
       req = BS.prompts.videoScriptPrompt({
         blog: state.blog,
         fmt: f,
         formatId: f.id,
+        styleId: st.id,                                    // 🖋 v2.4.6 — 기본·이야기·포인트·비교
         persona6: currentPersona(),
         source: stripMetaSections(r.md),
         topic: r.topic,
@@ -5965,7 +6098,7 @@
     }
     show($("#videoPanel"), true);
     if ($("#videoBody")) $("#videoBody").innerHTML = "";
-    if ($("#videoMeta")) $("#videoMeta").textContent = f.emoji + " " + f.label + " · " + f.ratio + " · 🎭 " + (currentPersona() || {}).label;
+    if ($("#videoMeta")) $("#videoMeta").textContent = f.emoji + " " + f.label + " · " + f.ratio + " · 🖋 " + st.label + " · 🎭 " + (currentPersona() || {}).label;
     state.video = null;
     runScriptJob({
       req: req,
@@ -5978,9 +6111,10 @@
       apply: function (text) {
         var parsed = parseVideoScript(text);
         if (!parsed) return false;
+        parsed.styleId = st.id;                          // 🖋 v2.4.6 — 요청문·결과에 같이 남긴다
         state.video = parsed;
         renderVideoScript();
-        setStatus($("#videoStatus"), "✅ " + f.label + " 대본 준비됨 — 장면마다 Flow 프롬프트를 복사하거나 '📋 피클에게 보낼 영상 요청 복사'로 한 번에 넘기세요", "ok");
+        setStatus($("#videoStatus"), "✅ " + f.label + " · " + st.label + " 대본 준비됨 — 장면마다 Flow 프롬프트를 복사하거나 '📋 피클에게 보낼 영상 요청 복사'로 한 번에 넘기세요", "ok");
         var panel = $("#videoPanel");
         if (panel && panel.scrollIntoView) { try { panel.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
         return true;
@@ -6259,10 +6393,13 @@
       blog: state.blog,
       title: state.result.title,
       topic: state.result.topic,
-      summary: state.result.md   // 글 요지까지 넣어야 '이 글에서 궁금한 것'을 찌르는 문구가 나온다(v1.7.3)
+      summary: state.result.md,   // 글 요지까지 넣어야 '이 글에서 궁금한 것'을 찌르는 문구가 나온다(v1.7.3)
+      picks: (state.thumbPicks || []).slice()   // 🔥 v2.4.6 — 대본에서 고른 문구 5종 후보
     });
     renderThumbs();
-    toast("썸네일 2종 프롬프트를 만들었습니다 — 짧은 호기심 훅 문구로 뽑습니다");
+    toast((state.thumbPicks || []).length
+      ? "썸네일 2종 프롬프트를 만들었습니다 — 고른 문구 " + state.thumbPicks.length + "개를 후보로 넣었습니다"
+      : "썸네일 2종 프롬프트를 만들었습니다 — 짧은 호기심 훅 문구로 뽑습니다");
   }
 
   function renderThumbs() {
@@ -10269,6 +10406,39 @@
         });
       });
     }
+    /* 🔥 v2.4.6 — 썸네일 문구 5종만 따로 복사 */
+    if ($("#btnCopyThumbsAll")) {
+      $("#btnCopyThumbsAll").addEventListener("click", function () {
+        var v = state.video;
+        if (!v || !v.thumbs.length) { toast("아직 썸네일 문구가 없습니다 — 🎬 대본을 먼저 만들어 주세요"); return; }
+        copyPlain(videoThumbsText()).then(function (ok) {
+          toast(ok ? "썸네일 문구 5종을 복사했습니다" : "복사 실패");
+        });
+      });
+    }
+    /* 🖋 v2.4.6 — 대본 스타일 칩(다른 스타일이면 그 스타일로 새로 쓴다) */
+    if ($("#videoStyleTabs")) {
+      $("#videoStyleTabs").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-style]") : null;
+        if (!b) return;
+        var id = b.getAttribute("data-style") || "";
+        if (id === state.videoStyle && state.video) return;
+        state.videoStyle = id;
+        paintVideoStyles();
+        convertToVideoScript(state.videoFormat);
+      });
+    }
+    /* 🔥 v2.4.6 — 고른 썸네일 후보 지우기 */
+    if ($("#thumbPicks")) {
+      $("#thumbPicks").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-pick-idx]") : null;
+        if (!b) return;
+        var i = parseInt(b.getAttribute("data-pick-idx"), 10);
+        if (!isNaN(i)) state.thumbPicks.splice(i, 1);
+        paintThumbPicks();
+        if (state.video) renderVideoScript();
+      });
+    }
     /* 🛒 v2.4.4 — 상품형 4칸 켜기/끄기 (다음 대본부터 반영) */
     if ($("#optVideoProduct")) {
       $("#optVideoProduct").addEventListener("change", function () {
@@ -10438,6 +10608,19 @@
       });
     }
     paintVideoFormula();
+    /* 🖋 v2.4.6 — 대본 스타일 칩·고른 썸네일 문구 줄을 처음 화면에 그린다 */
+    paintVideoStyles();
+    paintThumbPicks();
+    /* 🕳️ v2.4.6 — 내 글 순위·빈집 기회(데이터 파일이 있으면 표, 없으면 빈 안내) */
+    if ($("#seoOppTabs")) {
+      $("#seoOppTabs").addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-opp]") : null;
+        if (!b) return;
+        SEO.tab = (b.getAttribute("data-opp") === "boost") ? "boost" : "vacant";
+        renderSeoOpp();
+      });
+    }
+    loadSeoOpp();
     if ($("#btnCopyBanner")) {
       $("#btnCopyBanner").addEventListener("click", function () {
         copyPlain(BS.prompts.bannerInstruction()).then(function (ok) {
@@ -10565,16 +10748,26 @@
   BS.renderVideoScript = renderVideoScript; // v2.2.2 — 결과 화면 카드 렌더 검증용
   /* v2.3.9 검증용 — 클립 공식 4가지 칸을 화면에 직접 그려 본다(API 키 없이).
      예: BS.videoTest({narration:'…', captions:[], scenes:[], thumbs:[], hook:'', pain:'1) …', cnkw:'1) ★ …', cta:'- 네이버 클립: …', remake:'- 남길 것: …'}) */
-  BS.videoTest = function (v) {
+  BS.videoTest = function (v, styleId) {
     state.video = v || null;
+    if (styleId) state.videoStyle = styleId;
     state.videoFormat = "short";
+    paintVideoTabs();
+    paintVideoStyles();
     renderVideoScript();
+    paintThumbPicks();
+    var f = BS.videoFormat(state.videoFormat);
+    var st = BS.videoStyle(state.videoStyle);
+    if ($("#videoMeta")) $("#videoMeta").textContent = f.emoji + " " + f.label + " · " + f.ratio + " · 🖋 " + st.label;
     var p = $("#videoPanel");
     if (p) p.hidden = false;
     var s = $("#stepResult");
     if (s) s.hidden = false;
     return true;
   };
+  BS.parseThumbLines = parseThumbLines;        // 🔥 v2.4.6 — 썸네일 문구 5종(톤) 파서
+  BS.videoThumbsText = videoThumbsText;        // 🔥 v2.4.6 — 5종만 복사
+  BS.paintThumbPicks = paintThumbPicks;        // 🔥 v2.4.6 — 고른 후보 줄
   BS.multiAllText = multiAllText;
   BS.articleDisclosure = articleDisclosure;
   BS.ensureDisclosure = ensureDisclosure;
@@ -10671,6 +10864,95 @@
     link: tipAnchorHtml,
     html: affiliateHtml,
     disclosure: function () { return articleDisclosure(state.result); }
+  };
+
+  /* ---------------- 🕳️ 내 글 순위 · 빈집 기회 (v2.4.6 · 2026-11-26 지연님 지시 · 3번 레퍼런스) ----------------
+     작업실은 정적 웹(GitHub Pages)이라 서치콘솔·검색광고 API를 직접 부르지 않는다.
+     수집(GitHub Actions 또는 크리 님 점검 파이프라인)이 data/seo-opportunities.json 한 파일을
+     갱신하면 이 화면이 그대로 읽어 두 표로 그린다. 데이터가 없으면 숫자를 지어내지 않고
+     '아직 데이터 없음 + 무엇이 필요한가'만 보여 준다. */
+  var SEO = { data: null, loaded: false, tab: "vacant" };
+
+  function seoText(v) {
+    if (v === null || v === undefined || v === "") return "확인 필요";
+    return String(v);
+  }
+  function seoNum(v) {
+    if (v === null || v === undefined || v === "" || isNaN(Number(v))) return "확인 필요";
+    try { return Number(v).toLocaleString("ko-KR"); } catch (e) { return String(v); }
+  }
+  function seoOppEmptyHtml() {
+    var C = BS.SEO_OPP || {};
+    return '<div class="seo-opp-empty"><strong>' + esc(C.emptyTitle || "아직 데이터가 없습니다") + '</strong>' +
+      esc(C.emptyBody || "") +
+      "<ul>" + (C.needs || []).map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></div>";
+  }
+  function seoOppTableHtml(rows, kind) {
+    var C = BS.SEO_OPP || {};
+    if (!rows || !rows.length) return "";
+    var cols = kind === "boost" ? (C.boostCols || []) : (C.vacantCols || []);
+    var head = "<tr>" + cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr>";
+    var body = rows.map(function (r) {
+      r = r || {};
+      var cells = kind === "boost"
+        ? [r.title, r.keyword, (r.rank === null || r.rank === undefined || r.rank === "") ? null : (r.rank + "위"),
+           seoNum(r.impressions), seoNum(r.clicks), r.advice]
+        : [r.keyword, seoNum(r.volume), r.competition, (r.myPosts ? (r.myPosts + "편") : "없음"),
+           (r.angle || r.title || r.reason)];
+      return "<tr>" + cells.map(function (c) { return "<td>" + esc(seoText(c)) + "</td>"; }).join("") + "</tr>";
+    }).join("");
+    return "<table><thead>" + head + "</thead><tbody>" + body + "</tbody></table>";
+  }
+  function renderSeoOpp() {
+    var C = BS.SEO_OPP || {};
+    var d = SEO.data;
+    var has = !!(d && (((d.vacant || []).length) || ((d.boost || []).length)));
+    var titleEl = $("#seoOppTitle"), badgeEl = $("#seoOppBadge"), descEl = $("#seoOppDesc");
+    var tabsEl = $("#seoOppTabs"), bodyEl = $("#seoOppBody"), srcEl = $("#seoOppSrc");
+    if (titleEl) titleEl.textContent = C.title || "🕳️ 내 글 순위 · 빈집 기회";
+    if (descEl) descEl.textContent = C.desc || "";
+    if (badgeEl) {
+      badgeEl.textContent = has ? ((d.updatedAt ? ("업데이트 " + d.updatedAt) : "데이터 있음")) : "준비 중";
+    }
+    if (tabsEl) show(tabsEl, has);
+    if (tabsEl) {
+      $$("#seoOppTabs .vf-tab").forEach(function (b) {
+        b.classList.toggle("active", (b.getAttribute("data-opp") || "") === SEO.tab);
+      });
+    }
+    if (!bodyEl) return;
+    if (!has) { bodyEl.innerHTML = seoOppEmptyHtml(); }
+    else {
+      var rows = (SEO.tab === "boost" ? (d.boost || []) : (d.vacant || []));
+      var table = seoOppTableHtml(rows, SEO.tab);
+      bodyEl.innerHTML = table || '<div class="seo-opp-empty"><strong>이 목록은 아직 비었습니다</strong>다른 목록을 누르거나 다음 수집을 기다려 주세요.</div>';
+    }
+    if (srcEl) {
+      var src = (d && d.source) || {};
+      var bits = [];
+      if (has) {
+        if (src.searchConsole) bits.push("서치콘솔");
+        if (src.naverAd) bits.push("네이버 검색광고");
+        if (src.posts) bits.push("내 글 " + src.posts + "편");
+      }
+      srcEl.textContent = bits.length ? ("출처: " + bits.join(" · ") + (d.updatedAt ? (" · 수집 " + d.updatedAt) : "")) : "";
+      show(srcEl, bits.length > 0);
+    }
+  }
+  function loadSeoOpp() {
+    var C = BS.SEO_OPP || {};
+    var url = (C.dataPath || "data/seo-opportunities.json") + "?v=" + encodeURIComponent(BS.VERSION || "0");
+    if (typeof fetch !== "function") { renderSeoOpp(); return; }
+    fetch(url).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { SEO.data = d; SEO.loaded = true; renderSeoOpp(); })
+      .catch(function () { SEO.data = null; SEO.loaded = true; renderSeoOpp(); });
+  }
+  BS.seoOpp = {
+    load: loadSeoOpp,
+    render: renderSeoOpp,
+    set: function (d) { SEO.data = d || null; SEO.loaded = true; renderSeoOpp(); return true; },
+    tab: function (t) { SEO.tab = (t === "boost") ? "boost" : "vacant"; renderSeoOpp(); return true; },
+    data: function () { return SEO.data; }
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
