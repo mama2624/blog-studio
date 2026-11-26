@@ -55,6 +55,14 @@
 - 네이버 블로그 3곳(3,811편)은 서치콘솔 속성이 없어 구글 순위 데이터가 없다(네이버·다음 검색이 주 채널). 그래서 boost는 gold-queen.com 계열(티스토리 개인 도메인 포함)만 담긴다.
 - 첫 가동 결과: 28일(2026-10-27~11-23) 페이지 152행 → 중복 정리 129 → 글 URL 63편 → 글목록 매칭 57편 → 4~15위 30편 → 노출 2회 이상 **19편**이 표에 올라갔다.
 
+### 3-1) 빈집 키워드(`vacant[]`) 자동 수집 — 네이버 검색광고 API (2026-11-26 합류)
+- `tools/update_seo_vacant.py` — 네이버 검색광고 `keywordstool`(HMAC-SHA256)로 후보 키워드의 **월 검색량(PC+모바일)·경쟁도**를 받아 내 글 4,912편 제목과 대조하고, **검색량은 있는데 내 글이 없는 키워드**만 `vacant[]`에 넣는다. `boost[]`·`readme[]`는 읽기만 하고 파일에 그대로 다시 씁니다(크리 님 20:30 수집분 보존).
+- `.github/workflows/seo-vacant.yml` — 매일 **22:00 UTC = 07:00 KST** 자동 + `workflow_dispatch`. 커밋 전 `git pull --rebase`로 크리 님 push와 충돌을 피하고, `data/seo-opportunities.json` 한 파일만 커밋한다.
+- 키는 GitHub Secrets 세 개로만 둔다: `NAVER_AD_CUSTOMER_ID`(4400665) · `NAVER_AD_ACCESS_LICENSE` · `NAVER_AD_SECRET_KEY`. 저장소·로그·문서에 적지 않는다.
+- 입력: `data/my-posts.txt`(내 블로그 전체 글목록 스냅샷) · `tools/seo-seed-keywords.json`(주제별 씨앗 92개 = 4대 블로그 주제 + 이번·다음 달 시즌 키워드).
+- 거르는 규칙: 씨앗과 **글자 2개 이상 겹치는** 연관 키워드만 · 주가·시세·환율·예매·업종·시험 등 조회형 제외 · 월 검색량 1,000회 이상 · 3,000~150,000회 미들테일 가중 · 한 블로그 최대 8행.
+- 손으로 한 번 돌리기: `gh workflow run seo-vacant.yml -R mama2624/blog-studio`
+
 ### 4) 검증 (2026-11-26 · v2.4.6)
 - 단위 테스트 88 PASS · 0 FAIL — `python3 work/bs246-test/test_v246.py` (판본·설정 계약·스타일별 프롬프트·5종 파서·요청문·썸네일 후보·카드 렌더 + v2.4.5 목차 회귀)
 - 화면 확인 29 PASS · 0 FAIL — `python3 work/bs246-test/ui_check.py` (스타일 칩 4개·카드 5개·후보 담기/빼기·빈 상태와 샘플 표·모바일 390px·콘솔 오류 0)
