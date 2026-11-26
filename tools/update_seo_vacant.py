@@ -78,8 +78,10 @@ def signature(secret: str, timestamp: str, method: str, uri: str) -> str:
 def keywordstool(hints: list[str], customer: str, license_: str, secret: str, show_detail: bool = True) -> list[dict]:
     """hintKeywords(최대 5개) → relatedKeywordList
 
-    띄어쓰기 있는 씨앗('아파트 관리비' 등)은 반드시 %20 으로 보내야 한다.
-    urlencode 기본값('+')으로 보내면 네이버가 HTTP 400 으로 거절한다(2026-11-26 첫 실행에서 확인).
+    띄어쓰기 있는 씨앗('아파트 관리비' 등)은 hintKeywords 에 넣는 순간
+    code 11001('hintKeywords 파라미터가 유효하지 않습니다')로 거절된다(2026-11-26 실서버 확인).
+    그래서 보낼 때는 공백을 떼고('아파트관리비') 보낸다 — 돌려받는 연관 키워드에는
+    띄어쓴 표기가 그대로 섞여 오므로 후보 목록은 손해가 없다.
     """
     ts = str(int(time.time() * 1000))
     query = urllib.parse.urlencode(
@@ -300,7 +302,7 @@ def main() -> int:
     ok = fails = 0
     batches = [seeds[i:i + 5] for i in range(0, len(seeds), 5)]
     for bi, batch in enumerate(batches, 1):
-        words = [kw for kw, _ in batch]
+        words = [kw.replace(" ", "") for kw, _ in batch]
         blog = batch[0][1]
         items = None
         for attempt in (1, 2):
@@ -326,7 +328,19 @@ def main() -> int:
                 else:
                     time.sleep(1.5)
         if items is None:
-            continue
+            # 묶음이 계속 거절되면 한 개씩 다시 — 한 키워드 때문에 다섯 개를 잃지 않는다
+            items = []
+            for w in words:
+                try:
+                    items.extend(keywordstool([w], args.customer, args.license_, args.secret))
+                    time.sleep(args.sleep)
+                except Exception:  # noqa: BLE001
+                    continue
+            if items:
+                fails -= 1
+                ok += 1
+            else:
+                continue
         for it in items:
             kw = (it.get("relKeyword") or "").strip()
             if not kw:
