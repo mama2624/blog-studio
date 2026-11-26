@@ -199,6 +199,16 @@ def suggest(keyword: str) -> tuple[str, str]:
 
 
 # ────────────────────────────── 조립 ──────────────────────────────
+def josa(word: str, with_batchim: str, without_batchim: str) -> str:
+    """받침 유무에 따라 조사를 고른다 ('비행기표예약' + 이 → '이', '수능' + 이 → '가')."""
+    if not word:
+        return without_batchim
+    ch = word[-1]
+    if not ("가" <= ch <= "힣"):
+        return without_batchim
+    return with_batchim if (ord(ch) - ord("가")) % 28 else without_batchim
+
+
 STOP = {"뜻", "의미", "영어로", "한자", "유래"}
 
 # 빈집 후보에서 빼는 검색 의도 — 주가·시세·조회·설치형은 글로 써도 읽는 사람이 없고
@@ -266,7 +276,7 @@ def build(rows_by_keyword: dict, posts: dict, args) -> list[dict]:
             "angle": f"{title} — {angle}",
             "reason": (
                 f"월 검색량 {vol:,}회(PC {info['pc']:,} · 모바일 {info['mobile']:,})인데 "
-                f"내 글 {total_posts:,}편 제목에 '{kw}'가 없습니다."
+                f"내 글 {total_posts:,}편 제목에 '{kw}'{josa(kw, '이', '가')} 없습니다."
             ),
             "_score": round(vol * COMP_WEIGHT.get(comp, 1.0) * vol_weight(vol)
                             * (1.3 if CONTENT_INTENT.search(kw) else 1.0), 1),
