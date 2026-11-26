@@ -49,6 +49,7 @@
 ### 4) 검증 (2026-11-26 · v2.4.6)
 - 단위 테스트 88 PASS · 0 FAIL — `python3 work/bs246-test/test_v246.py` (판본·설정 계약·스타일별 프롬프트·5종 파서·요청문·썸네일 후보·카드 렌더 + v2.4.5 목차 회귀)
 - 화면 확인 29 PASS · 0 FAIL — `python3 work/bs246-test/ui_check.py` (스타일 칩 4개·카드 5개·후보 담기/빼기·빈 상태와 샘플 표·모바일 390px·콘솔 오류 0)
+- 실서버 확인 — `BS_BASE=https://mama2624.github.io/blog-studio/ python3 work/bs246-test/ui_check.py` 도 29 PASS · 0 FAIL (2026-11-26 09:44 KST · 커밋 `5fe5cbe` · Pages run 45730762488 success)
 - 캡처: `work/bs246-test/shots/v246_영상_스타일_문구5종_*.png` · `v246_썸네일_후보_*.png` · `v246_빈집_데이터없음_*.png` · `v246_빈집_표_*.png`
 
 ## 📋 목차 앵커 금지 · 번호당 한 줄 · 목차-서두 구분선 (v2.4.5 · 2026-11-25)
