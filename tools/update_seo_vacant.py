@@ -31,6 +31,7 @@
   · 검색량 = monthlyPcQcCnt + monthlyMobileQcCnt ('< 10' 은 5 로 본다)
   · 경쟁도 = compIdx (낮음/중간/높음 → 낮음/보통/높음)
   · 내 글 수 = 글 제목에 그 키워드가 들어간 편수(공백·기호 무시). 0편일 때만 빈집으로 올린다.
+  · 씨앗과 글자 2개 이상 겹치는 키워드만 — 연관 목록에 섞여 오는 무관 인기어를 건진다.
   · 주가·시세·환율·예매·업종·시험 조회형(BAN 목록)은 뺀다 — 읽는 사람이 없는 조회형이고
     지연님 블로그(소비자 설명형 장문)와도 맞지 않는다.
   · 정렬 = 검색량 × 경쟁도 가중치(낮음 1.4 · 보통 1.15 · 높음 1.0) × 구간 가중치(미들 테일 선호)
@@ -212,6 +213,12 @@ CONTENT_INTENT = re.compile(
 )
 
 
+def bigrams(text: str) -> set[str]:
+    """글자 2개씩 잘라 비교 — '수능' vs '수능일', '김장' vs '김장배추가격'을 엮는다."""
+    t = norm(text)
+    return {t[i:i + 2] for i in range(len(t) - 1)}
+
+
 def vol_weight(v: int) -> float:
     """미들 테일 선호 — 3,000~150,000회가 개인이 1페이지를 노릴 수 있는 구간."""
     if v < 3000:
@@ -318,7 +325,7 @@ def main() -> int:
     batches = [seeds[i:i + 5] for i in range(0, len(seeds), 5)]
     for bi, batch in enumerate(batches, 1):
         words = [kw.replace(" ", "") for kw, _ in batch]
-        blog = batch[0][1]
+        grams = [(bigrams(kw), blog) for kw, blog in batch]
         items = None
         for attempt in (1, 2):
             try:
@@ -359,6 +366,16 @@ def main() -> int:
         for it in items:
             kw = (it.get("relKeyword") or "").strip()
             if not kw:
+                continue
+            # 씨앗과 글자 2개 이상 겹치는 것만 — '방금 돌린 씨앗'과 무관한 인기 검색어가
+            # 연관 목록에 섞여 오는 것을 걸러낸다(2026-11-26: 빽다방·코스피200·세무사 등)
+            kwg = bigrams(kw)
+            blog, best = "", 0
+            for g, b in grams:
+                n = len(kwg & g)
+                if n > best:
+                    best, blog = n, b
+            if best == 0:
                 continue
             pc = _qc(it.get("monthlyPcQcCnt"))
             mo = _qc(it.get("monthlyMobileQcCnt"))
