@@ -1,0 +1,61 @@
+name: 빈집 키워드 수집 (네이버 검색광고)
+
+# 작업실 「내 글 순위 · 빈집 기회」 의 ① 바로 쓸 빈집 주제(vacant[])만 채운다.
+#   - 네이버 검색광고 API keywordstool 로 월 검색량·경쟁도 -> 내 글 제목과 대조
+#   - ② 보강할 내 글(boost[])은 크리(@keuli8) 님 측이 20:30 에 채우므로 손대지 않는다.
+#     (스크립트가 파일을 쓸 때 기존 boost[] 를 그대로 다시 씁니다)
+#   - 키는 저장소에 넣지 않고 Settings > Secrets and variables > Actions 에만 둔다.
+on:
+  schedule:
+      - cron: "0 22 * * *"      # 매일 22:00 UTC = 다음 날 07:00 KST
+        workflow_dispatch:           # 필요할 때 손으로 한 번 돌리기
+
+        permissions:
+          contents: write              # data/seo-opportunities.json 커밋용
+
+          concurrency:
+            group: seo-vacant
+              cancel-in-progress: false
+
+              jobs:
+                vacant:
+                    runs-on: ubuntu-latest
+                        timeout-minutes: 20
+                            steps:
+                                  - name: 저장소 받기
+                                          uses: actions/checkout@v4
+
+                                                - name: 파이썬 준비
+                                                        uses: actions/setup-python@v5
+                                                                with:
+                                                                          python-version: "3.12"
+
+                                                                                - name: 최신 커밋 먼저 당겨오기
+                                                                                        run: git pull --rebase origin main
+                                                                                              - name: 빈집 키워드 수집 (vacant[] 갱신 · boost[] 보존)
+                                                                                                      env:
+                                                                                                                NAVER_AD_CUSTOMER_ID: ${{ secrets.NAVER_AD_CUSTOMER_ID }}
+                                                                                                                          NAVER_AD_ACCESS_LICENSE: ${{ secrets.NAVER_AD_ACCESS_LICENSE }}
+                                                                                                                                    NAVER_AD_SECRET_KEY: ${{ secrets.NAVER_AD_SECRET_KEY }}
+                                                                                                                                            run: python3 tools/update_seo_vacant.py
+                                                                                                                                                  - name: 바뀐 게 있을 때만 커밋·푸시
+                                                                                                                                                          run: |
+                                                                                                                                                                    set -e
+                                                                                                                                                                              git config user.name "github-actions[bot]"
+                                                                                                                                                                                        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                                                                                                                                                                                                  git add data/seo-opportunities.json
+                                                                                                                                                                                                            if git diff --cached --quiet; then
+                                                                                                                                                                                                                        echo "변경 없음"
+                                                                                                                                                                                                                                    exit 0
+                                                                                                                                                                                                                                              fi
+                                                                                                                                                                                                                                                        git commit -m "chore: 빈집 키워드 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M') KST"
+                                                                                                                                                                                                                                                                  for i in 1 2 3; do
+                                                                                                                                                                                                                                                                              if git pull --rebase origin main && git push; then
+                                                                                                                                                                                                                                                                                            exit 0
+                                                                                                                                                                                                                                                                                                        fi
+                                                                                                                                                                                                                                                                                                                    sleep 5
+                                                                                                                                                                                                                                                                                                                              done
+                                                                                                                                                                                                                                                                                                                                        exit 1
+                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                            
+                                                                                        
