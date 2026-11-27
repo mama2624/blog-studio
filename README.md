@@ -40,6 +40,7 @@
 - 원본(`js/gem_raw.js`) md5 `1dfe61f8872b49c54ce41a5f9e73caca` 불변.
 
 ### 5) 검증
+- 캐시 버스터는 `?v=2.4.8.1`입니다(v2.4.8 첫 푸시 뒤 문구 교정 1건이 같은 `?v=2.4.8`로는 브라우저 캐시에 가려져, 판본은 2.4.8 그대로 두고 캐시 키만 올렸습니다).
 - `python3 work/bs248-test/test_v248.py` — 아래 표 참고(항목: 판본·캐시 버스터·`BS.SEARCH_BODY`·`searchBodyBlock()` 삽입 3곳·`outputRules` 3열 예외·`gemRawRules` 가드 3줄·`BS.AUDIT_PASS1` 1개·회귀(이미지 기준선·v2.4.6·gem_raw 불변)).
 
 ## 🖋 대본 스타일 · 🔥 썸네일 문구 5종 · 🕳 빈집 기회 (v2.4.6 · 2026-11-26)
