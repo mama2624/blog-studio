@@ -3,6 +3,54 @@
 지연님 전용 **반자동 멀티작업실** — **글 용도 3모드**(📝 블로그 10단계 · ☕ 네이버 카페 글 · 🛒 상품·여행 제휴 리뷰)로 원고를 만들고, 그 원고 하나로 **🧵 스레드 타래**와 **🎬 클립·릴스·유튜브 대본**까지 뽑아 스마트에디터·스레드·영상에 붙여넣는 정적 웹앱입니다.
 빌드 없이 순수 HTML/CSS/JS라서 GitHub Pages에 그대로 올리면 됩니다.
 
+## 🖼️ 썸네일 1번 반타블랙 고대비 통일 (v2.5.1 · 2026-11-28)
+
+지연님 지시: `"썸네일 1번 스타일을 1. 리얼 블랙(#000100) 고대비 타이포로 변경"` → `"반타블랙으로 해줘"`. 썸네일 1번 배경을 **반타블랙(#000100 · Vantablack)** — 빛을 완전히 흡수하는 무광 순수 블랙 — 으로 통일하고, 작업실 정본과 제미나이 스킬 3곳을 한꺼번에 맞췄습니다.
+
+### 1) 확정 규격 — 썸네일 1번
+| 항목 | 규격 |
+|---|---|
+| 배경 | **반타블랙 `#000100`**(Vantablack) — 빛을 완전히 흡수하는 무광 순수 블랙, 반사광 없음(zero light reflection) |
+| 금지 | 하단 바·테두리·장식선 없음 · 아이보리 배경·네이비 포인트 바·flat vector poster 폐기 |
+| 글자 | 윗줄 **순백 `#FFFFFF`** · 아랫줄 **네온 오렌지 `#FF6B00`**, 초대형 굵은 한글 산세리프 2줄, 캔버스 정중앙 |
+| 문구 | 영문 프롬프트 안에 `reading "..."`로 그 글의 실제 한글 문구 직접 삽입(2~12자 호기심 문장) |
+| 영문 문장 | `solid light-absorbing matte Vantablack background (#000100) with no bottom bar, no border, and zero light reflection` |
+
+### 2) 고친 곳
+| # | 위치 | 이전 | 지금 |
+|---|---|---|---|
+| ① | `js/config.js` `BS.IMAGE_BASELINE.thumb1` (원고 출력 정본) | `solid pitch-black light-absorbing matte black background (#000100)` | `solid light-absorbing matte Vantablack background (#000100) with no bottom bar, no border, and zero light reflection` |
+| ② | `js/gem_raw.js` `directive` — 썸네일 1번 규칙 | 아이보리 배경 + 네이비 포인트 바 + flat vector poster | 반타블랙(#000100 · Vantablack) 단색 배경 · 하단 바·테두리·장식선 없음 · 반사광 없음 · 순백(#FFFFFF)·네온 오렌지(#FF6B00) 2줄 정중앙 · `reading "..."` |
+| ③ | `js/gem_raw.js` `knowledge` 제4조 2) 썸네일 1번 영문 프롬프트 | `A clean Korean typography-only thumbnail design, solid warm ivory background with a deep navy accent bar …` | `A striking Korean typography-only blog thumbnail poster, solid light-absorbing matte Vantablack background (#000100) with no bottom bar, no border, and zero light reflection …` |
+| ④ | `knowledge` 제4조 텍스트 규칙 · 3대 원칙 2번 · 10대 규격 이미지 줄 | 썸네일 1번만 글자, 2번은 `Textless, no words`·상단 1/3 여백 | 1·2번 **모두** 한글 문구를 AI가 그림, `Textless`는 목차별 본문 이미지만(옛 상단 1/3 여백 폐기) |
+| ⑤ | `knowledge` 제4조 2) 썸네일 2번 영문 프롬프트 | `clean negative space in the upper third … textless, no words` | `full-frame … with no blank cutout space … reading "…" top line dark navy / second line burnt orange` |
+| ⑥ | `js/prompts.js` (원고 생성·검수 프롬프트 7곳) | `리얼 블랙(#000100)` | `반타블랙(#000100 · Vantablack)` |
+
+### 2-2) 같은 날 추가 — 목차별 본문 이미지에 짧은 한글 라벨 (지연님 지시)
+지연님: `"본문 이미지에도 본문 내용을 이해할 텍스트 정도는 넣어줘야지 저렇게 나오면 아무의미 없잖아"` → 레퍼런스 사진 `"이렇게 글자 표현해"` → 정정 `"이 스타일로 고정하라는게 아냐"` → `"응 표현할 수 있는 모든 기법 동원해"`.
+
+| 항목 | 이전 | 지금 |
+|---|---|---|
+| 본문 이미지 글자 | 목차별 본문은 일괄 `Textless, no words` | **일괄 Textless 폐기** — 이미지만 봐도 내용이 이해되게 **짧은 한글 라벨·핵심 제목·수치 1~3개**를 영문 프롬프트 안에 `with clean, legible Korean sans-serif labels reading "..."`로 직접 넣는다 |
+| 스타일 | 비교·수치 목차는 3D 차트, 나머지 실사 textless로 사실상 고정 | **고정 없음** — 목차 내용에 가장 잘 어울리는 기법을 자유롭게(실사 현장·사물 클로즈업 / 4D 입체 렌더링 / 투시도 / 3D 단면·분해도 / 비교 차트·흐름 인포그래픽 등 표현할 수 있는 모든 기법) |
+| 도식일 때 | 라벨 없음 | 단계마다 아래 **굵은 한글 제목**(`reading "..."`) + 요소마다 **짧은 한글 라벨·수치**(`reading "..."`) |
+| 유지 | — | `full-bleed`(상단 여백 없음) · 상담 장면 금지 · 4D/투시/실사 사실 표현 · 긴 문장·워터마크 금지 |
+
+고친 곳: `js/config.js` `BS.IMAGE_BASELINE.bodyChart`·`bodyPhoto`·`body`·`noText`·`guard`·`checklist`·`BS.IMAGE_PRINCIPLES`·`BS.IMAGE_GEM.textless`, `js/gem_raw.js` `directive` ②·`knowledge`(제4조 텍스트 규칙·3대 원칙 2번·제4조 2) 양식·10대 규격 이미지 줄·체크리스트 7번), `js/prompts.js`(원고 생성·검수·출력 형식 7곳). 제미나이 스킬 3곳도 같은 문장으로 저장했습니다.
+
+### 3) 바꾸지 않은 것
+- **`BS.HUB_BANNER` 3:1 슬림 허브 배너 영문 원문은 한 글자도 그대로**(`Modern Korean editorial blog call-to-action banner … aspect ratio 3:1`).
+- 인물 고정 문장(한국인 30대 후반~40대 초반 실사)·목차별 본문 이미지 규격(3D 차트 / full-frame 실사)·장면 규칙(상담 장면 금지)·문구 3종 규칙(제목 ≠ 썸네일 1번 ≠ 썸네일 2번) 그대로.
+- `BS.IMAGE_BASELINE_V33`(v2.2.5 옛 원문)은 **참고·역사 기록으로만** 남겨 두었고 원고 출력에는 쓰지 않습니다(위 표 ①이 출력 정본).
+
+### 4) 숫자
+- `directive` **8,170 → 8,852자**(18,710 bytes) · sha256 `c4d2f0c21f2e0c09512dc9a0bacf82c5856569278050aa806d3732a2a1219946`
+- `knowledge` **31,061 → 34,792자**(66,874 bytes) · sha256 `052ed5fad84c3840b30b04bb785df304ea2abbae89bbed41a1f34f77814d6cb0`
+- `BS.VERSION = "2.5.1"` · `index.html` 캐시 버스터 `?v=2.5.1.1`(6곳) · 푸터에 v2.5.1 기록 한 줄 · 통합본 `work/gems-1128-v251/0-제미나이_올인원_슈퍼젬_v3.3_통합완성본_v2.5.1.txt`
+- 검증: `python3 work/bs251-test/test_v251.py` — 회귀 포함 전 항목 PASS.
+
+---
+
 ## 🧹 젬 지식 파일 끝말 정리 (v2.5.0 · 2026-11-28)
 
 지연님 지시: v2.4.9로 지침 끝말을 걷어낸 뒤 `"(작업실 지식 파일에는) 예전 끝말이 그대로 남아 있네. 같이 정리해줘"` — 지침은 그대로 두고 **지식 파일(knowledge)만** v2.4.9 기준으로 맞췄습니다.
